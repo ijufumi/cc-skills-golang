@@ -4,6 +4,11 @@ AI agent skills are reusable instruction sets that extend your coding assistant 
 
 For generic skills, please visit [cc-skills](https://github.com/samber/cc-skills).
 
+> [!IMPORTANT]  
+> Bootstrapped with Claude Code by distilling my Go project commits. **Edited, tested, reviewed and reworked by a human**.
+> 
+> No AI slop here.
+
 <img width="1414" height="491" alt="image" src="https://github.com/user-attachments/assets/620b5835-c1ba-4ea9-bf47-2293b58b879e" />
 
 ## 🚀 How to use
