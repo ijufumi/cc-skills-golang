@@ -56,34 +56,32 @@ Follow these influential Go developers and contributors:
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
-| **Rob Pike** | rsc | @rob_pike |  |  |
+| **Rob Pike** | robpike |  |  |  |
 | **Ken Thompson** | ken |  |  |  |
-| **Russ Cox** | rsc | @_rsc_ |  |  |
-| **Brad Fitzpatrick** | bradfitz | @bradfitz |  | https://bsky.app/profile/bradfitz.com |
-| **Andrew Gerrand** | adg | @nevsain |  |  |
-| **Dave Cheney** | davecheney | @davecheney | https://linkedin.com/in/davecheney |  |
+| **Russ Cox** | rsc | @\_rsc | https://www.linkedin.com/in/swtch | https://bsky.app/profile/swtch.com |
+| **Brad Fitzpatrick** | bradfitz | @bradfitz | https://www.linkedin.com/in/bradfitz/ | https://bsky.app/profile/bradfitz.com |
+| **Andrew Gerrand** | adg |  |  |  |
 | **Robert Griesemer** | griesemer |  |  |  |
+| **Dmitry Vyukov** | dvyukov | @dvyukov |  |  |
 
 ### Go Tooling & Infrastructure
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
-| **Sam Boyer** | sdboyer | @sdboyer | https://linkedin.com/in/sam-boyer |  |
+| **Sam Boyer** | sdboyer | @sdboyer |  |  |
 | **Daniel Theophanes** | kardianos | @kardianos |  |  |
-| **Matt Butcher** | technosophos | @technosophos |  |  |
+| **Matt Butcher** | technosophos |  |  |  |
+| **Jaana Dogan** | rakyll | @rakyll | https://www.linkedin.com/in/rakyll/ |  |
 
 ### Popular Go Authors & Educators
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
 | **Mat Ryer** | matryer | @matryer | https://linkedin.com/in/matryer |  |
-| **John Graham-Cumming** | jgrahamc | @jgc |  |  |
-| **Katherine Cox-Buday** | katherinecoxbuday | @katherinecobuday | https://linkedin.com/in/katherinecox |  |
+| **Dave Cheney** | davecheney | @davecheney | https://linkedin.com/in/davecheney |  |
+| **Katherine Cox-Buday** | kat-co |  | https://linkedin.com/in/katherinecoxbuday |  |
 | **Johnny Boursiquot** | jboursiquot | @jboursiquot | https://linkedin.com/in/jboursiquot |  |
-| **Nate Finch** | natefinch | @nate_finch |  |  |
-| **Aram Härmälä** | aram | @arame |  |  |
-| **Dmitry Shvedov** | dlvhdr | @dlvhdr\_ |  | https://bsky.app/profile/dlvhdr.bsky.social |
-| **Michał Łowicki** | mlowicki | @michal_lowicki | https://linkedin.com/in/michalowicki |  |
+| **Michał Łowicki** | mlowicki | @mlowicki | https://linkedin.com/in/michał-łowicki-a60402b |  |
 
 ### Library & Framework Authors
 
@@ -92,14 +90,9 @@ Follow these influential Go developers and contributors:
 | **Steve Francia** | spf13 | @spf13 | https://linkedin.com/in/spf13 |  |
 | **Samuel Berthe** | samber | @samuelberthe | https://linkedin.com/in/samuelberthe | https://bsky.app/profile/samber.bsky.social |
 | **Mitchell Hashimoto** | mitchellh | @mitchellh | https://linkedin.com/in/mitchellh | https://bsky.app/profile/mitchellh.com |
-| **Matt Holt** | mholt | @mholtdev |  |  |
-| **Tomás Senart** | tommy-muehle | @tommy_mu |  |
-| **John J Wang** | golang | @johnjwang |  |  |
-| **Björn Rabenstein** | beorn7 | @beorn7 |  |  |
-| **Jaana Dogan** | rakyll | @rakyll | https://linkedin.com/in/jaana-dogan-8265a011 |  |
-| **Mitchell Hashimoto** | mitchellh | @mitchellh |  |  |
-| **Daniel Kahn Gillmor** | dkg |  |  |  |
-| **Sergey Alexandrov** | k6 | @k6io |  |  |
+| **Matt Holt** | mholt | @mholt6 |  |  |
+| **Tomás Senart** | tsenart | @tsenart | https://www.linkedin.com/in/tsenart/ |  |
+| **Björn Rabenstein** | beorn7 |  |  |  |
 
 ### Conference Speakers & Community Leaders
 
@@ -109,21 +102,14 @@ Follow these influential Go developers and contributors:
 | **Erik St. Martin** | erikstmartin | @erikstmartin |  |  |
 | **Brian Ketelsen** | bketelsen |  |  | @brian.dev |
 
-### Performance & Optimization Experts
-
-| Name              | GitHub    | Twitter/X  | LinkedIn | Bluesky |
-| ----------------- | --------- | ---------- | -------- | ------- |
-| **Alois Bělaška** | abelavska | @abelavska |          |         |
-| **Dmitry Vyukov** | dvyukov   |            |          |         |
-
 ## Must-Follow Blogs
 
-| Blog            | Author       | URL                            |
-| --------------- | ------------ | ------------------------------ |
-| The Go Blog     | Go Team      | https://go.dev/blog            |
-| Rob Pike's Blog | Rob Pike     | https://rakyll.org             |
-| Dave Cheney     | Dave Cheney  | https://dave.cheney.net        |
-| Ardan Labs Blog | Bill Kennedy | https://www.ardanlabs.com/blog |
+| Blog            | Author       | URL                                |
+| --------------- | ------------ | ---------------------------------- |
+| The Go Blog     | Go Team      | https://go.dev/blog                |
+| Rob Pike's Blog | Rob Pike     | https://commandcenter.blogspot.com |
+| Dave Cheney     | Dave Cheney  | https://dave.cheney.net            |
+| Ardan Labs Blog | Bill Kennedy | https://www.ardanlabs.com/blog     |
 
 ## YouTube Channels
 

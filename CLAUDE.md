@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
 This is a Claude Code plugin containing AI agent skills for production-ready Go projects. The repository provides reusable skill definitions that Claude Code can invoke when working on Go codebases.
