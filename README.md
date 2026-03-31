@@ -16,7 +16,7 @@ For generic skills, please visit [cc-skills](https://github.com/samber/cc-skills
 **Install with [skills](https://skills.sh/) CLI** (universal, works with any [Agent Skills](https://agentskills.io)-compatible tool):
 
 ```bash
-npx skills add https://github.com/samber/cc-skills-golang --skill '*'
+npx skills add https://github.com/samber/cc-skills-golang --all
 # or a single skill:
 npx skills add https://github.com/samber/cc-skills-golang --skill golang-performance
 ```
