@@ -25,23 +25,23 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Modes:**
 
-- **Write mode** — adding new tests or mocks to a codebase.
-- **Review mode** — auditing existing test code for testify misuse.
+- **Write mode** — コードベースに新しいテストやモックを追加する。
+- **Review mode** — 既存のテストコードのtestify誤用を監査する。
 
 # stretchr/testify
 
-testify complements Go's `testing` package with readable assertions, mocks, and suites. It does not replace `testing` — always use `*testing.T` as the entry point.
+testifyはGoの `testing` パッケージを補完し、読みやすいアサーション、モック、スイートを提供します。`testing` を置き換えるものではありません。常に `*testing.T` をエントリポイントとして使用してください。
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。詳細はライブラリのドキュメントとコード例を参照してください。Context7はディスカバリプラットフォームとして活用できます。
 
-## assert vs require
+## assert と require
 
-Both offer identical assertions. The difference is failure behavior:
+どちらも同一のアサーションを提供します。違いは失敗時の動作です:
 
-- **assert**: records failure, continues — see all failures at once
-- **require**: calls `t.FailNow()` — use for preconditions where continuing would panic or mislead
+- **assert**: 失敗を記録し、処理を続行 — すべての失敗を一度に確認できる
+- **require**: `t.FailNow()` を呼び出す — 続行するとパニックや誤解を招く前提条件に使用
 
-Use `assert.New(t)` / `require.New(t)` for readability. Name them `is` and `must`:
+可読性のために `assert.New(t)` / `require.New(t)` を使用してください。それぞれ `is` と `must` と命名します:
 
 ```go
 func TestParseConfig(t *testing.T) {
@@ -58,9 +58,9 @@ func TestParseConfig(t *testing.T) {
 }
 ```
 
-**Rule**: `require` for preconditions (setup, error checks), `assert` for verifications. Never mix randomly.
+**ルール**: 前提条件（セットアップ、エラーチェック）には `require`、検証には `assert` を使用する。無秩序に混ぜないこと。
 
-## Core Assertions
+## コアアサーション
 
 ```go
 is := assert.New(t)
@@ -98,9 +98,9 @@ is.IsType(&User{}, obj)
 is.Implements((*io.Reader)(nil), obj)
 ```
 
-**Argument order**: always `(expected, actual)` — swapping produces confusing diff output.
+**引数の順序**: 常に `(expected, actual)` — 順序を入れ替えると紛らわしいdiff出力になります。
 
-## Advanced Assertions
+## 高度なアサーション
 
 ```go
 is.ElementsMatch([]string{"b", "a", "c"}, result)             // unordered comparison
@@ -125,17 +125,17 @@ is.EventuallyWithT(func(c *assert.CollectT) {
 
 ## testify/mock
 
-Mock interfaces to isolate the unit under test. Embed `mock.Mock`, implement methods with `m.Called()`, always verify with `AssertExpectations(t)`.
+テスト対象のユニットを分離するためにインターフェースをモック化します。`mock.Mock` を埋め込み、`m.Called()` でメソッドを実装し、常に `AssertExpectations(t)` で検証してください。
 
-Key matchers: `mock.Anything`, `mock.AnythingOfType("T")`, `mock.MatchedBy(func)`. Call modifiers: `.Once()`, `.Times(n)`, `.Maybe()`, `.Run(func)`.
+主要なマッチャー: `mock.Anything`, `mock.AnythingOfType("T")`, `mock.MatchedBy(func)`。呼び出し修飾子: `.Once()`, `.Times(n)`, `.Maybe()`, `.Run(func)`。
 
-For defining mocks, argument matchers, call modifiers, return sequences, and verification, see [Mock reference](./references/mock.md).
+モックの定義、引数マッチャー、呼び出し修飾子、戻り値シーケンス、検証については [Mock reference](./references/mock.md) を参照してください。
 
 ## testify/suite
 
-Suites group related tests with shared setup/teardown.
+スイートは共有のセットアップ/ティアダウンで関連するテストをグループ化します。
 
-### Lifecycle
+### ライフサイクル
 
 ```
 SetupSuite()    → once before all tests
@@ -145,7 +145,7 @@ SetupSuite()    → once before all tests
 TearDownSuite() → once after all tests
 ```
 
-### Example
+### 例
 
 ```go
 type TokenServiceSuite struct {
@@ -167,28 +167,28 @@ func (s *TokenServiceSuite) TestGenerate_ReturnsValidToken() {
     s.store.AssertExpectations(s.T())
 }
 
-// Required launcher
+// 必須のランチャー
 func TestTokenServiceSuite(t *testing.T) {
     suite.Run(t, new(TokenServiceSuite))
 }
 ```
 
-Suite methods like `s.Equal()` behave like `assert`. For require: `s.Require().NotNil(obj)`.
+スイートメソッドの `s.Equal()` は `assert` と同様に動作します。requireの場合: `s.Require().NotNil(obj)`。
 
-## Common Mistakes
+## よくある間違い
 
-- **Forgetting `AssertExpectations(t)`** — mock expectations silently pass without verification
-- **`is.Equal(ErrNotFound, err)`** — fails on wrapped errors. Use `is.ErrorIs` to walk the chain
-- **Swapped argument order** — testify assumes `(expected, actual)`. Swapping produces backwards diffs
-- **`assert` for guards** — test continues after failure and panics on nil dereference. Use `require`
-- **Missing `suite.Run()`** — without the launcher function, zero tests execute silently
-- **Comparing pointers** — `is.Equal(ptr1, ptr2)` compares addresses. Dereference or use `EqualExportedValues`
+- **`AssertExpectations(t)` の呼び忘れ** — モックのexpectationが検証なしで暗黙的にパスしてしまう
+- **`is.Equal(ErrNotFound, err)`** — ラップされたエラーで失敗する。エラーチェーンをたどるには `is.ErrorIs` を使用する
+- **引数の順序の入れ替え** — testifyは `(expected, actual)` を前提としている。入れ替えると逆向きのdiffが出力される
+- **ガードに `assert` を使用** — 失敗後もテストが続行し、nilデリファレンスでパニックする。`require` を使用する
+- **`suite.Run()` の欠落** — ランチャー関数がないと、テストが一つも実行されず無視される
+- **ポインタの比較** — `is.Equal(ptr1, ptr2)` はアドレスを比較する。デリファレンスするか `EqualExportedValues` を使用する
 
-## Linters
+## リンター
 
-Use `testifylint` to catch wrong argument order, assert/require misuse, and more. See `samber/cc-skills-golang@golang-linter` skill.
+`testifylint` を使用して、引数の順序の間違い、assert/requireの誤用などを検出できます。`samber/cc-skills-golang@golang-linter` スキルを参照してください。
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-testing` skill for general test patterns, table-driven tests, and CI
 - → See `samber/cc-skills-golang@golang-linter` skill for testifylint configuration

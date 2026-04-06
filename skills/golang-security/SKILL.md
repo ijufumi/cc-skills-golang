@@ -31,92 +31,92 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 - **Audit mode** — full codebase security scan. Launch up to 5 parallel sub-agents (via the Agent tool), each covering an independent vulnerability domain: (1) injection patterns, (2) cryptography and secrets, (3) web security and headers, (4) authentication and authorization, (5) concurrency safety and dependency vulnerabilities. Aggregate findings, score with DREAD, and report by severity.
 - **Coding mode** — use when writing new code or fixing a reported vulnerability. Follow the skill's sequential guidance. Optionally launch a background agent to grep for common vulnerability patterns in newly written code while the main agent continues implementing the feature.
 
-# Go Security
+# Go セキュリティ
 
-## Overview
+## 概要
 
-Security in Go follows the principle of **defense in depth**: protect at multiple layers, validate all inputs, use secure defaults, and leverage the standard library's security-aware design. Go's type system and concurrency model provide some inherent protections, but vigilance is still required.
+Goにおけるセキュリティは**多層防御**の原則に従う: 複数のレイヤーで保護し、すべての入力を検証し、安全なデフォルトを使用し、標準ライブラリのセキュリティを意識した設計を活用する。Goの型システムと並行性モデルはある程度の固有の保護を提供するが、引き続き注意が必要である。
 
-## Security Thinking Model
+## セキュリティ思考モデル
 
-Before writing or reviewing code, ask three questions:
+コードを書くまたはレビューする前に、3つの質問をする:
 
-1. **What are the trust boundaries?** — Where does untrusted data enter the system? (HTTP requests, file uploads, environment variables, database rows written by other services)
-2. **What can an attacker control?** — Which inputs flow into sensitive operations? (SQL queries, shell commands, HTML output, file paths, cryptographic operations)
-3. **What is the blast radius?** — If this defense fails, what's the worst outcome? (Data leak, RCE, privilege escalation, denial of service)
+1. **信頼境界はどこか?** — 信頼できないデータはどこからシステムに入るか?（HTTPリクエスト、ファイルアップロード、環境変数、他のサービスが書き込んだデータベース行）
+2. **攻撃者は何を制御できるか?** — どの入力が機密操作に流れるか?（SQLクエリ、シェルコマンド、HTML出力、ファイルパス、暗号操作）
+3. **影響範囲はどれくらいか?** — この防御が失敗した場合、最悪の結果は何か?（データ漏洩、RCE、権限昇格、サービス拒否）
 
-## Severity Levels
+## 深刻度レベル
 
-| Level | DREAD | Meaning |
+| レベル | DREAD | 意味 |
 | --- | --- | --- |
-| Critical | 8-10 | RCE, full data breach, credential theft — fix immediately |
-| High | 6-7.9 | Auth bypass, significant data exposure, broken crypto — fix in current sprint |
-| Medium | 4-5.9 | Limited exposure, session issues, defense weakening — fix in next sprint |
-| Low | 1-3.9 | Minor info disclosure, best-practice deviations — fix opportunistically |
+| Critical | 8-10 | RCE、完全なデータ侵害、認証情報の窃取 — 即座に修正 |
+| High | 6-7.9 | 認証バイパス、重大なデータ露出、暗号の破綻 — 現在のスプリントで修正 |
+| Medium | 4-5.9 | 限定的な露出、セッション問題、防御の弱体化 — 次のスプリントで修正 |
+| Low | 1-3.9 | 軽微な情報開示、ベストプラクティスからの逸脱 — 適宜修正 |
 
-Levels align with [DREAD scoring](./references/threat-modeling.md).
+レベルは [DREAD scoring](./references/threat-modeling.md) に準拠。
 
-## Research Before Reporting
+## 報告前の調査
 
-Before flagging a security issue, trace the full data flow through the codebase — don't assess a code snippet in isolation.
+セキュリティ問題を報告する前に、コードベース全体のデータフローを追跡する — コードの断片を孤立して評価しない。
 
-1. **Trace the data origin** — follow the variable back to where it enters the system. Is it user input, a hardcoded constant, or an internal-only value?
-2. **Check for upstream validation** — look for input validation, sanitization, type parsing, or allow-listing earlier in the call chain.
-3. **Examine the trust boundary** — if the data never crosses a trust boundary (e.g., internal service-to-service with mTLS), the risk profile is different.
-4. **Read the surrounding code, not just the diff** — middleware, interceptors, or wrapper functions may already provide a layer of defense.
+1. **データの起源を追跡する** — 変数がシステムに入る場所まで遡る。ユーザー入力か、ハードコードされた定数か、内部専用の値か?
+2. **上流のバリデーションを確認する** — コールチェーンの早い段階での入力バリデーション、サニタイゼーション、型パース、許可リストを探す。
+3. **信頼境界を検査する** — データが信頼境界を越えない場合（例: mTLSを使用した内部サービス間通信）、リスクプロファイルは異なる。
+4. **差分だけでなく周囲のコードを読む** — ミドルウェア、インターセプター、ラッパー関数が既に防御レイヤーを提供している場合がある。
 
-**Severity adjustment, not dismissal:** upstream protection does not eliminate a finding — defense in depth means every layer should protect itself. But it changes severity: a SQL concatenation reachable only through a strict input parser is medium, not critical. Always report the finding with adjusted severity and note which upstream defenses exist and what would happen if they were removed or bypassed.
+**深刻度の調整であり、却下ではない:** 上流の保護は発見を排除しない — 多層防御はすべてのレイヤーが自身を保護すべきことを意味する。しかし深刻度は変わる: 厳密な入力パーサーを通じてのみ到達可能なSQL結合はcriticalではなくmediumである。常に調整された深刻度で発見を報告し、どの上流防御が存在し、それらが除去またはバイパスされた場合に何が起こるかを記載する。
 
-**When downgrading or skipping a finding:** add a brief inline comment (e.g., `// security: SQL concat safe here — input is validated by parseUserID() which returns int`) so the decision is documented, reviewable, and won't be re-flagged by future audits.
+**発見をダウングレードまたはスキップする場合:** 簡潔なインラインコメントを追加する（例: `// security: SQL concat safe here — input is validated by parseUserID() which returns int`）。これにより決定が文書化され、レビュー可能になり、将来の監査で再度フラグされなくなる。
 
-## Threat Modeling (STRIDE)
+## 脅威モデリング (STRIDE)
 
-Apply STRIDE to every trust boundary crossing and data flow in your system: **S**poofing (authentication), **T**ampering (integrity), **R**epudiation (audit logging), **I**nformation Disclosure (encryption), **D**enial of Service (rate limiting), **E**levation of Privilege (authorization). Score each threat using DREAD (Damage, Reproducibility, Exploitability, Affected users, Discoverability) to prioritize remediation — Critical (8-10) demands immediate action.
+システム内のすべての信頼境界の横断とデータフローにSTRIDEを適用する: **S**poofing（認証）、**T**ampering（整合性）、**R**epudiation（監査ログ）、**I**nformation Disclosure（暗号化）、**D**enial of Service（レート制限）、**E**levation of Privilege（認可）。DREADスコアリング（Damage、Reproducibility、Exploitability、Affected users、Discoverability）を使用して各脅威に優先順位を付け — Critical（8-10）は即座の対応が必要。
 
-For the full methodology with Go examples, DFD trust boundaries, DREAD scoring, and OWASP Top 10 mapping, see **[Threat Modeling Guide](./references/threat-modeling.md)**.
+Goの例、DFD信頼境界、DREADスコアリング、OWASP Top 10マッピングを含む完全な方法論については **[Threat Modeling Guide](./references/threat-modeling.md)** を参照。
 
-## Quick Reference
+## クイックリファレンス
 
-| Severity | Vulnerability | Defense | Standard Library Solution |
+| 深刻度 | 脆弱性 | 防御 | 標準ライブラリの解決策 |
 | --- | --- | --- | --- |
-| Critical | SQL Injection | Parameterized queries separate data from code | `database/sql` with `?` placeholders |
-| Critical | Command Injection | Pass args separately, never via shell concatenation | `exec.Command` with separate args |
-| High | XSS | Auto-escaping renders user data as text, not HTML/JS | `html/template`, `text/template` |
-| High | Path Traversal | Scope file access to a root, prevent `../` escapes | `os.Root` (Go 1.24+), `filepath.Clean` |
-| Medium | Timing Attacks | Constant-time comparison avoids byte-by-byte leaks | `crypto/subtle.ConstantTimeCompare` |
-| High | Crypto Issues | Use vetted algorithms; never roll your own | `crypto/aes`, `crypto/rand` |
-| Medium | HTTP Security | TLS + security headers prevent downgrade attacks | `net/http`, configure TLSConfig |
-| Low | Missing Headers | HSTS, CSP, X-Frame-Options prevent browser attacks | Security headers middleware |
-| Medium | Rate Limiting | Rate limits prevent brute-force and resource exhaustion | `golang.org/x/time/rate`, server timeouts |
-| High | Race Conditions | Protect shared state to prevent data corruption | `sync.Mutex`, channels, avoid shared state |
+| Critical | SQLインジェクション | パラメータ化クエリでデータとコードを分離 | `database/sql` の `?` プレースホルダー |
+| Critical | コマンドインジェクション | 引数を個別に渡し、シェル結合を使わない | `exec.Command` で引数を個別に指定 |
+| High | XSS | 自動エスケープでユーザーデータをHTML/JSではなくテキストとして表示 | `html/template`、`text/template` |
+| High | パストラバーサル | ファイルアクセスをルートに限定し、`../` エスケープを防止 | `os.Root`（Go 1.24+）、`filepath.Clean` |
+| Medium | タイミング攻撃 | 定数時間比較でバイト単位のリークを防止 | `crypto/subtle.ConstantTimeCompare` |
+| High | 暗号問題 | 検証済みアルゴリズムを使用し、独自暗号を作らない | `crypto/aes`、`crypto/rand` |
+| Medium | HTTPセキュリティ | TLS + セキュリティヘッダーでダウングレード攻撃を防止 | `net/http`、TLSConfig設定 |
+| Low | ヘッダー欠落 | HSTS、CSP、X-Frame-Optionsでブラウザ攻撃を防止 | セキュリティヘッダーミドルウェア |
+| Medium | レート制限 | レート制限でブルートフォースとリソース枯渇を防止 | `golang.org/x/time/rate`、サーバータイムアウト |
+| High | レースコンディション | 共有状態を保護してデータ破損を防止 | `sync.Mutex`、チャネル、共有状態の回避 |
 
-## Detailed Categories
+## 詳細カテゴリ
 
-For complete examples, code snippets, and CWE mappings, see:
+完全な例、コードスニペット、CWEマッピングについては以下を参照:
 
-- **[Cryptography](./references/cryptography.md)** — Algorithms, key derivation, TLS configuration.
-- **[Injection Vulnerabilities](./references/injection.md)** — SQL, command, template injection, XSS, SSRF.
-- **[Filesystem Security](./references/filesystem.md)** — Path traversal, zip bombs, file permissions, symlinks.
-- **[Network/Web Security](./references/network.md)** — SSRF, open redirects, HTTP headers, timing attacks, session fixation.
-- **[Cookie Security](./references/cookies.md)** — Secure, HttpOnly, SameSite flags.
-- **[Third-Party Data Leaks](./references/third-party.md)** — Analytics privacy risks, GDPR/CCPA compliance.
-- **[Memory Safety](./references/memory-safety.md)** — Integer overflow, memory aliasing, `unsafe` usage.
-- **[Secrets Management](./references/secrets.md)** — Hardcoded credentials, env vars, secret managers.
-- **[Logging Security](./references/logging.md)** — PII in logs, log injection, sanitization.
-- **[Threat Modeling Guide](./references/threat-modeling.md)** — STRIDE, DREAD scoring, trust boundaries, OWASP Top 10.
-- **[Security Architecture](./references/architecture.md)** — Defense-in-depth, Zero Trust, auth patterns, rate limiting, anti-patterns.
+- **[暗号](./references/cryptography.md)** — アルゴリズム、鍵導出、TLS設定。
+- **[インジェクション脆弱性](./references/injection.md)** — SQL、コマンド、テンプレートインジェクション、XSS、SSRF。
+- **[ファイルシステムセキュリティ](./references/filesystem.md)** — パストラバーサル、Zip爆弾、ファイルパーミッション、シンボリックリンク。
+- **[ネットワーク/Webセキュリティ](./references/network.md)** — SSRF、オープンリダイレクト、HTTPヘッダー、タイミング攻撃、セッション固定。
+- **[Cookieセキュリティ](./references/cookies.md)** — Secure、HttpOnly、SameSiteフラグ。
+- **[サードパーティデータ漏洩](./references/third-party.md)** — アナリティクスのプライバシーリスク、GDPR/CCPAコンプライアンス。
+- **[メモリ安全性](./references/memory-safety.md)** — 整数オーバーフロー、メモリエイリアシング、`unsafe` の使用。
+- **[シークレット管理](./references/secrets.md)** — ハードコードされた認証情報、環境変数、シークレットマネージャー。
+- **[ロギングセキュリティ](./references/logging.md)** — ログ内のPII、ログインジェクション、サニタイゼーション。
+- **[脅威モデリングガイド](./references/threat-modeling.md)** — STRIDE、DREADスコアリング、信頼境界、OWASP Top 10。
+- **[セキュリティアーキテクチャ](./references/architecture.md)** — 多層防御、ゼロトラスト、認証パターン、レート制限、アンチパターン。
 
-## Code Review Checklist
+## コードレビューチェックリスト
 
-For the full security review checklist organized by domain (input handling, database, crypto, web, auth, errors, dependencies, concurrency), see **[Security Review Checklist](./references/checklist.md)** — a comprehensive checklist for code review with coverage of all major vulnerability categories.
+ドメイン別（入力処理、データベース、暗号、Web、認証、エラー、依存関係、並行性）に整理された完全なセキュリティレビューチェックリストについては **[Security Review Checklist](./references/checklist.md)** を参照 — すべての主要な脆弱性カテゴリをカバーするコードレビュー用の包括的なチェックリスト。
 
-## Tooling & Verification
+## ツールと検証
 
-### Static Analysis & Linting
+### 静的解析とリンティング
 
-Security-relevant linters: `bodyclose`, `sqlclosecheck`, `nilerr`, `errcheck`, `govet`, `staticcheck`. See the `samber/cc-skills-golang@golang-linter` skill for configuration and usage.
+セキュリティ関連リンター: `bodyclose`、`sqlclosecheck`、`nilerr`、`errcheck`、`govet`、`staticcheck`。設定と使用方法は `samber/cc-skills-golang@golang-linter` スキルを参照。
 
-For deeper security-specific analysis:
+より深いセキュリティ特化の解析:
 
 ```bash
 # Go security checker (SAST)
@@ -128,7 +128,7 @@ go install golang.org/x/vuln/cmd/govulncheck@latest
 govulncheck ./...
 ```
 
-### Security Testing
+### セキュリティテスト
 
 ```bash
 # Race detector
@@ -138,40 +138,40 @@ go test -race ./...
 go test -fuzz=Fuzz
 ```
 
-## Common Mistakes
+## よくある間違い
 
-| Severity | Mistake | Fix |
+| 深刻度 | 間違い | 修正 |
 | --- | --- | --- | --- |
-| High | `math/rand` for tokens | Output is predictable — attacker can reproduce the sequence. Use `crypto/rand` |
-| Critical | SQL string concatenation | Attacker can modify query logic. Parameterized queries keep data and code separate |
-| Critical | `exec.Command("bash -c")` | Shell interprets metacharacters (`;`, ` | `, `` ` ``). Pass args separately to avoid shell parsing |
-| High | Trusting unsanitized input | Validate at trust boundaries — internal code trusts the boundary, so catching bad input there protects everything |
-| Critical | Hardcoded secrets | Secrets in source code end up in version history, CI logs, and backups. Use env vars or secret managers |
-| Medium | Comparing secrets with `==` | `==` short-circuits on first differing byte, leaking timing info. Use `crypto/subtle.ConstantTimeCompare` |
-| Medium | Returning detailed errors | Stack traces and DB errors help attackers map your system. Return generic messages, log details server-side |
-| High | Ignoring `-race` findings | Races cause data corruption and can bypass authorization checks under concurrency. Fix all races |
-| High | MD5/SHA1 for passwords | Both have known collision attacks and are fast to brute-force. Use Argon2id or bcrypt (intentionally slow, memory-hard) |
-| High | AES without GCM | ECB/CBC modes lack authentication — attacker can modify ciphertext undetected. GCM provides encrypt+authenticate |
-| Medium | Binding to 0.0.0.0 | Exposes service to all network interfaces. Bind to specific interface to limit attack surface |
+| High | トークンに `math/rand` | 出力は予測可能 — 攻撃者がシーケンスを再現できる。`crypto/rand` を使用 |
+| Critical | SQL文字列結合 | 攻撃者がクエリロジックを変更可能。パラメータ化クエリでデータとコードを分離 |
+| Critical | `exec.Command("bash -c")` | シェルがメタ文字（`;`、` | `、`` ` ``）を解釈する。シェル解析を避けるため引数を個別に渡す |
+| High | サニタイズされていない入力の信頼 | 信頼境界でバリデーションする — 内部コードは境界を信頼するため、そこで不正な入力を捕捉すればすべてを保護できる |
+| Critical | ハードコードされたシークレット | ソースコード内のシークレットはバージョン履歴、CIログ、バックアップに残る。環境変数またはシークレットマネージャーを使用 |
+| Medium | `==` でのシークレット比較 | `==` は最初の異なるバイトで短絡し、タイミング情報を漏洩する。`crypto/subtle.ConstantTimeCompare` を使用 |
+| Medium | 詳細なエラーの返却 | スタックトレースとDBエラーは攻撃者のシステム把握を助ける。汎用メッセージを返し、詳細はサーバーサイドでログ |
+| High | `-race` の発見を無視 | レースはデータ破損を引き起こし、並行状況下で認可チェックをバイパスできる。すべてのレースを修正 |
+| High | パスワードに MD5/SHA1 | 両方とも既知の衝突攻撃があり、ブルートフォースが高速。Argon2id または bcrypt を使用（意図的に低速でメモリハード） |
+| High | GCMなしの AES | ECB/CBCモードは認証がない — 攻撃者が暗号文を検出されずに変更可能。GCMで暗号化+認証を提供 |
+| Medium | 0.0.0.0 へのバインド | すべてのネットワークインターフェースにサービスを公開する。攻撃対象領域を制限するために特定のインターフェースにバインド |
 
-## Security Anti-Patterns
+## セキュリティアンチパターン
 
-| Severity | Anti-Pattern | Why It Fails | Fix |
+| 深刻度 | アンチパターン | なぜ失敗するか | 修正 |
 | --- | --- | --- | --- |
-| High | Security through obscurity | Hidden URLs are discoverable via fuzzing, logs, or source | Authentication + authorization on all endpoints |
-| High | Trusting client headers | `X-Forwarded-For`, `X-Is-Admin` are trivially forged | Server-side identity verification |
-| High | Client-side authorization | JavaScript checks are bypassed by any HTTP client | Server-side permission checks on every handler |
-| High | Shared secrets across envs | Staging breach compromises production | Per-environment secrets via secret manager |
-| Critical | Ignoring crypto errors | `_, _ = encrypt(data)` silently proceeds unencrypted | Always check errors — fail closed, never open |
-| Critical | Rolling your own crypto | Custom encryption hasn't been analyzed by cryptographers | Use `crypto/aes` GCM, `golang.org/x/crypto/argon2` |
+| High | 隠蔽によるセキュリティ | 隠しURLはファジング、ログ、ソースで発見可能 | すべてのエンドポイントに認証+認可 |
+| High | クライアントヘッダーの信頼 | `X-Forwarded-For`、`X-Is-Admin` は容易に偽造可能 | サーバーサイドのID検証 |
+| High | クライアントサイド認可 | JavaScriptチェックはどのHTTPクライアントでもバイパス可能 | すべてのハンドラにサーバーサイドの権限チェック |
+| High | 環境間でのシークレット共有 | ステージングの侵害が本番を危険にさらす | シークレットマネージャーによる環境別シークレット |
+| Critical | 暗号エラーの無視 | `_, _ = encrypt(data)` が暗号化なしで黙って続行 | 常にエラーをチェック — 閉じた状態で失敗し、開いた状態にしない |
+| Critical | 独自暗号の作成 | カスタム暗号は暗号学者に分析されていない | `crypto/aes` GCM、`golang.org/x/crypto/argon2` を使用 |
 
-See **[Security Architecture](./references/architecture.md)** for detailed anti-patterns with Go code examples.
+Goのコード例を含む詳細なアンチパターンについては **[Security Architecture](./references/architecture.md)** を参照。
 
-## Cross-References
+## クロスリファレンス
 
 See `samber/cc-skills-golang@golang-database`, `samber/cc-skills-golang@golang-safety`, `samber/cc-skills-golang@golang-observability`, `samber/cc-skills-golang@golang-continuous-integration` skills.
 
-## Additional Resources
+## 追加リソース
 
 - [Go Security Best Practices](https://go.dev/doc/security/best-practices)
 - [gosec Security Linter](https://github.com/securego/gosec)

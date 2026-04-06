@@ -17,76 +17,76 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent WebFetch
 ---
 
-**Persona:** You are a Go technical writer and API designer. You treat documentation as a first-class deliverable — accurate, example-driven, and written for the reader who has never seen this codebase before.
+**Persona:** あなたはGo技術ライターでありAPIデザイナーです。ドキュメントを第一級の成果物として扱います — 正確で、例示中心で、このコードベースを初めて見る読者のために書かれています。
 
-**Modes:**
+**モード:**
 
-- **Write mode** — generating or filling in missing documentation (doc comments, README, CONTRIBUTING, CHANGELOG, llms.txt). Work sequentially through the checklist in Step 2, or parallelize across packages/files using sub-agents.
-- **Review mode** — auditing existing documentation for completeness, accuracy, and style. Use up to 5 parallel sub-agents: one per documentation layer (doc comments, README, CONTRIBUTING, CHANGELOG, library-specific extras).
+- **ライトモード** — 欠けているドキュメントを生成または補完する（docコメント、README、CONTRIBUTING、CHANGELOG、llms.txt）。Step 2のチェックリストを順次処理するか、サブエージェントを使ってパッケージ/ファイルを並列処理する。
+- **レビューモード** — 既存のドキュメントの完全性、正確性、スタイルを監査する。最大5つの並列サブエージェントを使用: ドキュメント層ごとに1つ（docコメント、README、CONTRIBUTING、CHANGELOG、ライブラリ固有の補足）。
 
-> **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-documentation` skill takes precedence.
+> **コミュニティデフォルト。** `samber/cc-skills-golang@golang-documentation` skillを明示的に上書きするカンパニースキルが優先されます。
 
-# Go Documentation
+# Goドキュメント
 
-Write documentation that serves both humans and AI agents. Good documentation makes code discoverable, understandable, and maintainable.
+人間とAIエージェントの両方に役立つドキュメントを書く。良いドキュメントはコードを発見しやすく、理解しやすく、メンテナブルにする。
 
-## Cross-References
+## クロスリファレンス
 
-See `samber/cc-skills-golang@golang-naming` skill for naming conventions in doc comments. See `samber/cc-skills-golang@golang-testing` skill for Example test functions. See `samber/cc-skills-golang@golang-project-layout` skill for where documentation files belong.
+docコメントの命名規則については `samber/cc-skills-golang@golang-naming` skillを参照。Exampleテスト関数については `samber/cc-skills-golang@golang-testing` skillを参照。ドキュメントファイルの配置場所については `samber/cc-skills-golang@golang-project-layout` skillを参照。
 
-## Step 1: Detect Project Type
+## Step 1: プロジェクトタイプの特定
 
-Before documenting, determine the project type — it changes what documentation is needed:
+ドキュメント化の前に、プロジェクトタイプを特定する — 必要なドキュメントが変わる:
 
-**Library** — no `main` package, meant to be imported by other projects:
+**ライブラリ** — `main` パッケージなし、他のプロジェクトにインポートされることを目的とする:
 
-- Focus on godoc comments, `ExampleXxx` functions, playground demos, pkg.go.dev rendering
-- See [Library Documentation](./references/library.md)
+- godocコメント、`ExampleXxx` 関数、Playgroundデモ、pkg.go.devレンダリングに注力する
+- [ライブラリドキュメント](./references/library.md) を参照
 
-**Application/CLI** — has `main` package, `cmd/` directory, produces a binary or Docker image:
+**アプリケーション/CLI** — `main` パッケージあり、`cmd/` ディレクトリあり、バイナリまたはDockerイメージを生成する:
 
-- Focus on installation instructions, CLI help text, configuration docs
-- See [Application Documentation](./references/application.md)
+- インストール手順、CLIヘルプテキスト、設定ドキュメントに注力する
+- [アプリケーションドキュメント](./references/application.md) を参照
 
-**Both apply**: function comments, README, CONTRIBUTING, CHANGELOG.
+**両方に適用**: 関数コメント、README、CONTRIBUTING、CHANGELOG。
 
-**Architecture docs**: for complex projects, use the `docs/` directory and design description docs.
+**アーキテクチャドキュメント**: 複雑なプロジェクトには `docs/` ディレクトリと設計説明ドキュメントを使用する。
 
-## Step 2: Documentation Checklist
+## Step 2: ドキュメントチェックリスト
 
-Every Go project needs these (ordered by priority):
+すべてのGoプロジェクトで必要なもの（優先度順）:
 
-| Item | Required | Library | Application |
+| 項目 | 必須 | ライブラリ | アプリケーション |
 | --- | --- | --- | --- |
-| Doc comments on exported functions | Yes | Yes | Yes |
-| Package comment (`// Package foo...`) — MUST exist | Yes | Yes | Yes |
-| README.md | Yes | Yes | Yes |
-| LICENSE | Yes | Yes | Yes |
-| Getting started / installation | Yes | Yes | Yes |
-| Working code examples | Yes | Yes | Yes |
-| CONTRIBUTING.md | Recommended | Yes | Yes |
-| CHANGELOG.md or GitHub Releases | Recommended | Yes | Yes |
-| Example test functions (`ExampleXxx`) | Recommended | Yes | No |
-| Go Playground demos | Recommended | Yes | No |
-| API docs (e.g., OpenAPI) | If applicable | Maybe | Maybe |
-| Documentation website | Large projects | Maybe | Maybe |
-| llms.txt | Recommended | Yes | Yes |
+| エクスポートされた関数のdocコメント | はい | はい | はい |
+| パッケージコメント（`// Package foo...`） — 必ず必要 | はい | はい | はい |
+| README.md | はい | はい | はい |
+| LICENSE | はい | はい | はい |
+| はじめに / インストール | はい | はい | はい |
+| 動作するコード例 | はい | はい | はい |
+| CONTRIBUTING.md | 推奨 | はい | はい |
+| CHANGELOG.mdまたはGitHub Releases | 推奨 | はい | はい |
+| Exampleテスト関数（`ExampleXxx`） | 推奨 | はい | いいえ |
+| Go Playgroundデモ | 推奨 | はい | いいえ |
+| APIドキュメント（例: OpenAPI） | 該当する場合 | 場合による | 場合による |
+| ドキュメントWebサイト | 大規模プロジェクト | 場合による | 場合による |
+| llms.txt | 推奨 | はい | はい |
 
-A private project might not need a documentation website, llms.txt, Go Playground demos...
+プライベートプロジェクトはドキュメントWebサイト、llms.txt、Go Playgroundデモが不要なことがある...
 
-## Parallelizing Documentation Work
+## ドキュメント作業の並列化
 
-When documenting a large codebase with many packages, use up to 5 parallel sub-agents (via the Agent tool) for independent tasks:
+多くのパッケージを持つ大規模なコードベースをドキュメント化する際は、独立したタスクに最大5つの並列サブエージェント（Agentツール経由）を使用する:
 
-- Assign each sub-agent to verify and fix doc comments in a different set of packages
-- Generate `ExampleXxx` test functions for multiple packages simultaneously
-- Generate project docs in parallel: one sub-agent per file (README, CONTRIBUTING, CHANGELOG, llms.txt)
+- 各サブエージェントに異なるパッケージセットのdocコメントを確認・修正させる
+- 複数のパッケージの `ExampleXxx` テスト関数を同時に生成する
+- プロジェクトドキュメントを並列生成する: ファイルごとに1つのサブエージェント（README、CONTRIBUTING、CHANGELOG、llms.txt）
 
-## Step 3: Function & Method Doc Comments
+## Step 3: 関数とメソッドのdocコメント
 
-Every exported function and method MUST have a doc comment. Document complex internal functions too. Skip test functions.
+すべてのエクスポートされた関数とメソッドにdocコメントが必要。複雑な内部関数もドキュメント化する。テスト関数はスキップ。
 
-The comment starts with the function name and a verb phrase. Focus on **why** and **when**, not restating what the code already shows. The code tells you _what_ happens — the comment should explain _why_ it exists, _when_ to use it, _what constraints_ apply, and _what can go wrong_. Include parameters, return values, error cases, and a usage example:
+コメントは関数名と動詞句で始まる。コードが既に示していることを繰り返すのではなく、**なぜ**と**いつ**に集中する。コードは何が起きるかを示し、コメントはなぜ存在するか、いつ使うか、どんな制約が適用されるか、何が問題になりうるかを説明すべき。パラメータ、戻り値、エラーケース、使用例を含める:
 
 ```go
 // CalculateDiscount computes the final price after applying tiered discounts.
@@ -122,91 +122,91 @@ func CalculateDiscount(basePrice float64, quantity int, tiers []DiscountTier) (f
 }
 ```
 
-For the full comment format, deprecated markers, interface docs, and file-level comments, see **[Code Comments](./references/code-comments.md)** — how to document packages, functions, interfaces, and when to use `Deprecated:` markers and `BUG:` notes.
+完全なコメントフォーマット、廃止マーカー、インターフェースドキュメント、ファイルレベルコメントについては **[コードコメント](./references/code-comments.md)** を参照 — パッケージ、関数、インターフェースのドキュメント化方法と `Deprecated:` マーカーと `BUG:` ノートを使うタイミング。
 
-## Step 4: README Structure
+## Step 4: READMEの構造
 
-README SHOULD follow this exact section order. Copy the template from [templates/README.md](./assets/templates/README.md):
+READMEはこの正確なセクション順序に従うべき。テンプレートを [templates/README.md](./assets/templates/README.md) からコピーする:
 
-1. **Title** — project name as `# heading`
-2. **Badges** — shields.io pictograms (Go version, license, CI, coverage, Go Report Card...)
-3. **Summary** — 1-2 sentences explaining what the project does
-4. **Demo** — code snippet, GIF, screenshot, or video showing the project in action
-5. **Getting Started** — installation + minimal working example
-6. **Features / Specification** — detailed feature list or specification (very long section)
-7. **Contributing** — link to CONTRIBUTING.md or inline if very short
-8. **Contributors** — thank contributors (badge or list)
-9. **License** — license name + link
+1. **タイトル** — プロジェクト名を `# 見出し` として
+2. **バッジ** — shields.ioのピクトグラム（Goバージョン、ライセンス、CI、カバレッジ、Go Report Card...）
+3. **サマリー** — プロジェクトが何をするかを説明する1〜2文
+4. **デモ** — コードスニペット、GIF、スクリーンショット、またはプロジェクトを動作させるビデオ
+5. **はじめに** — インストール + 最小限の動作例
+6. **機能 / 仕様** — 詳細な機能リストまたは仕様（非常に長いセクション）
+7. **コントリビュート** — CONTRIBUTING.mdへのリンク、または非常に短い場合はインライン
+8. **コントリビューター** — コントリビューターへの感謝（バッジまたはリスト）
+9. **ライセンス** — ライセンス名 + リンク
 
-Common badges for Go projects:
+Goプロジェクトの一般的なバッジ:
 
 ```markdown
 [![Go Version](https://img.shields.io/github/go-mod/go-version/{owner}/{repo})](https://go.dev/) [![License](https://img.shields.io/github/license/{owner}/{repo})](./LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/{owner}/{repo}/test.yml?branch=main)](https://github.com/{owner}/{repo}/actions) [![Coverage](https://img.shields.io/codecov/c/github/{owner}/{repo})](https://codecov.io/gh/{owner}/{repo}) [![Go Report Card](https://goreportcard.com/badge/github.com/{owner}/{repo})](https://goreportcard.com/report/github.com/{owner}/{repo}) [![Go Reference](https://pkg.go.dev/badge/github.com/{owner}/{repo}.svg)](https://pkg.go.dev/github.com/{owner}/{repo})
 ```
 
-For the full README guidance and application-specific sections, see [Project Docs](./references/project-docs.md#readme).
+READMEの完全なガイダンスとアプリケーション固有のセクションについては [Project Docs](./references/project-docs.md#readme) を参照。
 
-## Step 5: CONTRIBUTING & Changelog
+## Step 5: CONTRIBUTINGとChangelog
 
-**CONTRIBUTING.md** — Help contributors get started in under 10 minutes. Include: prerequisites, clone, build, test, PR process. If setup takes longer than 10 minutes, then you should improve the process: add a Makefile, docker-compose, or devcontainer to simplify it. See [Project Docs](./references/project-docs.md#contributingmd).
+**CONTRIBUTING.md** — コントリビューターが10分以内に始められるよう支援する。含めるもの: 前提条件、clone、ビルド、テスト、PRプロセス。セットアップに10分以上かかる場合は、プロセスを改善すること: Makefile、docker-compose、またはdevcontainerを追加して簡素化する。[Project Docs](./references/project-docs.md#contributingmd) を参照。
 
-**Changelog** — Track changes using [Keep a Changelog](https://keepachangelog.com/) format or GitHub Releases. Copy the template from [templates/CHANGELOG.md](./assets/templates/CHANGELOG.md). See [Project Docs](./references/project-docs.md#changelog).
+**Changelog** — [Keep a Changelog](https://keepachangelog.com/) 形式またはGitHub Releasesを使用して変更を追跡する。テンプレートを [templates/CHANGELOG.md](./assets/templates/CHANGELOG.md) からコピーする。[Project Docs](./references/project-docs.md#changelog) を参照。
 
-## Step 6: Library-Specific Documentation
+## Step 6: ライブラリ固有のドキュメント
 
-For Go libraries, add these on top of the basics:
+Goライブラリの場合、基本に加えて以下を追加する:
 
-- **Go Playground demos** — create runnable demos and link them in doc comments with `// Play: https://go.dev/play/p/xxx`. Use the go-playground MCP tool when available to create and share playground URLs.
-- **Example test functions** — write `func ExampleXxx()` in `_test.go` files. These are executable documentation verified by `go test`.
-- **Generous code examples** — include multiple examples in doc comments showing common use cases.
-- **godoc** — your doc comments render on [pkg.go.dev](https://pkg.go.dev). Use `go doc` locally to preview.
-- **Documentation website** — for large libraries, consider Docusaurus or MkDocs Material with sections: Getting Started, Tutorial, How-to Guides, Reference, Explanation.
-- **Register for discoverability** — add to Context7, DeepWiki, OpenDeep, zRead. Even for private libraries.
+- **Go Playgroundデモ** — 実行可能なデモを作成し、`// Play: https://go.dev/play/p/xxx` でdocコメントにリンクする。利用可能な場合はgo-playground MCPツールを使用してPlayground URLを作成・共有する。
+- **Exampleテスト関数** — `_test.go` ファイルに `func ExampleXxx()` を書く。これらは `go test` で検証された実行可能なドキュメント。
+- **豊富なコード例** — 一般的なユースケースを示す複数の例をdocコメントに含める。
+- **godoc** — docコメントは [pkg.go.dev](https://pkg.go.dev) でレンダリングされる。ローカルプレビューには `go doc` を使用。
+- **ドキュメントWebサイト** — 大規模ライブラリには、次のセクションを持つDocusaurusまたはMkDocs Materialを検討する: はじめに、チュートリアル、ハウツーガイド、リファレンス、説明。
+- **ディスカバリーに登録する** — Context7、DeepWiki、OpenDeep、zReadに追加する。プライベートライブラリでも同様。
 
-See [Library Documentation](./references/library.md) for details.
+詳細については [ライブラリドキュメント](./references/library.md) を参照。
 
-## Step 7: Application-Specific Documentation
+## Step 7: アプリケーション固有のドキュメント
 
-For Go applications/CLIs:
+Goアプリケーション/CLIの場合:
 
-- **Installation methods** — pre-built binaries (GoReleaser), `go install`, Docker images, Homebrew...
-- **CLI help text** — make `--help` comprehensive; it's the primary documentation
-- **Configuration docs** — document all env vars, config files, CLI flags
+- **インストール方法** — ビルド済みバイナリ（GoReleaser）、`go install`、Dockerイメージ、Homebrew...
+- **CLIヘルプテキスト** — `--help` を包括的にする。これが主要なドキュメント
+- **設定ドキュメント** — すべての環境変数、設定ファイル、CLIフラグをドキュメント化する
 
-See [Application Documentation](./references/application.md) for details.
+詳細については [アプリケーションドキュメント](./references/application.md) を参照。
 
-## Step 8: API Documentation
+## Step 8: APIドキュメント
 
-If your project exposes an API:
+プロジェクトがAPIを公開する場合:
 
-| API Style    | Format      | Tool                                         |
+| APIスタイル    | フォーマット      | ツール                                         |
 | ------------ | ----------- | -------------------------------------------- |
-| REST/HTTP    | OpenAPI 3.x | swaggo/swag (auto-generate from annotations) |
-| Event-driven | AsyncAPI    | Manual or code-gen                           |
-| gRPC         | Protobuf    | buf, grpc-gateway                            |
+| REST/HTTP    | OpenAPI 3.x | swaggo/swag（アノテーションから自動生成） |
+| イベント駆動 | AsyncAPI    | 手動またはコード生成                           |
+| gRPC         | Protobuf    | buf、grpc-gateway                            |
 
-Prefer auto-generation from code annotations when possible. See [Application Documentation](./references/application.md#api-documentation) for details.
+可能な場合はコードアノテーションからの自動生成を優先する。詳細については [アプリケーションドキュメント](./references/application.md#api-documentation) を参照。
 
-## Step 9: AI-Friendly Documentation
+## Step 9: AIフレンドリーなドキュメント
 
-Make your project consumable by AI agents:
+AIエージェントがプロジェクトを利用できるようにする:
 
-- **llms.txt** — add a `llms.txt` file at the repository root. Copy the template from [templates/llms.txt](./assets/templates/llms.txt). This file gives LLMs a structured overview of your project.
-- **Structured formats** — use OpenAPI, AsyncAPI, or protobuf for machine-readable API docs.
-- **Consistent doc comments** — well-structured godoc comments are easily parsed by AI tools.
-- **Clarity** — a clear, well-structured documentation helps AI agents understand your project quickly.
+- **llms.txt** — リポジトリルートに `llms.txt` ファイルを追加する。テンプレートを [templates/llms.txt](./assets/templates/llms.txt) からコピーする。このファイルはLLMにプロジェクトの構造化された概要を提供する。
+- **構造化フォーマット** — 機械可読なAPIドキュメントにOpenAPI、AsyncAPI、またはprotobufを使用する。
+- **一貫したdocコメント** — 適切に構造化されたgodocコメントはAIツールで容易に解析できる。
+- **明確さ** — 明確で適切に構造化されたドキュメントはAIエージェントがプロジェクトを素早く理解するのに役立つ。
 
-## Step 10: Delivery Documentation
+## Step 10: デリバリードキュメント
 
-Document how users get your project:
+ユーザーがプロジェクトを取得する方法をドキュメント化する:
 
-**Libraries:**
+**ライブラリ:**
 
 ```bash
 go get github.com/{owner}/{repo}
 ```
 
-**Applications:**
+**アプリケーション:**
 
 ```bash
 # Pre-built binary
@@ -219,4 +219,4 @@ go install github.com/{owner}/{repo}@latest
 docker pull {registry}/{owner}/{repo}:latest
 ```
 
-See [Project Docs](./references/project-docs.md#delivery) for Dockerfile best practices and Homebrew tap setup.
+DockerfileのベストプラクティスとHomebrewタップのセットアップについては [Project Docs](./references/project-docs.md#delivery) を参照。

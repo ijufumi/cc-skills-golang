@@ -32,35 +32,35 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 - **Setup** — adding CI to a project for the first time: start with the Quick Reference table, then generate workflows in this order: test → lint → security → release. Always check latest action versions before writing YAML.
 - **Improve** — auditing or extending an existing pipeline: read current workflow files first, identify gaps against the Quick Reference table, then propose targeted additions without duplicating existing steps.
 
-# Go Continuous Integration
+# Go 継続的インテグレーション
 
-Set up production-grade CI/CD pipelines for Go projects using GitHub Actions.
+GitHub Actionsを使用してGoプロジェクト向けのプロダクショングレードCI/CDパイプラインを構築する。
 
-## Action Versions
+## アクションバージョン
 
-The versions shown in the examples below are reference versions that may be outdated. Before generating workflow files, search the internet for the latest stable major version of each GitHub Action used (e.g., `actions/checkout`, `actions/setup-go`, `golangci/golangci-lint-action`, `codecov/codecov-action`, `goreleaser/goreleaser-action`, etc.). Use the latest version you find, not the one hardcoded in the examples.
+以下の例に示されているバージョンは参考バージョンであり、古くなっている可能性がある。ワークフローファイルを生成する前に、使用する各GitHub Action（`actions/checkout`、`actions/setup-go`、`golangci/golangci-lint-action`、`codecov/codecov-action`、`goreleaser/goreleaser-action`など）の最新の安定メジャーバージョンをインターネットで検索すること。例にハードコードされているバージョンではなく、見つけた最新バージョンを使用する。
 
-## Quick Reference
+## クイックリファレンス
 
-| Stage         | Tool                        | Purpose                       |
+| ステージ      | ツール                      | 目的                          |
 | ------------- | --------------------------- | ----------------------------- |
-| **Test**      | `go test -race`             | Unit + race detection         |
-| **Coverage**  | `codecov/codecov-action`    | Coverage reporting            |
-| **Lint**      | `golangci-lint`             | Comprehensive linting         |
-| **Vet**       | `go vet`                    | Built-in static analysis      |
-| **SAST**      | `gosec`, `CodeQL`, `Bearer` | Security static analysis      |
-| **Vuln scan** | `govulncheck`               | Known vulnerability detection |
-| **Docker**    | `docker/build-push-action`  | Multi-platform image builds   |
-| **Deps**      | Dependabot / Renovate       | Automated dependency updates  |
-| **Release**   | GoReleaser                  | Automated binary releases     |
+| **テスト**    | `go test -race`             | ユニットテスト + 競合検出     |
+| **カバレッジ**| `codecov/codecov-action`    | カバレッジレポート            |
+| **リント**    | `golangci-lint`             | 包括的なリント                |
+| **Vet**       | `go vet`                    | 組み込み静的解析              |
+| **SAST**      | `gosec`, `CodeQL`, `Bearer` | セキュリティ静的解析          |
+| **脆弱性スキャン** | `govulncheck`          | 既知の脆弱性検出              |
+| **Docker**    | `docker/build-push-action`  | マルチプラットフォームイメージビルド |
+| **依存関係**  | Dependabot / Renovate       | 自動依存関係更新              |
+| **リリース**  | GoReleaser                  | 自動バイナリリリース          |
 
 ---
 
-## Testing
+## テスト
 
-`.github/workflows/test.yml` — see [test.yml](./assets/test.yml)
+`.github/workflows/test.yml` — [test.yml](./assets/test.yml)を参照
 
-Adapt the Go version matrix to match `go.mod`:
+Goバージョンのマトリクスを`go.mod`に合わせて調整する:
 
 ```
 go 1.23   → matrix: ["1.23", "1.24", "1.25", "1.26", "stable"]
@@ -69,160 +69,160 @@ go 1.25   → matrix: ["1.25", "1.26", "stable"]
 go 1.26   → matrix: ["1.26", "stable"]
 ```
 
-Use `fail-fast: false` so a failure on one Go version doesn't cancel the others.
+1つのGoバージョンの失敗が他をキャンセルしないように`fail-fast: false`を使用する。
 
-Test flags:
+テストフラグ:
 
-- `-race`: CI MUST run tests with the `-race` flag (catches data races — undefined behavior in Go)
-- `-shuffle=on`: Randomize test order to catch inter-test dependencies
-- `-coverprofile`: Generate coverage data
-- `git diff --exit-code`: Fails if `go mod tidy` changes anything
+- `-race`: CIではデータ競合（Goにおける未定義動作）を検出するために`-race`フラグを付けてテストを実行しなければならない
+- `-shuffle=on`: テスト間の依存関係を検出するためにテスト順序をランダム化する
+- `-coverprofile`: カバレッジデータを生成する
+- `git diff --exit-code`: `go mod tidy`で変更が発生した場合に失敗する
 
-### Coverage Configuration
+### カバレッジの設定
 
-CI SHOULD enforce code coverage thresholds. Configure thresholds in `codecov.yml` at the repo root — see [codecov.yml](./assets/codecov.yml)
-
----
-
-## Integration Tests
-
-`.github/workflows/integration.yml` — see [integration.yml](./assets/integration.yml)
-
-Use `-count=1` to disable test caching — cached results can hide flaky service interactions.
+CIはコードカバレッジの閾値を強制すべきである。閾値はリポジトリルートの`codecov.yml`で設定する — [codecov.yml](./assets/codecov.yml)を参照
 
 ---
 
-## Linting
+## インテグレーションテスト
 
-`golangci-lint` MUST be run in CI on every PR. `.github/workflows/lint.yml` — see [lint.yml](./assets/lint.yml)
+`.github/workflows/integration.yml` — [integration.yml](./assets/integration.yml)を参照
 
-### golangci-lint Configuration
-
-Create `.golangci.yml` at the root of the project. See the `samber/cc-skills-golang@golang-linter` skill for the recommended configuration.
+テストキャッシュを無効にするために`-count=1`を使用する — キャッシュされた結果は不安定なサービスインタラクションを隠す可能性がある。
 
 ---
 
-## Security & SAST
+## リント
 
-`.github/workflows/security.yml` — see [security.yml](./assets/security.yml)
+`golangci-lint`はすべてのPRでCIにおいて実行しなければならない。`.github/workflows/lint.yml` — [lint.yml](./assets/lint.yml)を参照
 
-CI MUST run `govulncheck`. It only reports vulnerabilities in code paths your project actually calls — unlike generic CVE scanners. CodeQL results appear in the repository's Security tab. Bearer is good at detecting sensitive data flow issues.
+### golangci-lintの設定
 
-### CodeQL Configuration
-
-Create `.github/codeql/codeql-config.yml` to use the extended security query suite — see [codeql-config.yml](./assets/codeql-config.yml)
-
-Available query suites:
-
-- **default**: Standard security queries
-- **security-extended**: Extra security queries with slightly lower precision
-- **security-and-quality**: Security queries plus maintainability and reliability checks
-
-### Container Image Scanning
-
-If the project produces Docker images, Trivy container scanning is included in the Docker workflow — see [docker.yml](./assets/docker.yml)
+プロジェクトのルートに`.golangci.yml`を作成する。推奨設定については`samber/cc-skills-golang@golang-linter`スキルを参照。
 
 ---
 
-## Dependency Management
+## セキュリティ & SAST
+
+`.github/workflows/security.yml` — [security.yml](./assets/security.yml)を参照
+
+CIは`govulncheck`を実行しなければならない。一般的なCVEスキャナーと異なり、プロジェクトが実際に呼び出すコードパスの脆弱性のみを報告する。CodeQLの結果はリポジトリのSecurityタブに表示される。Bearerは機密データフローの問題検出に優れている。
+
+### CodeQLの設定
+
+拡張セキュリティクエリスイートを使用するために`.github/codeql/codeql-config.yml`を作成する — [codeql-config.yml](./assets/codeql-config.yml)を参照
+
+利用可能なクエリスイート:
+
+- **default**: 標準セキュリティクエリ
+- **security-extended**: やや低い精度の追加セキュリティクエリ
+- **security-and-quality**: セキュリティクエリに加え、保守性と信頼性のチェック
+
+### コンテナイメージスキャン
+
+プロジェクトがDockerイメージを生成する場合、TrivyコンテナスキャンがDockerワークフローに含まれている — [docker.yml](./assets/docker.yml)を参照
+
+---
+
+## 依存関係管理
 
 ### Dependabot
 
-`.github/dependabot.yml` — see [dependabot.yml](./assets/dependabot.yml)
+`.github/dependabot.yml` — [dependabot.yml](./assets/dependabot.yml)を参照
 
-Minor/patch updates are grouped into a single PR. Major updates get individual PRs since they may have breaking changes.
+マイナー/パッチ更新は単一のPRにグループ化される。メジャー更新は破壊的変更の可能性があるため個別のPRとなる。
 
-#### Auto-Merge for Dependabot
+#### Dependabotの自動マージ
 
-`.github/workflows/dependabot-auto-merge.yml` — see [dependabot-auto-merge.yml](./assets/dependabot-auto-merge.yml)
+`.github/workflows/dependabot-auto-merge.yml` — [dependabot-auto-merge.yml](./assets/dependabot-auto-merge.yml)を参照
 
 > **Security warning:** This workflow requires `contents: write` and `pull-requests: write` — these are elevated permissions that allow merging PRs and modifying repository content. The `if: github.actor == 'dependabot[bot]'` guard restricts execution to Dependabot only. Do not remove this guard. Note that `github.actor` checks are not fully spoof-proof — **branch protection rules are the real safety net**. Ensure branch protection is configured (see [Repository Security Settings](#repository-security-settings)) with required status checks and required approvals so that auto-merge only succeeds after all checks pass, regardless of who triggered the workflow.
 
-### Renovate (alternative)
+### Renovate（代替手段）
 
-Renovate is a more mature and configurable alternative to Dependabot. It supports automerge natively, grouping, scheduling, regex managers, and monorepo-aware updates. If Dependabot feels too limited, Renovate is the go-to choice.
+RenovateはDependabotのより成熟した、設定可能な代替手段である。automerge、グループ化、スケジューリング、正規表現マネージャー、モノレポ対応の更新をネイティブにサポートする。Dependabotに制限を感じる場合、Renovateが最適な選択肢である。
 
-Install the [Renovate GitHub App](https://github.com/apps/renovate), then create `renovate.json` at the repo root — see [renovate.json](./assets/renovate.json)
+[Renovate GitHub App](https://github.com/apps/renovate)をインストールし、リポジトリルートに`renovate.json`を作成する — [renovate.json](./assets/renovate.json)を参照
 
-Key advantages over Dependabot:
+Dependabotに対する主な利点:
 
-- **`gomodTidy`**: Automatically runs `go mod tidy` after updates
-- **Native automerge**: No separate workflow needed
-- **Better grouping**: More flexible rules for grouping PRs
-- **Regex managers**: Can update versions in Dockerfiles, Makefiles, etc.
-- **Monorepo support**: Handles Go workspaces and multi-module repos
+- **`gomodTidy`**: 更新後に自動的に`go mod tidy`を実行する
+- **ネイティブautomerge**: 別途ワークフローが不要
+- **より良いグループ化**: PRグループ化のより柔軟なルール
+- **正規表現マネージャー**: Dockerfile、Makefileなどのバージョンを更新可能
+- **モノレポサポート**: Goワークスペースとマルチモジュールリポジトリに対応
 
 ---
 
-## Release Automation
+## リリース自動化
 
-GoReleaser automates binary builds, checksums, and GitHub Releases. The configuration varies significantly depending on the project type.
+GoReleaserはバイナリビルド、チェックサム、GitHub Releasesを自動化する。設定はプロジェクトの種類によって大きく異なる。
 
-### Release Workflow
+### リリースワークフロー
 
-`.github/workflows/release.yml` — see [release.yml](./assets/release.yml)
+`.github/workflows/release.yml` — [release.yml](./assets/release.yml)を参照
 
 > **Security warning:** This workflow requires `contents: write` to create GitHub Releases. It is restricted to tag pushes (`tags: ["v*"]`) so it cannot be triggered by pull requests or branch pushes. Only users with push access to the repository can create tags.
 
-### GoReleaser for CLI/Programs
+### CLI/プログラム向けGoReleaser
 
-Programs need cross-compiled binaries, archives, and optionally Docker images.
+プログラムにはクロスコンパイルされたバイナリ、アーカイブ、およびオプションでDockerイメージが必要である。
 
-`.goreleaser.yml` — see [goreleaser-cli.yml](./assets/goreleaser-cli.yml)
+`.goreleaser.yml` — [goreleaser-cli.yml](./assets/goreleaser-cli.yml)を参照
 
-### GoReleaser for Libraries
+### ライブラリ向けGoReleaser
 
-Libraries don't produce binaries — they only need a GitHub Release with a changelog. Use a minimal config that skips the build.
+ライブラリはバイナリを生成しない — チェンジログ付きのGitHub Releaseのみが必要である。ビルドをスキップする最小限の設定を使用する。
 
-`.goreleaser.yml` — see [goreleaser-lib.yml](./assets/goreleaser-lib.yml)
+`.goreleaser.yml` — [goreleaser-lib.yml](./assets/goreleaser-lib.yml)を参照
 
-For libraries, you may not even need GoReleaser — a simple GitHub Release created via the UI or `gh release create` is often sufficient.
+ライブラリの場合、GoReleaserは不要かもしれない — UIまたは`gh release create`で作成するシンプルなGitHub Releaseで十分なことが多い。
 
-### GoReleaser for Monorepos / Multi-Binary
+### モノレポ / マルチバイナリ向けGoReleaser
 
-When a repository contains multiple commands (e.g., `cmd/api/`, `cmd/worker/`).
+リポジトリに複数のコマンドが含まれる場合（例: `cmd/api/`、`cmd/worker/`）。
 
-`.goreleaser.yml` — see [goreleaser-monorepo.yml](./assets/goreleaser-monorepo.yml)
+`.goreleaser.yml` — [goreleaser-monorepo.yml](./assets/goreleaser-monorepo.yml)を参照
 
-### Docker Build & Push
+### Docker ビルド & プッシュ
 
-For projects that produce Docker images. This workflow builds multi-platform images, generates SBOM and provenance attestations, pushes to both GitHub Container Registry (GHCR) and Docker Hub, and includes Trivy container scanning.
+Dockerイメージを生成するプロジェクト向け。このワークフローはマルチプラットフォームイメージのビルド、SBOMとprovenance証明書の生成、GitHub Container Registry（GHCR）とDocker Hubの両方へのプッシュ、Trivyコンテナスキャンを含む。
 
-`.github/workflows/docker.yml` — see [docker.yml](./assets/docker.yml)
+`.github/workflows/docker.yml` — [docker.yml](./assets/docker.yml)を参照
 
 > **Security warning:** Permissions are scoped per job: the `container-scan` job only gets `contents: read` + `security-events: write`, while the `docker` job gets `packages: write` (to push to GHCR) and `attestations: write` + `id-token: write` (for provenance/SBOM signing). This ensures the scan job cannot push images even if compromised. The `push` flag is set to `false` on pull requests so untrusted code cannot publish images. The `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets must be configured in the repository secrets settings — never hardcode credentials.
 
-Key details:
+主な詳細:
 
-- **QEMU + Buildx**: Required for multi-platform builds (`linux/amd64,linux/arm64`). Remove platforms you don't need.
-- **`push: false` on PRs**: Images are built but never pushed on pull requests — this validates the Dockerfile without publishing untrusted code.
-- **Metadata action**: Automatically generates semver tags (`v1.2.3` → `1.2.3`, `1.2`, `1`), branch tags (`main`), and SHA tags.
-- **Provenance + SBOM**: `provenance: mode=max` and `sbom: true` generate supply chain attestations. These require `attestations: write` and `id-token: write` permissions.
-- **Dual registry**: Pushes to both GHCR (using `GITHUB_TOKEN`, no extra secret needed) and Docker Hub (requires `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` secrets). Remove the Docker Hub login and image line if not needed.
-- **Trivy**: Scans the built image for CRITICAL and HIGH vulnerabilities and uploads results to the Security tab.
-- Adapt the image names and registries to your project. For GHCR-only, remove the Docker Hub login step and the `docker.io/` line from `images:`.
-
----
-
-## Repository Security Settings
-
-After creating workflow files, ALWAYS tell the developer to configure GitHub repository settings (branch protection, workflow permissions, secrets, environments) — see [repo-security.md](./references/repo-security.md)
+- **QEMU + Buildx**: マルチプラットフォームビルド（`linux/amd64,linux/arm64`）に必須。不要なプラットフォームは削除する。
+- **PRでの`push: false`**: プルリクエストではイメージはビルドされるがプッシュされない — 信頼されていないコードを公開せずにDockerfileを検証する。
+- **Metadataアクション**: semverタグ（`v1.2.3` → `1.2.3`、`1.2`、`1`）、ブランチタグ（`main`）、SHAタグを自動生成する。
+- **Provenance + SBOM**: `provenance: mode=max`と`sbom: true`がサプライチェーン証明書を生成する。`attestations: write`と`id-token: write`権限が必要。
+- **デュアルレジストリ**: GHCR（`GITHUB_TOKEN`を使用、追加シークレット不要）とDocker Hub（`DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN`シークレットが必要）の両方にプッシュする。不要な場合はDocker Hubのログインとイメージ行を削除する。
+- **Trivy**: ビルドされたイメージをCRITICALおよびHIGHの脆弱性についてスキャンし、結果をSecurityタブにアップロードする。
+- イメージ名とレジストリをプロジェクトに合わせて調整する。GHCRのみの場合、Docker Hubのログインステップと`images:`の`docker.io/`行を削除する。
 
 ---
 
-## Common Mistakes
+## リポジトリセキュリティ設定
 
-| Mistake | Fix |
+ワークフローファイル作成後、開発者にGitHubリポジトリ設定（ブランチ保護、ワークフロー権限、シークレット、環境）を構成するよう必ず伝えること — [repo-security.md](./references/repo-security.md)を参照
+
+---
+
+## よくある間違い
+
+| 間違い | 修正方法 |
 | --- | --- |
-| Missing `-race` in CI tests | Always use `go test -race` |
-| No `-shuffle=on` | Randomize test order to catch inter-test dependencies |
-| Caching integration test results | Use `-count=1` to disable caching |
-| `go mod tidy` not checked | Add `go mod tidy && git diff --exit-code` step |
-| Missing `fail-fast: false` | One Go version failing shouldn't cancel other jobs |
-| Not pinning action versions | GitHub Actions MUST use pinned major versions (e.g. `@vN`, not `@master`) |
-| No `permissions` block | Follow least-privilege per job |
-| Ignoring govulncheck findings | Fix or suppress with justification |
+| CIテストで`-race`がない | 常に`go test -race`を使用する |
+| `-shuffle=on`がない | テスト間の依存関係を検出するためにテスト順序をランダム化する |
+| インテグレーションテスト結果のキャッシュ | キャッシュを無効にするために`-count=1`を使用する |
+| `go mod tidy`がチェックされていない | `go mod tidy && git diff --exit-code`ステップを追加する |
+| `fail-fast: false`がない | 1つのGoバージョンの失敗が他のジョブをキャンセルすべきではない |
+| アクションバージョンを固定していない | GitHub Actionsはメジャーバージョンを固定しなければならない（例: `@master`ではなく`@vN`） |
+| `permissions`ブロックがない | ジョブごとに最小権限の原則に従う |
+| govulncheckの検出結果を無視する | 修正するか、正当な理由を付けて抑制する |
 
-## Related Skills
+## 関連スキル
 
 See `samber/cc-skills-golang@golang-linter`, `samber/cc-skills-golang@golang-security`, `samber/cc-skills-golang@golang-testing`, `samber/cc-skills-golang@golang-dependency-management` skills.

@@ -19,44 +19,44 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Persona:** You are a Go engineer who treats caching as a system design decision. You choose eviction algorithms based on measured access patterns, size caches from working-set data, and always plan for expiration, loader failures, and monitoring.
 
-# Using samber/hot for In-Memory Caching in Go
+# samber/hot を使った Go のインメモリキャッシュ
 
-Generic, type-safe in-memory caching library for Go 1.22+ with 9 eviction algorithms, TTL, loader chains with singleflight deduplication, sharding, stale-while-revalidate, and Prometheus metrics.
+Go 1.22+ 向けの汎用・型安全なインメモリキャッシュライブラリ。9種類のエビクションアルゴリズム、TTL、singleflight重複排除付きローダーチェーン、シャーディング、stale-while-revalidate、Prometheusメトリクスに対応。
 
-**Official Resources:**
+**公式リソース:**
 
 - [pkg.go.dev/github.com/samber/hot](https://pkg.go.dev/github.com/samber/hot)
 - [github.com/samber/hot](https://github.com/samber/hot)
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。最新のAPIシグネチャや使用方法については、ライブラリの公式ドキュメントとコード例を参照してください。Context7がディスカバリプラットフォームとして役立ちます。
 
 ```bash
 go get -u github.com/samber/hot
 ```
 
-## Algorithm Selection
+## アルゴリズム選択
 
-Pick based on your access pattern — the wrong algorithm wastes memory or tanks hit rate.
+アクセスパターンに基づいて選択すること。間違ったアルゴリズムはメモリの浪費やヒット率の低下を招く。
 
-| Algorithm | Constant | Best for | Avoid when |
+| アルゴリズム | 定数 | 適したケース | 避けるべきケース |
 | --- | --- | --- | --- |
-| **W-TinyLFU** | `hot.WTinyLFU` | General-purpose, mixed workloads (default) | You need simplicity for debugging |
-| **LRU** | `hot.LRU` | Recency-dominated (sessions, recent queries) | Frequency matters (scan pollution evicts hot items) |
-| **LFU** | `hot.LFU` | Frequency-dominated (popular products, DNS) | Access patterns shift (stale popular items never evict) |
-| **TinyLFU** | `hot.TinyLFU` | Read-heavy with frequency bias | Write-heavy (admission filter overhead) |
-| **S3FIFO** | `hot.S3FIFO` | High throughput, scan-resistant | Small caches (<1000 items) |
-| **ARC** | `hot.ARC` | Self-tuning, unknown patterns | Memory-constrained (2x tracking overhead) |
-| **TwoQueue** | `hot.TwoQueue` | Mixed with hot/cold split | Tuning complexity is unacceptable |
-| **SIEVE** | `hot.SIEVE` | Simple scan-resistant LRU alternative | Highly skewed access patterns |
-| **FIFO** | `hot.FIFO` | Simple, predictable eviction order | Hit rate matters (no frequency/recency awareness) |
+| **W-TinyLFU** | `hot.WTinyLFU` | 汎用、混合ワークロード（デフォルト） | デバッグのためにシンプルさが必要な場合 |
+| **LRU** | `hot.LRU` | 最新性重視（セッション、最近のクエリ） | 頻度が重要な場合（スキャン汚染によりホットアイテムが追い出される） |
+| **LFU** | `hot.LFU` | 頻度重視（人気商品、DNS） | アクセスパターンが変化する場合（古い人気アイテムが追い出されない） |
+| **TinyLFU** | `hot.TinyLFU` | 読み取り中心で頻度バイアスあり | 書き込み中心（アドミッションフィルタのオーバーヘッド） |
+| **S3FIFO** | `hot.S3FIFO` | 高スループット、スキャン耐性あり | 小さいキャッシュ（1000アイテム未満） |
+| **ARC** | `hot.ARC` | 自己チューニング、パターン不明時 | メモリ制約あり（2倍のトラッキングオーバーヘッド） |
+| **TwoQueue** | `hot.TwoQueue` | ホット/コールド分割の混合 | チューニングの複雑さが許容できない場合 |
+| **SIEVE** | `hot.SIEVE` | シンプルなスキャン耐性LRU代替 | 極端に偏ったアクセスパターン |
+| **FIFO** | `hot.FIFO` | シンプルで予測可能なエビクション順序 | ヒット率が重要な場合（頻度/最新性の認識なし） |
 
-**Decision shortcut:** Start with `hot.WTinyLFU`. Switch only when profiling shows the miss rate is too high for your SLO.
+**判断の近道:** `hot.WTinyLFU` から始めること。プロファイリングでミス率がSLOに対して高すぎると判明した場合のみ切り替える。
 
-For detailed algorithm comparison, benchmarks, and a decision tree, see [Algorithm Guide](./references/algorithm-guide.md).
+アルゴリズムの詳細比較、ベンチマーク、デシジョンツリーについては [Algorithm Guide](./references/algorithm-guide.md) を参照。
 
-## Core Usage
+## 基本的な使い方
 
-### Basic Cache with TTL
+### TTL付き基本キャッシュ
 
 ```go
 import "github.com/samber/hot"
@@ -73,9 +73,9 @@ cache.SetWithTTL("session:abc", session, 30*time.Minute)
 value, found, err := cache.Get("user:123")
 ```
 
-### Loader Pattern (Read-Through)
+### ローダーパターン（リードスルー）
 
-Loaders fetch missing keys automatically with singleflight deduplication — concurrent `Get()` calls for the same missing key share one loader invocation:
+ローダーは欠落したキーを自動的にフェッチし、singleflightで重複排除する。同じ欠落キーに対する並行 `Get()` 呼び出しは1つのローダー実行を共有する:
 
 ```go
 cache := hot.NewHotCache[int, *User](hot.WTinyLFU, 10_000).
@@ -90,43 +90,43 @@ defer cache.StopJanitor()
 user, found, err := cache.Get(123) // triggers loader on miss
 ```
 
-## Capacity Sizing
+## キャパシティサイジング
 
-Before setting the cache capacity, estimate how many items fit in the memory budget:
+キャッシュ容量を設定する前に、メモリ予算内に何アイテム収まるか見積もること:
 
-1. **Estimate single-item size** — estimate size of the struct, add the size of heap-allocated fields (slices, maps, strings). Include the key size. A rough per-entry overhead of ~100 bytes covers internal bookkeeping (pointers, expiry timestamps, algorithm metadata).
-2. **Ask the developer** how much memory is dedicated to this cache in production (e.g., 256 MB, 1 GB). This depends on the service's total memory and what else shares the process.
-3. **Compute capacity** — `capacity = memoryBudget / estimatedItemSize`. Round down to leave headroom.
+1. **単一アイテムサイズを見積もる** — 構造体のサイズを推定し、ヒープ割り当てフィールド（スライス、マップ、文字列）のサイズを加算する。キーサイズも含める。エントリあたり約100バイトの概算オーバーヘッドで内部管理（ポインタ、有効期限タイムスタンプ、アルゴリズムメタデータ）をカバーできる。
+2. **開発者に確認する** — 本番環境でこのキャッシュにどれだけのメモリを割り当てるか（例: 256 MB、1 GB）。これはサービスの総メモリとプロセスを共有する他の要素に依存する。
+3. **容量を計算する** — `capacity = memoryBudget / estimatedItemSize`。余裕を持たせるために切り捨てる。
 
 ```
 Example: *User struct ~500 bytes + string key ~50 bytes + overhead ~100 bytes = ~650 bytes/entry
          256 MB budget → 256_000_000 / 650 ≈ 393,000 items
 ```
 
-If the item size is unknown, ask the developer to measure it with a unit test that allocates N items and checks `runtime.ReadMemStats`. Guessing capacity without measuring leads to OOM or wasted memory.
+アイテムサイズが不明な場合は、N個のアイテムを割り当てて `runtime.ReadMemStats` で確認するユニットテストで計測するよう開発者に依頼すること。計測なしに容量を推測するとOOMやメモリの浪費につながる。
 
-## Common Mistakes
+## よくある間違い
 
-1. **Forgetting `WithJanitor()`** — without it, expired entries stay in memory until the algorithm evicts them. Always chain `.WithJanitor()` in the builder and `defer cache.StopJanitor()`.
-2. **Calling `SetMissing()` without missing cache config** — panics at runtime. Enable `WithMissingCache(algorithm, capacity)` or `WithMissingSharedCache()` in the builder first.
-3. **`WithoutLocking()` + `WithJanitor()`** — mutually exclusive, panics. `WithoutLocking()` is only safe for single-goroutine access without background cleanup.
-4. **Oversized cache** — a cache holding everything is a map with overhead. Size to your working set (typically 10-20% of total data). Monitor hit rate to validate.
-5. **Ignoring loader errors** — `Get()` returns `(zero, false, err)` on loader failure. Always check `err`, not just `found`.
+1. **`WithJanitor()` の付け忘れ** — これがないと、期限切れエントリはアルゴリズムが追い出すまでメモリに残る。ビルダーで常に `.WithJanitor()` をチェーンし、`defer cache.StopJanitor()` を呼ぶこと。
+2. **ミッシングキャッシュ設定なしで `SetMissing()` を呼ぶ** — 実行時にpanicする。先にビルダーで `WithMissingCache(algorithm, capacity)` または `WithMissingSharedCache()` を有効にすること。
+3. **`WithoutLocking()` + `WithJanitor()`** — 相互排他でpanicする。`WithoutLocking()` はバックグラウンドクリーンアップなしの単一goroutineアクセスでのみ安全。
+4. **過大なキャッシュ** — すべてを保持するキャッシュはオーバーヘッド付きのマップにすぎない。ワーキングセット（通常、全データの10-20%）に合わせてサイズを設定する。ヒット率を監視して検証すること。
+5. **ローダーエラーの無視** — `Get()` はローダー失敗時に `(zero, false, err)` を返す。`found` だけでなく必ず `err` をチェックすること。
 
-## Best Practices
+## ベストプラクティス
 
-1. Always set TTL — unbounded caches serve stale data indefinitely because there is no signal to refresh
-2. Use `WithJitter(lambda, upperBound)` to spread expirations — without jitter, items created together expire together, causing thundering herd on the loader
-3. Monitor with `WithPrometheusMetrics(cacheName)` — hit rate below 80% usually means the cache is undersized or the algorithm is wrong for the workload
-4. Use `WithCopyOnRead(fn)` / `WithCopyOnWrite(fn)` for mutable values — without copies, callers mutate cached objects and corrupt shared state
+1. 常にTTLを設定する — 無制限のキャッシュは更新シグナルがないため古いデータを無期限に返し続ける
+2. `WithJitter(lambda, upperBound)` で有効期限を分散させる — ジッターなしでは同時に作成されたアイテムが同時に期限切れとなり、ローダーにサンダリングハードが発生する
+3. `WithPrometheusMetrics(cacheName)` で監視する — ヒット率が80%未満の場合、通常キャッシュが小さすぎるかワークロードに対してアルゴリズムが不適切
+4. ミュータブルな値には `WithCopyOnRead(fn)` / `WithCopyOnWrite(fn)` を使う — コピーなしでは呼び出し元がキャッシュオブジェクトを変更し、共有状態を破損する
 
-For advanced patterns (revalidation, sharding, missing cache, monitoring setup), see [Production Patterns](./references/production-patterns.md).
+高度なパターン（再検証、シャーディング、ミッシングキャッシュ、モニタリング設定）については [Production Patterns](./references/production-patterns.md) を参照。
 
-For the complete API surface, see [API Reference](./references/api-reference.md).
+完全なAPIサーフェスについては [API Reference](./references/api-reference.md) を参照。
 
-If you encounter a bug or unexpected behavior in samber/hot, open an issue at <https://github.com/samber/hot/issues>.
+samber/hot でバグや予期しない動作に遭遇した場合は、<https://github.com/samber/hot/issues> で Issue を作成してください。
 
-## Cross-References
+## 相互参照
 
 - → See `samber/cc-skills-golang@golang-performance` skill for general caching strategy and when to use in-memory cache vs Redis vs CDN
 - → See `samber/cc-skills-golang@golang-observability` skill for Prometheus metrics integration and monitoring

@@ -17,46 +17,46 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent AskUserQuestion
 ---
 
-**Persona:** You are a Go project architect. You right-size structure to the problem — a script stays flat, a service gets layers only when justified by actual complexity.
+**Persona:** あなたはGoプロジェクトアーキテクトです。問題に合わせた適切なサイズの構造を選択します — スクリプトはフラットのまま、サービスは実際の複雑さで正当化される場合のみ層を追加します。
 
-# Go Project Layout
+# Goプロジェクトレイアウト
 
-## Architecture Decision: Ask First
+## アーキテクチャの決定: まず尋ねる
 
-When starting a new project, **ask the developer** what software architecture they prefer (clean architecture, hexagonal, DDD, flat structure, etc.). NEVER over-structure small projects — a 100-line CLI tool does not need layers of abstractions or dependency injection.
+新しいプロジェクトを始める際は、**開発者に**好みのソフトウェアアーキテクチャ（クリーンアーキテクチャ、ヘキサゴナル、DDD、フラット構造など）を尋ねる。小規模プロジェクトを過剰に構造化してはならない — 100行のCLIツールに抽象化レイヤーや依存性注入は不要。
 
-→ See `samber/cc-skills-golang@golang-design-patterns` skill for detailed architecture guides with file trees and code examples.
+ファイルツリーとコード例を含む詳細なアーキテクチャガイドについては → See `samber/cc-skills-golang@golang-design-patterns` skill。
 
-## Dependency Injection: Ask Next
+## 依存性注入: 次に尋ねる
 
-After settling on the architecture, **ask the developer** which dependency injection approach they want: manual constructor injection, or a DI library (samber/do, google/wire, uber-go/dig+fx), or none at all. The choice affects how services are wired, how lifecycle (health checks, graceful shutdown) is managed, and how the project is structured. See the `samber/cc-skills-golang@golang-dependency-injection` skill for a full comparison and decision table.
+アーキテクチャが決まったら、**開発者に**どの依存性注入アプローチを使いたいか尋ねる: 手動コンストラクタインジェクション、DIライブラリ（samber/do、google/wire、uber-go/dig+fx）、またはなし。この選択はサービスの配線方法、ライフサイクル（ヘルスチェック、グレースフルシャットダウン）の管理方法、プロジェクトの構造に影響する。完全な比較とデシジョンテーブルについては `samber/cc-skills-golang@golang-dependency-injection` skillを参照。
 
 ## 12-Factor App
 
-For applications (services, APIs, workers), follow [12-Factor App](https://12factor.net/) conventions: config via environment variables, logs to stdout, stateless processes, graceful shutdown, backing services as attached resources, and admin tasks as one-off commands (e.g., `cmd/migrate/`).
+アプリケーション（サービス、API、ワーカー）には [12-Factor App](https://12factor.net/) の規約に従う: 環境変数による設定、標準出力へのログ、ステートレスプロセス、グレースフルシャットダウン、アタッチされたリソースとしてのバッキングサービス、ワンオフコマンドとしての管理タスク（例: `cmd/migrate/`）。
 
-## Quick Start: Choose Your Project Type
+## クイックスタート: プロジェクトタイプの選択
 
-| Project Type | Use When | Key Directories |
+| プロジェクトタイプ | 使用するタイミング | 主要なディレクトリ |
 | --- | --- | --- |
-| **CLI Tool** | Building a command-line application | `cmd/{name}/`, `internal/`, optional `pkg/` |
-| **Library** | Creating reusable code for others | `pkg/{name}/`, `internal/` for private code |
-| **Service** | HTTP API, microservice, or web app | `cmd/{service}/`, `internal/`, `api/`, `web/` |
-| **Monorepo** | Multiple related packages/modules | `go.work`, separate modules per package |
-| **Workspace** | Developing multiple local modules | `go.work`, replace directives |
+| **CLIツール** | コマンドラインアプリケーションのビルド | `cmd/{name}/`、`internal/`、オプション `pkg/` |
+| **ライブラリ** | 他者向けの再利用可能なコードの作成 | `pkg/{name}/`、プライベートコード用 `internal/` |
+| **サービス** | HTTP API、マイクロサービス、またはWebアプリ | `cmd/{service}/`、`internal/`、`api/`、`web/` |
+| **モノリポ** | 複数の関連パッケージ/モジュール | `go.work`、パッケージごとの別モジュール |
+| **ワークスペース** | 複数のローカルモジュールの開発 | `go.work`、replaceディレクティブ |
 
-## Module Naming Conventions
+## モジュール命名規則
 
-### Module Name (go.mod)
+### モジュール名（go.mod）
 
-Your module path in `go.mod` should:
+`go.mod` のモジュールパスは:
 
-- **MUST match your repository URL**: `github.com/username/project-name`
-- **Use lowercase only**: `github.com/you/my-app` (not `MyApp`)
-- **Use hyphens for multi-word**: `user-auth` not `user_auth` or `userAuth`
-- **Be semantic**: Name should clearly express purpose
+- **リポジトリURLと一致しなければならない**: `github.com/username/project-name`
+- **小文字のみ使用**: `github.com/you/my-app`（`MyApp` ではない）
+- **複数単語にはハイフンを使用**: `user-auth`（`user_auth` や `userAuth` ではない）
+- **セマンティックである**: 名前が目的を明確に表現すること
 
-**Examples:**
+**例:**
 
 ```go
 // ✅ Good
@@ -69,52 +69,52 @@ module github.com/jdoe/MyProject
 module utils
 ```
 
-### Package Naming
+### パッケージ命名
 
-Packages MUST be lowercase, singular, and match their directory name. → See `samber/cc-skills-golang@golang-naming` skill for complete package naming conventions and examples.
+パッケージは小文字、単数形で、ディレクトリ名と一致しなければならない。完全なパッケージ命名規則と例については → See `samber/cc-skills-golang@golang-naming` skill。
 
-## Directory Layout
+## ディレクトリレイアウト
 
-All `main` packages must reside in `cmd/` with minimal logic — parse flags, wire dependencies, call `Run()`. Business logic belongs in `internal/` or `pkg/`. Use `internal/` for non-exported packages, `pkg/` only when code is useful to external consumers.
+すべての `main` パッケージは最小限のロジックで `cmd/` に置く — フラグのパース、依存関係の配線、`Run()` の呼び出し。ビジネスロジックは `internal/` または `pkg/` に属する。非エクスポートパッケージには `internal/` を使用し、`pkg/` は外部消費者に有用なコードの場合のみ使用する。
 
-See [directory layout examples](references/directory-layouts.md) for universal, small project, and library layouts, plus common mistakes.
+ユニバーサル、小規模プロジェクト、ライブラリのレイアウトとよくある間違いについては [ディレクトリレイアウトの例](references/directory-layouts.md) を参照。
 
-## Essential Configuration Files
+## 必須設定ファイル
 
-Every Go project should include at the root:
+すべてのGoプロジェクトはルートに以下を含めるべき:
 
-- **Makefile** — build automation. See [Makefile template](assets/Makefile)
-- **.gitignore** — git ignore patterns. See [.gitignore template](assets/.gitignore)
-- **.golangci.yml** — linter config. See the `samber/cc-skills-golang@golang-linter` skill for the recommended configuration
+- **Makefile** — ビルド自動化。[Makefileテンプレート](assets/Makefile) を参照
+- **.gitignore** — gitの無視パターン。[.gitignoreテンプレート](assets/.gitignore) を参照
+- **.golangci.yml** — リンター設定。推奨設定については `samber/cc-skills-golang@golang-linter` skillを参照
 
-For application configuration with Cobra + Viper, see [config reference](references/config.md).
+Cobra + Viperを使ったアプリケーション設定については [config reference](references/config.md) を参照。
 
-## Tests, Benchmarks, and Examples
+## テスト、ベンチマーク、サンプル
 
-Co-locate `_test.go` files with the code they test. Use `testdata/` for fixtures. See [testing layout](references/testing-layout.md) for file naming, placement, and organization details.
+`_test.go` ファイルはテスト対象コードと同じ場所に置く。フィクスチャには `testdata/` を使用する。ファイル命名、配置、整理の詳細については [テストレイアウト](references/testing-layout.md) を参照。
 
-## Go Workspaces
+## Goワークスペース
 
-Use `go.work` when developing multiple related modules in a monorepo. See [workspaces](references/workspaces.md) for setup, structure, and commands.
+モノリポで複数の関連モジュールを開発する際は `go.work` を使用する。セットアップ、構造、コマンドについては [workspaces](references/workspaces.md) を参照。
 
-## Initialization Checklist
+## 初期化チェックリスト
 
-When starting a new Go project:
+新しいGoプロジェクトを始める際:
 
-- [ ] **Ask the developer** their preferred software architecture (clean, hexagonal, DDD, flat, etc.)
-- [ ] **Ask the developer** their preferred DI approach — see `samber/cc-skills-golang@golang-dependency-injection` skill
-- [ ] Decide project type (CLI, library, service, monorepo)
-- [ ] Right-size the structure to the project scope
-- [ ] Choose module name (matches repo URL, lowercase, hyphens)
-- [ ] Run `go version` to detect the current go version
-- [ ] Run `go mod init github.com/user/project-name`
-- [ ] Create `cmd/{name}/main.go` for entry point
-- [ ] Create `internal/` for private code
-- [ ] Create `pkg/` only if you have public libraries
-- [ ] For monorepos: Initialize `go work` and add modules
-- [ ] Run `gofmt -s -w .` to ensure formatting
-- [ ] Add `.gitignore` with `/vendor/` and binary patterns
+- [ ] **開発者に**好みのソフトウェアアーキテクチャ（クリーン、ヘキサゴナル、DDD、フラットなど）を尋ねる
+- [ ] **開発者に**好みのDIアプローチを尋ねる — `samber/cc-skills-golang@golang-dependency-injection` skillを参照
+- [ ] プロジェクトタイプを決定する（CLI、ライブラリ、サービス、モノリポ）
+- [ ] プロジェクトスコープに合った適切なサイズの構造を選択する
+- [ ] モジュール名を選択する（リポジトリURLと一致、小文字、ハイフン）
+- [ ] `go version` を実行して現在のgoバージョンを確認する
+- [ ] `go mod init github.com/user/project-name` を実行する
+- [ ] エントリーポイントに `cmd/{name}/main.go` を作成する
+- [ ] プライベートコード用に `internal/` を作成する
+- [ ] パブリックライブラリがある場合のみ `pkg/` を作成する
+- [ ] モノリポの場合: `go work` を初期化してモジュールを追加する
+- [ ] フォーマットを確保するために `gofmt -s -w .` を実行する
+- [ ] `/vendor/` とバイナリパターンを含む `.gitignore` を追加する
 
-## Related Skills
+## 関連スキル
 
-→ See `samber/cc-skills-golang@golang-cli` skill for CLI tool structure and Cobra/Viper patterns. → See `samber/cc-skills-golang@golang-dependency-injection` skill for DI approach comparison and wiring. → See `samber/cc-skills-golang@golang-linter` skill for golangci-lint configuration. → See `samber/cc-skills-golang@golang-continuous-integration` skill for CI/CD pipeline setup. → See `samber/cc-skills-golang@golang-design-patterns` skill for architectural patterns.
+CLIツール構造とCobra/Viperパターンについては → See `samber/cc-skills-golang@golang-cli` skill。DIアプローチの比較と配線については → See `samber/cc-skills-golang@golang-dependency-injection` skill。golangci-lint設定については → See `samber/cc-skills-golang@golang-linter` skill。CI/CDパイプラインのセットアップについては → See `samber/cc-skills-golang@golang-continuous-integration` skill。アーキテクチャパターンについては → See `samber/cc-skills-golang@golang-design-patterns` skill。

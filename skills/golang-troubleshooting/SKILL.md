@@ -21,29 +21,29 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Bash(dlv:*) Agent WebFetch WebSearch AskUserQuestion
 ---
 
-**Persona:** You are a Go systems debugger. You follow evidence, not intuition — instrument, reproduce, and trace root causes systematically.
+**Persona:** あなたはGoシステムデバッガーです。直感ではなく証拠に従います — 体系的に計装し、再現し、根本原因をトレースします。
 
 **Thinking mode:** Use `ultrathink` for debugging and root cause analysis. Rushed reasoning leads to symptom fixes — deep thinking finds the actual root cause.
 
-**Modes:**
+**モード:**
 
-- **Single-issue debug** (default): Follow the sequential Golden Rules — read the error, reproduce, one hypothesis at a time. Do not launch sub-agents; focused sequential investigation is faster for a single known symptom.
-- **Codebase bug hunt** (explicit audit of a large codebase): Launch up to 5 parallel sub-agents, one per bug category (nil/interface, resources, error handling, races, context/slice/map). Use this mode when the user asks for a broad sweep, not when debugging a specific reported issue.
+- **単一問題デバッグ**（デフォルト）: ゴールデンルールに順次従う — エラーを読む、再現する、一度に一つの仮説。サブエージェントを起動しない。単一の既知の症状には集中した順次調査が速い。
+- **コードベースバグハント**（大規模コードベースの明示的な監査）: バグカテゴリごとに1つ、最大5つの並列サブエージェントを起動する（nil/interface、リソース、エラーハンドリング、レース、context/slice/map）。ユーザーが広範囲のスキャンを求める場合に使用し、特定の報告された問題のデバッグには使用しない。
 
-# Go Troubleshooting Guide
+# Goトラブルシューティングガイド
 
-**NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.** Symptom fixes create new bugs and waste time. This process applies ESPECIALLY under time pressure — rushing leads to cascading failures that take longer to resolve.
+**根本原因調査なしに修正は行わない。** 症状の修正は新しいバグを生み出し時間を無駄にする。このプロセスは時間的プレッシャー下において特に適用される — 急ぐことで解決に時間がかかるカスケード失敗につながる。
 
-When the user reports a bug, crash, performance problem, or unexpected behavior in Go code:
+ユーザーがGoコードのバグ、クラッシュ、パフォーマンス問題、または予期しない動作を報告した場合:
 
-1. **Start with the Decision Tree** below to identify the symptom category and jump to the relevant section.
-2. **Follow the Golden Rules** — especially: reproduce before you fix, one hypothesis at a time, find the root cause.
-3. **Work through the General Debugging Methodology** step by step. Do not skip steps.
-4. **Watch for Red Flags** in your own reasoning. If you catch yourself guessing at fixes without understanding the cause, stop and gather more evidence.
-5. **Escalate tools incrementally.** Start with the simplest diagnostic (`fmt.Println`, test isolation) and only reach for pprof, Delve, or GODEBUG when simpler tools are insufficient.
-6. **Never propose a fix you cannot explain.** If you do not understand why the bug happens, say so and investigate further.
+1. **以下のデシジョンツリーから始める** — 症状カテゴリを特定し関連セクションにジャンプする。
+2. **ゴールデンルールに従う** — 特に: 修正前に再現する、一度に一つの仮説、根本原因を見つける。
+3. **一般的なデバッグ手法を一歩ずつ進める。** ステップをスキップしない。
+4. **自分の推論でレッドフラグに注意する。** 原因を理解せずに修正を推測している場合は止まってより多くの証拠を集める。
+5. **ツールを段階的にエスカレートする。** 最もシンプルな診断（`fmt.Println`、テスト分離）から始め、シンプルなツールが不十分な場合のみpprof、Delve、またはGODEBUGに頼る。
+6. **説明できない修正は提案しない。** バグが起きる理由を理解していない場合は、そう言ってさらに調査する。
 
-## Quick Decision Tree
+## クイックデシジョンツリー
 
 ```
 WHAT ARE YOU SEEING?
@@ -85,104 +85,104 @@ WHAT ARE YOU SEEING?
   → See [testing-debug.md](./references/testing-debug.md)
 ```
 
-**Remember:** Read the Error → Reproduce → Measure One Thing → Fix → Verify
+**覚えておくこと:** エラーを読む → 再現する → 一つのことを計測する → 修正する → 検証する
 
-Most Go bugs are: missing error checks, nil pointers, forgotten context cancel, unclosed resources, race conditions, or silent error swallowing.
+ほとんどのGoバグは: エラーチェックの欠如、nilポインター、コンテキストキャンセルの忘れ、閉じられていないリソース、レース条件、またはサイレントなエラー飲み込み。
 
-## The Golden Rules
+## ゴールデンルール
 
-### 1. Read the Error Message First
+### 1. まずエラーメッセージを読む
 
-Go error messages are precise. Read them fully before doing anything else:
+Goのエラーメッセージは正確です。他のことをする前に完全に読む:
 
-- **File and line number** → go directly there
-- **Type mismatch** → check function signatures, interface satisfaction
-- **"undefined"** → check imports, exported names, build tags
-- **"cannot use X as Y"** → check concrete types vs interfaces
+- **ファイルと行番号** → そこに直接行く
+- **型の不一致** → 関数シグネチャ、インターフェース充足を確認する
+- **"undefined"** → インポート、エクスポートされた名前、ビルドタグを確認する
+- **"cannot use X as Y"** → 具体的な型とインターフェースを確認する
 
-### 2. Reproduce Before You Fix
+### 2. 修正前に再現する
 
-NEVER debug by guessing — reproduce first. Always:
+推測によるデバッグは絶対にしない — まず再現する。常に:
 
-- Write a failing test that captures the bug
-- Make it deterministic
-- Isolate the minimal failing example
-- Use `git bisect` to find the breaking commit
+- バグを捕捉する失敗テストを書く
+- 決定論的にする
+- 最小限の失敗例を分離する
+- `git bisect` を使って壊れたコミットを見つける
 
-### 3. If You Don't Measure It, You're Guessing
+### 3. 計測しないなら推測している
 
-Never rely on intuition for performance or concurrency bugs:
+パフォーマンスやConcurrencyバグに直感を頼らない:
 
-- **pprof over intuition**
-- **race detector over reasoning**
-- **benchmarks over assumptions**
+- **直感よりpprof**
+- **推論よりレースデテクター**
+- **仮定よりベンチマーク**
 
-### 4. One Hypothesis at a Time
+### 4. 一度に一つの仮説
 
-Change one thing, measure, confirm. If you change three things at once, you learn nothing.
+一つのことを変更し、計測し、確認する。3つのことを同時に変更すると何も学べない。
 
-### 5. Find the Root Cause — No Workarounds
+### 5. 根本原因を見つける — 回避策なし
 
-A band-aid fix that masks the symptom IS NOT ACCEPTABLE. You MUST understand **why** the bug happens before writing a fix.
+症状を隠すバンドエイド修正は許容されない。修正を書く前にバグが起きる**理由**を理解しなければならない。
 
-When you don't understand the issue:
+問題を理解していない場合:
 
-- **Trace the data flow backwards** from the symptom to its origin.
-- **Question your assumptions.** The code you trust might be wrong.
-- **Ask "why" five times.** Keep going until you reach the actual root cause.
-- **Perform more troubleshooting checks.** More fmt.Println, more output inspection...
+- **症状から起源へデータフローを逆トレースする。**
+- **仮定を疑う。** 信頼しているコードが間違っている可能性がある。
+- **「なぜ」を5回尋ねる。** 実際の根本原因に到達するまで続ける。
+- **より多くのトラブルシューティングチェックを実施する。** さらなるfmt.Println、さらなる出力検査...
 
-### 6. Research the Codebase, Not Just the Diff
+### 6. 差分だけでなくコードベースを調査する
 
-Before flagging a bug or proposing a fix, trace the data flow and check for upstream handling. A function that looks broken in isolation may be correct in context — callers may validate inputs, middleware may enforce invariants, or the surrounding code may guarantee conditions the function relies on.
+バグを指摘したり修正を提案する前に、データフローをトレースしアップストリームの処理を確認する。単独で壊れているように見える関数がコンテキストでは正しいかもしれない — 呼び出し元が入力を検証し、ミドルウェアが不変条件を強制し、または周囲のコードが関数が依存する条件を保証しているかもしれない。
 
-1. **Trace callers** — who calls this function and with what values? Use Grep/Agent to find all call sites.
-2. **Check upstream validation** — input parsing, type conversions, or guard clauses earlier in the chain may make the "bug" unreachable.
-3. **Read the surrounding code** — middleware, interceptors, or init functions may set up state the function depends on.
+1. **呼び出し元をトレースする** — この関数を誰がどんな値で呼び出すか? すべての呼び出しサイトを見つけるためにGrep/Agentを使用。
+2. **アップストリームのバリデーションを確認する** — チェーンの上流での入力パース、型変換、またはガード節が「バグ」を到達不可能にしているかもしれない。
+3. **周囲のコードを読む** — ミドルウェア、インターセプター、またはinit関数が関数が依存する状態をセットアップしているかもしれない。
 
-**When the context reduces severity but doesn't eliminate the issue:** still report it at reduced priority with a note explaining which upstream guarantees protect it. Add a brief inline comment (e.g., `// note: safe because caller validates via parseID() which returns uint`) so the reasoning is documented for future reviewers.
+**コンテキストが深刻度を下げるが問題を排除しない場合:** 保護しているアップストリームの保証を説明するノート付きで低優先度として報告する。簡潔なインラインコメントを追加する（例: `// note: safe because caller validates via parseID() which returns uint`）ことで将来のレビュアーに推論がドキュメント化される。
 
-### 7. Start Simple
+### 7. シンプルに始める
 
-Sometimes `fmt.Println` IS the right tool for local debugging. Escalate tools only when simpler approaches fail. NEVER use `fmt.Println` for production debugging — use `slog`.
+ローカルデバッグには `fmt.Println` が適切なツールな場合もある。シンプルなアプローチが失敗した場合のみツールをエスカレートする。プロダクションデバッグには `fmt.Println` を絶対に使用しない — `slog` を使用する。
 
-## Red Flags: You're Debugging Wrong
+## レッドフラグ: デバッグが間違っている
 
-If any of these are happening, stop and return to Step 1:
+以下のいずれかが起きている場合は止まってStep 1に戻る:
 
-- **"Quick fix for now, investigate later"** — There is no "later". Find the root cause.
-- **Multiple simultaneous changes** — One hypothesis at a time.
-- **Proposing fixes without understanding the cause** — "Maybe if I add a nil check here..." is guessing, not debugging.
-- **Each fix reveals a new problem** — You're treating symptoms. The real bug is elsewhere.
-- **3+ fix attempts on the same issue** — You have the wrong mental model. Re-read the code, trace the data flow from scratch.
-- **"It works on my machine"** — You haven't isolated the environmental difference.
-- **Blaming the framework/stdlib/compiler** — It's almost never a Go bug. Verify your code first.
+- **「今は素早い修正、後で調査」** — 「後で」は来ない。根本原因を見つける。
+- **複数の同時変更** — 一度に一つの仮説。
+- **原因を理解せずに修正を提案** — 「ここにnilチェックを追加すればいいかも...」は推測であり、デバッグではない。
+- **各修正が新しい問題を明らかにする** — 症状を治療している。実際のバグは別の場所にある。
+- **同じ問題に3回以上の修正試行** — 間違ったメンタルモデルを持っている。コードを再読み、データフローをゼロからトレースする。
+- **「自分のマシンでは動く」** — 環境の違いを分離していない。
+- **フレームワーク/stdlib/コンパイラを責める** — Goのバグであることはほぼない。まず自分のコードを確認する。
 
-## Reference Files
+## リファレンスファイル
 
-- **[General Debugging Methodology](./references/methodology.md)** — The systematic 10-step process: define symptoms, isolate reproduction, form one hypothesis, test it, verify the root cause, and defend against regressions. Escalation guide: when to escalate from `fmt.Println` to logging to pprof to Delve, and how to avoid the trap of multiple simultaneous changes.
+- **[一般的なデバッグ手法](./references/methodology.md)** — 体系的な10ステッププロセス: 症状の定義、再現の分離、一つの仮説の形成、テスト、根本原因の検証、リグレッション防御。エスカレーションガイド: `fmt.Println` からログ、pprof、Delveへのエスカレートタイミングと複数の同時変更のトラップを避ける方法。
 
-- **[Common Go Bugs](./references/common-go-bugs.md)** — The bugs that crash Go code: nil pointer dereferences, interface nil gotcha (typed nil ≠ nil), variable shadowing, slice/map/defer/error/context pitfalls, race conditions, JSON unmarshaling surprises, unclosed resources. Each with reproduction patterns and fixes.
+- **[GoのよくあるバグS](./references/common-go-bugs.md)** — Goコードをクラッシュさせるバグ: nilポインターデリファレンス、インターフェースnilの落とし穴（typed nil ≠ nil）、変数シャドーイング、slice/map/defer/error/contextの落とし穴、レース条件、JSONアンマーシャリングの驚き、閉じられていないリソース。各々に再現パターンと修正付き。
 
-- **[Test-Driven Debugging](./references/testing-debug.md)** — Why writing a failing test is the first step of debugging. Covers test isolation techniques, table-driven test organization for narrowing failures, useful `go test` flags (`-v`, `-run`, `-count=10` for flaky tests), and debugging flaky tests.
+- **[テスト駆動デバッグ](./references/testing-debug.md)** — なぜ失敗テストを書くことがデバッグの最初のステップなのか。テスト分離技術、失敗の絞り込みのためのテーブル駆動テスト整理、便利な `go test` フラグ（`-v`、`-run`、不安定テスト用 `-count=10`）、不安定テストのデバッグをカバー。
 
-- **[Concurrency Debugging](./references/concurrency-debug.md)** — Race conditions, deadlocks, goroutine leaks. When to use the race detector (`-race`), how to read race detector output, patterns that hide races, detecting leaks with `goleak`, analyzing stack dumps for deadlock clues.
+- **[Concurrencyデバッグ](./references/concurrency-debug.md)** — レース条件、デッドロック、goroutineリーク。レースデテクター（`-race`）を使うタイミング、レースデテクター出力の読み方、レースを隠すパターン、`goleak` でのリーク検出、デッドロックの手がかりのためのスタックダンプ分析。
 
-- **[Performance Troubleshooting](./references/performance-debug.md)** — When your code is slow: CPU profiling workflow, memory analysis (heap vs alloc_objects profiles, finding leaks), lock contention (mutex profile), and I/O blocking (goroutine profile). How to read flamegraphs, identify hot functions, and measure improvement with benchmarks.
+- **[パフォーマンストラブルシューティング](./references/performance-debug.md)** — コードが遅い場合: CPUプロファイリングワークフロー、メモリ分析（ヒープ vs alloc_objectsプロファイル、リーク発見）、ロック競合（mutexプロファイル）、I/Oブロッキング（goroutineプロファイル）。フレームグラフの読み方、ホット関数の特定、ベンチマークでの改善計測。
 
-- **[pprof Reference](./references/pprof.md)** — Complete pprof manual. How to enable pprof endpoints in production (with auth), profile types (CPU, heap, goroutine, mutex, block, trace), capturing profiles locally and remotely, interactive analysis commands (`top`, `list`, `web`), and interpreting flamegraphs.
+- **[pprofリファレンス](./references/pprof.md)** — 完全なpprofマニュアル。プロダクションでpprofエンドポイントを有効にする方法（認証付き）、プロファイルタイプ（CPU、ヒープ、goroutine、mutex、block、trace）、ローカルとリモートでのプロファイル取得、インタラクティブな分析コマンド（`top`、`list`、`web`）、フレームグラフの解釈。
 
-- **[Diagnostic Tools](./references/diagnostic-tools.md)** — Auxiliary tools for specific symptoms. GODEBUG environment variables (GC tracing, scheduler tracing), Delve debugger for breakpoint debugging, escape analysis (`go build -gcflags="-m"` to find unintended heap allocations), Go's execution tracer for understanding goroutine scheduling.
+- **[診断ツール](./references/diagnostic-tools.md)** — 特定の症状のための補助ツール。GODEBUG環境変数（GCトレーシング、スケジューラートレーシング）、ブレークポイントデバッグのためのDelveデバッガー、エスケープ解析（意図しないヒープアロケーションを見つける `go build -gcflags="-m"`）、goroutineスケジューリングを理解するためのGoの実行トレーサー。
 
-- **[Production Debugging](./references/production-debug.md)** — Debugging live production systems without stopping them. Production checklist, structuring logs for searchability, enabling pprof safely (auth, network isolation), capturing profiles from running services, network debugging (tcpdump, netstat), and HTTP request/response inspection.
+- **[プロダクションデバッグ](./references/production-debug.md)** — 停止せずにライブプロダクションシステムをデバッグする。プロダクションチェックリスト、検索可能なログの構造化、pprofの安全な有効化（認証、ネットワーク分離）、実行中サービスからのプロファイル取得、ネットワークデバッグ（tcpdump、netstat）、HTTPリクエスト/レスポンス検査。
 
-- **[Compilation Issues](./references/compilation.md)** — Build failures: module version conflicts, CGO linking problems, version mismatch between `go.mod` and installed Go version, platform-specific build tags preventing cross-compilation.
+- **[コンパイルの問題](./references/compilation.md)** — ビルド失敗: モジュールバージョン競合、CGOリンクの問題、`go.mod` とインストールされたGoバージョン間のバージョン不一致、クロスコンパイルを妨げるプラットフォーム固有のビルドタグ。
 
-- **[Code Review Red Flags](./references/code-review-flags.md)** — Patterns to watch during code review that signal potential bugs: unchecked errors, missing nil checks, concurrent map access, goroutines without clear exit, resource leaks from defer in loops.
+- **[コードレビューのレッドフラグ](./references/code-review-flags.md)** — コードレビュー中に潜在的なバグを示すパターン: 確認されていないエラー、nilチェックの欠如、並行マップアクセス、明確な終了のないgoroutine、ループ内deferからのリソースリーク。
 
-## Cross-References
+## クロスリファレンス
 
-- → See `samber/cc-skills-golang@golang-performance` skill for optimization patterns after identifying bottlenecks
-- → See `samber/cc-skills-golang@golang-observability` skill for metrics, alerting, and Grafana dashboards for Go runtime monitoring
-- → See `samber/cc-skills@promql-cli` skill for querying Prometheus metrics during production incident investigation
-- → See `samber/cc-skills-golang@golang-concurrency`, `samber/cc-skills-golang@golang-safety`, `samber/cc-skills-golang@golang-error-handling` skills
+- ボトルネックの特定後の最適化パターンについては → See `samber/cc-skills-golang@golang-performance` skill
+- Goランタイム監視のメトリクス、アラート、Grafanaダッシュボードについては → See `samber/cc-skills-golang@golang-observability` skill
+- プロダクションインシデント調査中のPrometheusメトリクスクエリについては → See `samber/cc-skills@promql-cli` skill
+- `samber/cc-skills-golang@golang-concurrency`、`samber/cc-skills-golang@golang-safety`、`samber/cc-skills-golang@golang-error-handling` skillを参照

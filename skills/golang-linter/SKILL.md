@@ -29,15 +29,15 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 - **Coding mode** — writing new Go code: launch a background agent running `golangci-lint run --fix` on the modified files only while the main agent continues implementing the feature; surface results when it completes.
 - **Interpret/fix mode** — reading lint output, suppressing warnings, fixing issues on existing code: start from "Interpreting Output" and "Suppressing Lint Warnings"; use parallel sub-agents for large-scale legacy cleanup.
 
-# Go Linting
+# Go リンティング
 
-## Overview
+## 概要
 
-`golangci-lint` is the standard Go linting tool. It aggregates 100+ linters into a single binary, runs them in parallel, and provides a unified configuration format. Run it frequently during development and always in CI.
+`golangci-lint` は Go の標準的なリンティングツールです。100以上のリンターを単一のバイナリに集約し、並列実行し、統一された設定フォーマットを提供します。開発中に頻繁に実行し、CIでは必ず実行してください。
 
-Every Go project MUST have a `.golangci.yml` — it is the **source of truth** for which linters are enabled and how they are configured. See the [recommended configuration](./assets/.golangci.yml) for a production-ready setup with 33 linters enabled.
+すべての Go プロジェクトには `.golangci.yml` が必須です — これがどのリンターが有効でどのように設定されているかの**信頼できる唯一の情報源**です。33個のリンターを有効にした本番環境向けの設定については、[推奨設定](./assets/.golangci.yml)を参照してください。
 
-## Quick Reference
+## クイックリファレンス
 
 ```bash
 # Run all configured linters
@@ -59,13 +59,13 @@ golangci-lint linters
 golangci-lint run --verbose ./...
 ```
 
-## Configuration
+## 設定
 
-The [recommended .golangci.yml](./assets/.golangci.yml) provides a production-ready setup with 33 linters. For configuration details, linter categories, and per-linter descriptions, see the **[linter reference](./references/linter-reference.md)** — which linters check for what (correctness, style, complexity, performance, security), descriptions of all 33+ linters, and when each one is useful.
+[推奨 .golangci.yml](./assets/.golangci.yml) は33個のリンターを備えた本番環境向けの設定を提供します。設定の詳細、リンターのカテゴリ、各リンターの説明については、**[リンターリファレンス](./references/linter-reference.md)** を参照してください — どのリンターが何をチェックするか（正確性、スタイル、複雑さ、パフォーマンス、セキュリティ）、33以上のリンターの説明、各リンターが役立つ場面が記載されています。
 
-## Suppressing Lint Warnings
+## リント警告の抑制
 
-Use `//nolint` directives sparingly — fix the root cause first.
+`//nolint` ディレクティブは控えめに使用してください — まず根本原因を修正しましょう。
 
 ```go
 // Good: specific linter + justification
@@ -77,23 +77,23 @@ _ = logger.Sync()
 _ = logger.Sync()
 ```
 
-Rules:
+ルール:
 
-1. **//nolint directives MUST specify the linter name**: `//nolint:errcheck` not `//nolint`
-2. **//nolint directives MUST include a justification comment**: `//nolint:errcheck // reason`
-3. **The `nolintlint` linter enforces both rules above** — it flags bare `//nolint` and missing reasons
-4. **NEVER suppress security linters** (bodyclose, sqlclosecheck) without a very strong reason
+1. **//nolint ディレクティブにはリンター名を指定すること**: `//nolint:errcheck`（`//nolint` ではなく）
+2. **//nolint ディレクティブには理由のコメントを含めること**: `//nolint:errcheck // reason`
+3. **`nolintlint` リンターが上記2つのルールを強制する** — 裸の `//nolint` や理由の欠如をフラグする
+4. **セキュリティリンター**（bodyclose、sqlclosecheck）を非常に強い理由なく**抑制しないこと**
 
-For comprehensive patterns and examples, see **[nolint directives](./references/nolint-directives.md)** — when to suppress, how to write justifications, patterns for per-line vs per-function suppression, and anti-patterns.
+包括的なパターンと例については、**[nolint ディレクティブ](./references/nolint-directives.md)** を参照してください — 抑制するタイミング、理由の書き方、行単位 vs 関数単位の抑制パターン、アンチパターンが記載されています。
 
-## Development Workflow
+## 開発ワークフロー
 
-1. **Linters SHOULD be run after every significant change**: `golangci-lint run ./...`
-2. **Auto-fix what you can**: `golangci-lint run --fix ./...`
-3. **Format before committing**: `golangci-lint fmt ./...`
-4. **Incremental adoption on legacy code**: set `issues.new-from-rev` in `.golangci.yml` to only lint new/changed code, then gradually clean up old code
+1. **重要な変更のたびにリンターを実行すべき**: `golangci-lint run ./...`
+2. **自動修正できるものは修正する**: `golangci-lint run --fix ./...`
+3. **コミット前にフォーマットする**: `golangci-lint fmt ./...`
+4. **レガシーコードへの段階的導入**: `.golangci.yml` で `issues.new-from-rev` を設定し、新規/変更コードのみをリントし、古いコードを徐々にクリーンアップする
 
-Makefile targets (recommended):
+Makefile ターゲット（推奨）:
 
 ```makefile
 lint:
@@ -106,44 +106,44 @@ fmt:
 	golangci-lint fmt ./...
 ```
 
-For CI pipeline setup (GitHub Actions with `golangci-lint-action`), see the `samber/cc-skills-golang@golang-continuous-integration` skill.
+CI パイプラインの設定（GitHub Actions の `golangci-lint-action`）については、`samber/cc-skills-golang@golang-continuous-integration` スキルを参照してください。
 
-## Interpreting Output
+## 出力の解釈
 
-Each issue follows this format:
+各問題は以下の形式に従います:
 
 ```
 path/to/file.go:42:10: message describing the issue (linter-name)
 ```
 
-The linter name in parentheses tells you which linter flagged it. Use this to:
+括弧内のリンター名は、どのリンターがフラグしたかを示します。これを使って:
 
-- Look up the linter in the [reference](./references/linter-reference.md) to understand what it checks
-- Suppress with `//nolint:linter-name // reason` if it's a false positive
-- Use `golangci-lint run --verbose` for additional context and timing
+- [リファレンス](./references/linter-reference.md)でリンターを調べ、何をチェックしているか理解する
+- 誤検知の場合は `//nolint:linter-name // reason` で抑制する
+- `golangci-lint run --verbose` で追加のコンテキストとタイミング情報を得る
 
-## Common Issues
+## よくある問題
 
-| Problem | Solution |
+| 問題 | 解決策 |
 | --- | --- |
-| "deadline exceeded" | Increase `run.timeout` in `.golangci.yml` (default: 5m) |
-| Too many issues on legacy code | Set `issues.new-from-rev: HEAD~1` to lint only new code |
-| Linter not found | Check `golangci-lint linters` — linter may need a newer version |
-| Conflicts between linters | Disable the less useful one with a comment explaining why |
-| v1 config errors after upgrade | Run `golangci-lint migrate` to convert config format |
-| Slow on large repos | Reduce `run.concurrency` or exclude directories in `run.skip-dirs` |
+| "deadline exceeded" | `.golangci.yml` の `run.timeout` を増やす（デフォルト: 5m） |
+| レガシーコードで問題が多すぎる | `issues.new-from-rev: HEAD~1` を設定し、新しいコードのみをリントする |
+| リンターが見つからない | `golangci-lint linters` を確認 — リンターに新しいバージョンが必要かもしれない |
+| リンター間の競合 | 理由を説明するコメントを付けて、有用度の低い方を無効にする |
+| アップグレード後の v1 設定エラー | `golangci-lint migrate` を実行して設定フォーマットを変換する |
+| 大きなリポジトリで遅い | `run.concurrency` を減らすか、`run.skip-dirs` でディレクトリを除外する |
 
-## Parallelizing Legacy Codebase Cleanup
+## レガシーコードベースの並列クリーンアップ
 
-When adopting linting on a legacy codebase, use up to 5 parallel sub-agents (via the Agent tool) to fix independent linter categories simultaneously:
+レガシーコードベースにリンティングを導入する場合、最大5つの並列サブエージェント（Agent ツール経由）を使用して、独立したリンターカテゴリを同時に修正します:
 
-- Sub-agent 1: Run `golangci-lint run --fix ./...` for auto-fixable issues
-- Sub-agent 2: Fix security linter findings (bodyclose, sqlclosecheck, gosec)
-- Sub-agent 3: Fix error handling issues (errcheck, nilerr, wrapcheck)
-- Sub-agent 4: Fix style and formatting (gofumpt, goimports, revive)
-- Sub-agent 5: Fix code quality (gocritic, unused, ineffassign)
+- サブエージェント 1: `golangci-lint run --fix ./...` で自動修正可能な問題を実行
+- サブエージェント 2: セキュリティリンターの検出結果を修正（bodyclose、sqlclosecheck、gosec）
+- サブエージェント 3: エラーハンドリングの問題を修正（errcheck、nilerr、wrapcheck）
+- サブエージェント 4: スタイルとフォーマットを修正（gofumpt、goimports、revive）
+- サブエージェント 5: コード品質を修正（gocritic、unused、ineffassign）
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-continuous-integration` skill for CI pipeline with golangci-lint-action
 - → See `samber/cc-skills-golang@golang-code-style` skill for style rules that linters enforce

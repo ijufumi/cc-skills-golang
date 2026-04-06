@@ -26,47 +26,47 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-database` skill takes precedence.
 
-# Go Database Best Practices
+# Go データベースベストプラクティス
 
-Go's `database/sql` provides a solid foundation for database access. Use `sqlx` or `pgx` on top of it for ergonomics — never an ORM.
+Goの`database/sql`はデータベースアクセスの堅固な基盤を提供する。人間工学的な利便性のために`sqlx`や`pgx`をその上に使用すること。ORMは決して使用しない。
 
-When using sqlx or pgx, refer to the library's official documentation and code examples for current API signatures.
+sqlxやpgxを使用する場合は、最新のAPIシグネチャについてライブラリの公式ドキュメントとコード例を参照すること。
 
-## Best Practices Summary
+## ベストプラクティスまとめ
 
-1. **Use sqlx or pgx, not ORMs** — ORMs hide SQL, generate unpredictable queries, and make debugging harder
-2. Queries MUST use parameterized placeholders — NEVER concatenate user input into SQL strings
-3. Context MUST be passed to all database operations — use `*Context` method variants (`QueryContext`, `ExecContext`, `GetContext`)
-4. `sql.ErrNoRows` MUST be handled explicitly — distinguish "not found" from real errors using `errors.Is`
-5. Rows MUST be closed after iteration — `defer rows.Close()` immediately after `QueryContext` calls
-6. NEVER use `db.Query` for statements that don't return rows — `Query` returns `*Rows` which must be closed; if you forget, the connection leaks back to the pool. Use `db.Exec` instead
-7. **Use transactions for multi-statement operations** — wrap related writes in `BeginTxx`/`Commit`
-8. **Use `SELECT ... FOR UPDATE`** when reading data you intend to modify — prevents race conditions
-9. **Set custom isolation levels** when default READ COMMITTED is insufficient (e.g., serializable for financial operations)
-10. **Handle NULLable columns** with pointer fields (`*string`, `*int`) or `sql.NullXxx` types
-11. Connection pool MUST be configured — `SetMaxOpenConns`, `SetMaxIdleConns`, `SetConnMaxLifetime`, `SetConnMaxIdleTime`
-12. **Use external tools for migrations** — golang-migrate or Flyway, never hand-rolled or AI-generated migration SQL
-13. **Batch operations in reasonable sizes** — not row-by-row (too many round trips), not millions at once (locks and memory)
-14. **Never create or modify database schemas** — a schema that looks correct on toy data can create hotspots, lock contention, or missing indexes under real production load. Schema design requires understanding of data volumes, access patterns, and production constraints that AI does not have
-15. **Avoid hidden SQL features** — do not rely on triggers, views, materialized views, stored procedures, or row-level security in application code
+1. **sqlxまたはpgxを使用し、ORMは使わない** — ORMはSQLを隠蔽し、予測不能なクエリを生成し、デバッグを困難にする
+2. クエリはパラメータ化されたプレースホルダーを使用すること。ユーザー入力をSQL文字列に絶対に連結してはならない
+3. すべてのデータベース操作にContextを渡すこと。`*Context`メソッドバリアント（`QueryContext`、`ExecContext`、`GetContext`）を使用する
+4. `sql.ErrNoRows`は明示的に処理すること。`errors.Is`を使用して「見つからない」と実際のエラーを区別する
+5. イテレーション後にRowsを必ずクローズすること。`QueryContext`呼び出しの直後に`defer rows.Close()`する
+6. 行を返さないステートメントに`db.Query`を絶対に使用しない — `Query`はクローズが必要な`*Rows`を返す。忘れるとコネクションがプールにリークする。代わりに`db.Exec`を使用する
+7. **複数ステートメント操作にはトランザクションを使用する** — 関連する書き込みを`BeginTxx`/`Commit`でラップする
+8. **変更予定のデータを読み取る際は`SELECT ... FOR UPDATE`を使用する** — 競合状態を防止する
+9. **デフォルトのREAD COMMITTEDでは不十分な場合、カスタム分離レベルを設定する**（例：金融操作にはserializable）
+10. **NULLable列の処理**にはポインタフィールド（`*string`、`*int`）または`sql.NullXxx`型を使用する
+11. コネクションプールは必ず設定すること — `SetMaxOpenConns`、`SetMaxIdleConns`、`SetConnMaxLifetime`、`SetConnMaxIdleTime`
+12. **マイグレーションには外部ツールを使用する** — golang-migrateまたはFlyway。手作りやAI生成のマイグレーションSQLは使わない
+13. **適切なサイズでバッチ操作を行う** — 1行ずつ（ラウンドトリップが多すぎる）でも、一度に数百万行（ロックとメモリ）でもない
+14. **データベーススキーマを作成・変更しない** — テストデータでは正しく見えるスキーマでも、本番負荷ではホットスポット、ロック競合、インデックス不足を引き起こす可能性がある。スキーマ設計にはAIが持たないデータ量、アクセスパターン、本番制約の理解が必要
+15. **隠れたSQL機能に依存しない** — アプリケーションコードでトリガー、ビュー、マテリアライズドビュー、ストアドプロシージャ、行レベルセキュリティに依存しないこと
 
-## Library Choice
+## ライブラリの選択
 
-| Library | Best for | Struct scanning | PostgreSQL-specific |
+| ライブラリ | 最適な用途 | 構造体スキャン | PostgreSQL固有 |
 | --- | --- | --- | --- |
-| `database/sql` | Portability, minimal deps | Manual `Scan` | No |
-| `sqlx` | Multi-database projects | `StructScan` | No |
-| `pgx` | PostgreSQL (30-50% faster) | `pgx.RowToStructByName` | Yes (COPY, LISTEN, arrays) |
-| GORM/ent | **Avoid** | Magic | Abstracted away |
+| `database/sql` | 移植性、最小限の依存関係 | 手動`Scan` | いいえ |
+| `sqlx` | マルチデータベースプロジェクト | `StructScan` | いいえ |
+| `pgx` | PostgreSQL（30-50%高速） | `pgx.RowToStructByName` | はい（COPY、LISTEN、配列） |
+| GORM/ent | **避けること** | マジック | 抽象化されている |
 
-**Why NOT ORMs:**
+**ORMを使わない理由：**
 
-- Unpredictable query generation — N+1 problems you cannot see in code
-- Magic hooks and callbacks (BeforeCreate, AfterUpdate) make debugging harder
-- Schema migrations coupled to application code
-- Learning the ORM API is harder than learning SQL, and the abstraction leaks
+- 予測不能なクエリ生成 — コード上では見えないN+1問題
+- マジックフックとコールバック（BeforeCreate、AfterUpdate）がデバッグを困難にする
+- スキーママイグレーションがアプリケーションコードに結合される
+- ORM APIの学習はSQLの学習より難しく、抽象化はリークする
 
-## Parameterized Queries
+## パラメータ化クエリ
 
 ```go
 // ✗ VERY BAD — SQL injection vulnerability

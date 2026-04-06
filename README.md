@@ -1,23 +1,23 @@
-# Agent Skills for production-ready Golang projects
+# 本番環境向けGolangプロジェクトのためのAgent Skills
 
-AI agent skills are reusable instruction sets that extend your coding assistant with domain-specific expertise, loaded on demand so they don't bloat your context. This repository covers **Go-specific** skills only (language, testing, security, observability, etc.); for dev workflow skills (git conventions, CI/CD, PR reviews) you'll want to add a separate skills plugin.
+AIエージェントスキルは、コーディングアシスタントをドメイン固有の専門知識で拡張する再利用可能な命令セットです。必要に応じて読み込まれるため、コンテキストを圧迫しません。このリポジトリは**Go固有**のスキル（言語、テスト、セキュリティ、オブザーバビリティなど）のみを対象としています。開発ワークフロースキル（gitの規約、CI/CD、PRレビュー）については、別のスキルプラグインを追加してください。
 
-For generic skills, please visit [cc-skills](https://github.com/samber/cc-skills).
+汎用スキルについては [cc-skills](https://github.com/samber/cc-skills) をご覧ください。
 
-> [!IMPORTANT]  
-> Bootstrapped with Claude Code by distilling my Go project commits. **Edited, tested, reviewed and reworked by a human**.
+> [!IMPORTANT]
+> Claude Codeを使い、私のGoプロジェクトのコミットを蒸留してブートストラップしました。**人間が編集・テスト・レビュー・リワークしています**。
 >
-> **No AI slop here.** AI-made skills are useless.
+> **AIのスロップ（低品質な出力）はありません。** AI製のスキルは役に立ちません。
 
 <img width="1414" height="491" alt="image" src="https://github.com/user-attachments/assets/620b5835-c1ba-4ea9-bf47-2293b58b879e" />
 
-## 🚀 How to use
+## 🚀 使い方
 
-**Install with [skills](https://skills.sh/) CLI** (universal, works with any [Agent Skills](https://agentskills.io)-compatible tool):
+**[skills](https://skills.sh/) CLIでインストール**（ユニバーサル、[Agent Skills](https://agentskills.io)互換ツールで動作）:
 
 ```bash
 npx skills add https://github.com/samber/cc-skills-golang --all
-# or a single skill:
+# または単一のスキル:
 npx skills add https://github.com/samber/cc-skills-golang --skill golang-performance
 ```
 
@@ -36,11 +36,11 @@ npx skills add https://github.com/samber/cc-skills-golang --skill golang-perform
 <details>
 <summary>Openclaw</summary>
 
-Copy skills into the cross-client discovery directory:
+スキルをクロスクライアント検出ディレクトリにコピー:
 
 ```bash
 git clone https://github.com/samber/cc-skills-golang.git ~/.openclaw/skills/cc-skills-golang
-# or in workspace:
+# またはワークスペースに:
 git clone https://github.com/samber/cc-skills-golang.git ~/.openclaw/workspace/skills/cc-skills-golang
 ```
 
@@ -53,95 +53,95 @@ git clone https://github.com/samber/cc-skills-golang.git ~/.openclaw/workspace/s
 gemini extensions install https://github.com/samber/cc-skills-golang
 ```
 
-Update with `gemini extensions update cc-skills-golang`.
+`gemini extensions update cc-skills-golang` で更新できます。
 
 </details>
 
 <details>
 <summary>Cursor</summary>
 
-Copy skills into the cross-client discovery directory:
+スキルをクロスクライアント検出ディレクトリにコピー:
 
 ```bash
 git clone https://github.com/samber/cc-skills-golang.git  ~/.cursor/skills/cc-skills-golang
 ```
 
-Cursor auto-discovers skills from `.agents/skills/` and `.cursor/skills/`.
+Cursorは `.agents/skills/` と `.cursor/skills/` からスキルを自動検出します。
 
 </details>
 
 <details>
 <summary>Copilot</summary>
 
-Copy skills into the cross-client discovery directory:
+スキルをクロスクライアント検出ディレクトリにコピー:
 
 ```bash
 /plugin install https://github.com/samber/cc-skills-golang
-# or
+# または
 git clone https://github.com/samber/cc-skills-golang.git ~/.copilot/skills/cc-skills-golang
 ```
 
-Copilot auto-discovers skills from `.copilot/skills/`.
+Copilotは `.copilot/skills/` からスキルを自動検出します。
 
 </details>
 
 <details>
 <summary>OpenCode</summary>
 
-Copy skills into the cross-client discovery directory:
+スキルをクロスクライアント検出ディレクトリにコピー:
 
 ```bash
 git clone https://github.com/samber/cc-skills-golang.git ~/.agents/skills/cc-skills-golang
 ```
 
-OpenCode auto-discovers skills from `.agents/skills/`, `.opencode/skills/`, and `.claude/skills/`.
+OpenCodeは `.agents/skills/`、`.opencode/skills/`、`.claude/skills/` からスキルを自動検出します。
 
 </details>
 
 <details>
 <summary>Codex (OpenAI)</summary>
 
-Clone into the cross-client discovery path:
+クロスクライアント検出パスにクローン:
 
 ```bash
 git clone https://github.com/samber/cc-skills-golang.git ~/.agents/skills/cc-skills-golang
 ```
 
-Codex auto-discovers skills from `~/.agents/skills/` and `.agents/skills/`. Update with `cd ~/.agents/skills/cc-skills-golang && git pull`.
+Codexは `~/.agents/skills/` と `.agents/skills/` からスキルを自動検出します。`cd ~/.agents/skills/cc-skills-golang && git pull` で更新できます。
 
 </details>
 
 <details>
 <summary>Antigravity</summary>
 
-Clone and symlink into the cross-client discovery path:
+クロスクライアント検出パスにクローンしてシンボリックリンクを作成:
 
 ```bash
 git clone https://github.com/samber/cc-skills-golang.git ~/.antigravity/skills/cc-skills-golang
 ```
 
-Update with `cd ~/.antigravity/skills/cc-skills-golang && git pull`.
+`cd ~/.antigravity/skills/cc-skills-golang && git pull` で更新できます。
 
 </details>
 
 <!-- prettier-ignore-end -->
 
-## 🧩 Skills
+## 🧩 スキル一覧
 
-These skills are designed as **atomic, cross-referencing units**. A skill may reference conventions defined in another (e.g. error-handling rules that affect logging live in `golang-error-handling`, not `golang-observability`). Installing only a subset will give you a partial and potentially inconsistent view of the guidelines. For best results, install all general-purpose skills together.
+これらのスキルは**アトミックで相互参照する単位**として設計されています。あるスキルが別のスキルで定義された規約を参照することがあります（例：ロギングに影響するエラーハンドリングルールは `golang-observability` ではなく `golang-error-handling` に存在します）。一部のスキルのみをインストールすると、ガイドラインの部分的で一貫性のないビューになる可能性があります。最良の結果を得るには、汎用スキルをすべてまとめてインストールしてください。
 
-- ⭐️ Recommended
-- ✅ Published
-- 👷 Work in progress
-- ❌ To-do
-- ⚡ Command available
-- 🧠 Ultrathink automatically
-- ⚙️ Overridable (see doc below)
-- **Description (tok)**: weight of the `description` field from YAML frontmatter, always loaded into Claude's context for skill triggering
-- **SKILL.md (tok)**: weight of the full `SKILL.md` file loaded when the skill triggers
-- **Directory (tok)**: weight of all files in the skill directory (SKILL.md + referenced markdown files)
+- ⭐️ 推奨
+- ✅ 公開済み
+- 👷 作業中
+- ❌ 未着手
+- ⚡ コマンド利用可能
+- 🧠 自動でUltrathink
+- ⚙️ オーバーライド可能（下記ドキュメント参照）
+- **Description (tok)**: YAMLフロントマターの `description` フィールドの重み。スキルトリガーのためにClaudeのコンテキストに常に読み込まれます
+- **SKILL.md (tok)**: スキルがトリガーされた時に読み込まれる完全な `SKILL.md` ファイルの重み
+- **Directory (tok)**: スキルディレクトリ内の全ファイルの重み（SKILL.md + 参照されるマークダウンファイル）
 
-**General purpose:**
+**汎用:**
 
 <!-- markdownlint-disable table-column-style -->
 
@@ -175,7 +175,7 @@ These skills are designed as **atomic, cross-referencing units**. A skill may re
 |  | ✅ `golang-project-layout` | ⚡ | -38% | 66 | 1,510 | 5,718 |
 |  | ✅ `golang-stay-updated` |  | -56% | 43 | 1,916 | 1,916 |
 
-**Tools:**
+**ツール:**
 
 | Skill | Flags | Error rate gap | Description (tok) | SKILL.md (tok) | Directory (tok) |
 | --- | --- | --- | --- | --- | --- |
@@ -197,46 +197,46 @@ These skills are designed as **atomic, cross-referencing units**. A skill may re
 | ❌ `golang-temporal` |  | — | 0 | 0 | 0 |
 | ✅ `golang-stretchr-testify` |  | -47% | 89 | 1,714 | 2,533 |
 
-## 🧪 Skill evaluations
+## 🧪 スキル評価
 
-|             | With Skill          | Without Skill       | Delta     |
+|             | スキルあり          | スキルなし          | 差分      |
 | ----------- | ------------------- | ------------------- | --------- |
-| **Overall** | **3065/3141 (98%)** | **1691/3141 (54%)** | **+44pp** |
+| **全体**    | **3065/3141 (98%)** | **1691/3141 (54%)** | **+44pp** |
 
-See [EVALUATIONS.md](./EVALUATIONS.md) for the full per-skill breakdown.
+スキルごとの詳細な内訳は [EVALUATIONS.md](./EVALUATIONS.md) をご覧ください。
 
-## 🎯 Tuning Skill Triggers
+## 🎯 スキルトリガーの調整
 
-If a skill triggers too often or not often enough, please [open an issue](https://github.com/samber/cc-skills-golang/issues) suggesting a description change. The `description` field in SKILL.md frontmatter is the primary triggering mechanism — small wording adjustments can significantly improve trigger accuracy. Some `SKILL.md` files might have a `When to use` section which is another level of exclusion. Finally, `SKILL.md` files are an entrypoint for lazy loading references with deep knowledge located in `references/`.
+スキルのトリガーが多すぎる、または少なすぎる場合は、descriptionの変更を提案する [issue を作成](https://github.com/samber/cc-skills-golang/issues) してください。SKILL.mdフロントマターの `description` フィールドがトリガーの主要メカニズムです。わずかな文言の調整でトリガーの精度を大幅に改善できます。一部の `SKILL.md` には `When to use` セクションがあり、これも除外の基準になります。最後に、`SKILL.md` は `references/` にある詳細な知識を遅延読み込みするためのエントリーポイントです。
 
-## 🔄 Overlap
+## 🔄 重複について
 
-Claude reports very little overlap between skills in this repo, thanks to cross-reference. I suggest enabling most of the skills and leveraging lazy loading. The recommended ⭐️ skills load ~1,100 tokens of descriptions at startup; full skill content is only pulled in when relevant. Note:
+相互参照のおかげで、このリポジトリのスキル間の重複はほとんどありません。ほとんどのスキルを有効にし、遅延読み込みを活用することをお勧めします。推奨⭐️スキルは起動時に約1,100トークンのdescriptionを読み込みます。スキルの完全な内容は、関連する場合にのみ取得されます。注意:
 
-- I estimate that 50% of `golang-naming` and `golang-code-style` overlap with linters (golangci-lint).
-- A large part of the security rules in `golang-security` have been distilled from the Bearer (SAST) checklist. The skill is still useful for methodology.
-- If your team has its own conventions, create a company skill and declare the override explicitly near the top of its body: `This skill supersedes samber/cc-skills-golang@golang-naming skill for [company] projects.` Skills marked ⚙️ in the table above support this mechanism.
+- `golang-naming` と `golang-code-style` の約50%はリンター（golangci-lint）と重複していると推定しています。
+- `golang-security` のセキュリティルールの大部分はBearer（SAST）のチェックリストから抽出されたものです。方法論としてはスキルは依然として有用です。
+- チーム独自の規約がある場合は、カンパニースキルを作成し、そのボディの先頭付近でオーバーライドを明示的に宣言してください: `This skill supersedes samber/cc-skills-golang@golang-naming skill for [company] projects.` 上のテーブルで⚙️マークが付いたスキルがこのメカニズムをサポートしています。
 
-## ✍️ Contribute
+## ✍️ コントリビュート
 
-- **100 tokens per skill description** - what? when to use this skill?
-- **1.000–2.500 tokens per SKILL.md** — keep the main file focused on essentials
-- **Use secondary markdown files for depth** — reference them from SKILL.md with relative links (e.g., `[Logging](./logging.md)`). Claude reads these on demand when the topic is relevant, so they don't count against the context budget until needed
-- **Up to 10.000 tokens** for full skill and secondary files
-- **2–4 skills loaded simultaneously** in a typical session — design skills to coexist
-- **Stay below ~10k tokens of total loaded SKILL.md** anytime to avoid degrading response quality
+- **スキルdescriptionごとに100トークン** - 何を？いつこのスキルを使う？
+- **SKILL.mdごとに1,000〜2,500トークン** — メインファイルは要点に絞る
+- **詳細にはセカンダリマークダウンファイルを使用** — SKILL.mdから相対リンクで参照（例：`[Logging](./logging.md)`）。Claudeはトピックが関連する場合にのみこれらを読み込むため、必要になるまでコンテキスト予算にカウントされません
+- **スキル全体とセカンダリファイルで最大10,000トークン**
+- **2〜4スキルが同時に読み込まれる**のが一般的なセッション — スキルは共存できるように設計
+- **読み込まれるSKILL.mdの合計は常に約10kトークン以下に** — レスポンス品質の低下を防ぐため
 
-For more guidelines, please check `CLAUDE.md`.
+詳細なガイドラインは `CLAUDE.md` をご確認ください。
 
-## 💫 Fuel the Revolution
+## 💫 応援してください
 
-- ⭐️ **Star this repo** - Your star powers the caffeine engine!
-- ☕️ **Buy me a coffee** - I'll literally use it to build more skills while drinking actual coffee
+- ⭐️ **このリポジトリにスターを** - あなたのスターがカフェインエンジンの燃料になります！
+- ☕️ **コーヒーをおごってください** - 実際にコーヒーを飲みながらさらにスキルを作ります
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/samber?style=for-the-badge)](https://github.com/sponsors/samber)
 
-## 📝 License
+## 📝 ライセンス
 
 Copyright © 2026 [Samuel Berthe](https://github.com/samber).
 
-This project is under [MIT](./LICENSE) license.
+このプロジェクトは [MIT](./LICENSE) ライセンスの下で公開されています。

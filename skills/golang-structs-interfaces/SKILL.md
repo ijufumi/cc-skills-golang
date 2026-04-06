@@ -21,15 +21,15 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-structs-interfaces` skill takes precedence.
 
-# Go Structs & Interfaces
+# Go 構造体 & インターフェース
 
-## Interface Design Principles
+## インターフェース設計の原則
 
-### Keep Interfaces Small
+### インターフェースを小さく保つ
 
 > "The bigger the interface, the weaker the abstraction." — Go Proverbs
 
-Interfaces SHOULD have 1-3 methods. Small interfaces are easier to implement, mock, and compose. If you need a larger contract, compose it from small interfaces:
+インターフェースは1〜3個のメソッドを持つべきです。小さなインターフェースは実装、モック、合成が容易です。より大きな契約が必要な場合は、小さなインターフェースから合成してください:
 
 → See `samber/cc-skills-golang@golang-naming` skill for interface naming conventions (method + "-er" suffix, canonical names)
 
@@ -49,7 +49,7 @@ type ReadWriter interface {
 }
 ```
 
-Compose larger interfaces from smaller ones:
+小さなインターフェースから大きなインターフェースを合成します:
 
 ```go
 type ReadWriteCloser interface {
@@ -59,11 +59,11 @@ type ReadWriteCloser interface {
 }
 ```
 
-### Define Interfaces Where They're Consumed
+### インターフェースは使用される場所で定義する
 
-Interfaces Belong to Consumers.
+インターフェースはコンシューマーに属します。
 
-Interfaces MUST be defined where consumed, not where implemented. This keeps the consumer in control of the contract and avoids importing a package just for its interface.
+インターフェースは実装側ではなく、使用される側で定義しなければなりません。これによりコンシューマーが契約を制御でき、インターフェースのためだけにパッケージをインポートすることを避けられます。
 
 ```go
 // package notification — defines only what it needs
@@ -76,11 +76,11 @@ type Service struct {
 }
 ```
 
-The `email` package exports a concrete `Client` struct — it doesn't need to know about `Sender`.
+`email` パッケージは具象型の `Client` 構造体をエクスポートします。`Sender` について知る必要はありません。
 
-### Accept Interfaces, Return Structs
+### インターフェースを受け取り、構造体を返す
 
-Functions SHOULD accept interface parameters for flexibility and return concrete types for clarity. Callers get full access to the returned type's fields and methods; consumers upstream can still assign the result to an interface variable if needed.
+関数は柔軟性のためにインターフェースパラメータを受け取り、明確さのために具象型を返すべきです。呼び出し元は返された型のフィールドとメソッドに完全にアクセスでき、上流のコンシューマーは必要に応じて結果をインターフェース変数に代入できます。
 
 ```go
 // Good — accepts interface, returns concrete
@@ -90,11 +90,11 @@ func NewService(store UserStore) *Service { ... }
 func NewService(store UserStore) ServiceInterface { ... }
 ```
 
-### Don't Create Interfaces Prematurely
+### インターフェースを早期に作成しない
 
 > "Don't design with interfaces, discover them."
 
-NEVER create interfaces prematurely — wait for 2+ implementations or a testability requirement. Premature interfaces add indirection without value. Start with concrete types; extract an interface when a second consumer or a test mock demands it.
+インターフェースを早期に作成してはなりません。2つ以上の実装またはテスタビリティの要件が出るまで待ってください。早期のインターフェースは価値のないインダイレクションを追加します。具象型から始め、2番目のコンシューマーやテストモックが必要とした時にインターフェースを抽出してください。
 
 ```go
 // Bad — premature interface with a single implementation
@@ -107,9 +107,9 @@ type userRepository struct { db *sql.DB }
 type UserRepository struct { db *sql.DB }
 ```
 
-## Make the Zero Value Useful
+## ゼロ値を有用にする
 
-Design structs so they work without explicit initialization. A well-designed zero value reduces constructor boilerplate and prevents nil-related bugs:
+明示的な初期化なしで動作するように構造体を設計してください。適切に設計されたゼロ値はコンストラクタのボイラープレートを削減し、nil関連のバグを防ぎます:
 
 ```go
 // Good — zero value is ready to use
@@ -133,9 +133,9 @@ func (r *Registry) Register(name string, item Item) {
 }
 ```
 
-## Avoid `any` / `interface{}` When a Specific Type Will Do
+## 特定の型で十分な場合は `any` / `interface{}` を避ける
 
-Since Go 1.18+, MUST prefer generics over `any` for type-safe operations. Use `any` only at true boundaries where the type is genuinely unknown (e.g., JSON decoding, reflection):
+Go 1.18以降では、型安全な操作にはジェネリクスを `any` より優先しなければなりません。`any` は型が本当に不明な真の境界（例: JSONデコード、リフレクション）でのみ使用してください:
 
 ```go
 // Bad — loses type safety
@@ -145,9 +145,9 @@ func Contains(slice []any, target any) bool { ... }
 func Contains[T comparable](slice []T, target T) bool { ... }
 ```
 
-## Key Standard Library Interfaces
+## 主要な標準ライブラリインターフェース
 
-| Interface     | Package         | Method                                |
+| インターフェース     | パッケージ         | メソッド                                |
 | ------------- | --------------- | ------------------------------------- |
 | `Reader`      | `io`            | `Read(p []byte) (n int, err error)`   |
 | `Writer`      | `io`            | `Write(p []byte) (n int, err error)`  |
@@ -158,23 +158,23 @@ func Contains[T comparable](slice []T, target T) bool { ... }
 | `Marshaler`   | `encoding/json` | `MarshalJSON() ([]byte, error)`       |
 | `Unmarshaler` | `encoding/json` | `UnmarshalJSON([]byte) error`         |
 
-Canonical method signatures MUST be honored — if your type has a `String()` method, it must match `fmt.Stringer`. Don't invent `ToString()` or `ReadData()`.
+標準的なメソッドシグネチャを尊重しなければなりません。型に `String()` メソッドがある場合、`fmt.Stringer` と一致する必要があります。`ToString()` や `ReadData()` を発明しないでください。
 
-## Compile-Time Interface Check
+## コンパイル時インターフェースチェック
 
-Verify a type implements an interface at compile time with a blank identifier assignment. Place it near the type definition:
+ブランク識別子への代入でコンパイル時に型がインターフェースを実装しているか検証します。型定義の近くに配置してください:
 
 ```go
 var _ io.ReadWriter = (*MyBuffer)(nil)
 ```
 
-This costs nothing at runtime. If `MyBuffer` ever stops satisfying `io.ReadWriter`, the build fails immediately.
+実行時コストはゼロです。`MyBuffer` が `io.ReadWriter` を満たさなくなった場合、ビルドが即座に失敗します。
 
-## Type Assertions & Type Switches
+## 型アサーション & 型スイッチ
 
-### Safe Type Assertion
+### 安全な型アサーション
 
-Type assertions MUST use the comma-ok form to avoid panics:
+型アサーションはパニックを避けるためにcomma-ok形式を使用しなければなりません:
 
 ```go
 // Good — safe
@@ -187,9 +187,9 @@ if !ok {
 s := val.(string)
 ```
 
-### Type Switch
+### 型スイッチ
 
-Discover the dynamic type of an interface value:
+インターフェース値の動的な型を判別します:
 
 ```go
 switch v := val.(type) {
@@ -204,9 +204,9 @@ default:
 }
 ```
 
-### Optional Behavior with Type Assertions
+### 型アサーションによるオプション動作
 
-Check if a value supports additional capabilities without requiring them upfront:
+値が追加の機能をサポートしているかを、事前に要求せずに確認します:
 
 ```go
 type Flusher interface {
@@ -225,13 +225,13 @@ func writeData(w io.Writer, data []byte) error {
 }
 ```
 
-This pattern is used extensively in the standard library (e.g., `http.Flusher`, `io.ReaderFrom`).
+このパターンは標準ライブラリで広く使用されています（例: `http.Flusher`, `io.ReaderFrom`）。
 
-## Struct & Interface Embedding
+## 構造体 & インターフェースの埋め込み
 
-### Struct Embedding
+### 構造体の埋め込み
 
-Embedding promotes the inner type's methods and fields to the outer type — composition, not inheritance:
+埋め込みは内部型のメソッドとフィールドを外部型に昇格させます。継承ではなくコンポジションです:
 
 ```go
 type Logger struct {
@@ -248,14 +248,14 @@ s := Server{Logger: Logger{slog.Default()}, addr: ":8080"}
 s.Info("starting", "addr", s.addr)
 ```
 
-The receiver of promoted methods is the _inner_ type, not the outer. The outer type can override by defining its own method with the same name.
+昇格されたメソッドのレシーバーは外部型ではなく_内部_型です。外部型は同名のメソッドを定義することでオーバーライドできます。
 
-### When to Embed vs Named Field
+### 埋め込み vs 名前付きフィールドの使い分け
 
-| Use | When |
+| 使用方法 | 使用する場面 |
 | --- | --- |
-| **Embed** | You want to promote the full API of the inner type — the outer type "is a" enhanced version |
-| **Named field** | You only need the inner type internally — the outer type "has a" dependency |
+| **埋め込み** | 内部型の完全なAPIを昇格させたい場合 — 外部型は拡張バージョン（"is a"関係） |
+| **名前付きフィールド** | 内部型を内部的にのみ必要とする場合 — 外部型は依存関係を持つ（"has a"関係） |
 
 ```go
 // Embed — Server exposes all http.Handler methods
@@ -269,9 +269,9 @@ type Server struct {
 }
 ```
 
-## Dependency Injection via Interfaces
+## インターフェースによる依存性注入
 
-Accept dependencies as interfaces in constructors. This decouples components and makes testing straightforward:
+コンストラクタでインターフェースとして依存関係を受け取ります。これによりコンポーネントが疎結合になり、テストが容易になります:
 
 ```go
 type UserStore interface {
@@ -287,11 +287,11 @@ func NewUserService(store UserStore) *UserService {
 }
 ```
 
-In tests, pass a mock or stub that satisfies `UserStore` — no real database needed.
+テストでは、`UserStore` を満たすモックやスタブを渡します。実際のデータベースは不要です。
 
-## Struct Field Tags
+## 構造体フィールドタグ
 
-Use field tags for serialization control. Exported fields in serialized structs MUST have field tags:
+シリアライゼーション制御にフィールドタグを使用します。シリアライズされる構造体のエクスポートされたフィールドにはフィールドタグが必須です:
 
 ```go
 type Order struct {
@@ -305,31 +305,31 @@ type Order struct {
 }
 ```
 
-| Directive               | Meaning                                     |
+| ディレクティブ               | 意味                                     |
 | ----------------------- | ------------------------------------------- |
-| `json:"name"`           | Field name in JSON output                   |
-| `json:"name,omitempty"` | Omit field if zero value                    |
-| `json:"-"`              | Always exclude from JSON                    |
-| `json:",string"`        | Encode number/bool as JSON string           |
-| `db:"column"`           | Database column mapping (sqlx, etc.)        |
-| `yaml:"name"`           | YAML field name                             |
-| `xml:"name,attr"`       | XML attribute                               |
-| `validate:"required"`   | Struct validation (go-playground/validator) |
+| `json:"name"`           | JSON出力でのフィールド名                   |
+| `json:"name,omitempty"` | ゼロ値の場合フィールドを省略                    |
+| `json:"-"`              | 常にJSONから除外                    |
+| `json:",string"`        | 数値/boolをJSON文字列としてエンコード           |
+| `db:"column"`           | データベースカラムマッピング（sqlx等）        |
+| `yaml:"name"`           | YAMLフィールド名                             |
+| `xml:"name,attr"`       | XML属性                               |
+| `validate:"required"`   | 構造体バリデーション（go-playground/validator） |
 
-## Pointer vs Value Receivers
+## ポインタレシーバー vs 値レシーバー
 
-| Use pointer `(s *Server)` | Use value `(s Server)` |
+| ポインタ `(s *Server)` を使う場合 | 値 `(s Server)` を使う場合 |
 | --- | --- |
-| Method modifies the receiver | Receiver is small and immutable |
-| Receiver contains `sync.Mutex` or similar | Receiver is a basic type (int, string) |
-| Receiver is a large struct | Method is a read-only accessor |
-| Consistency: if any method uses a pointer, all should | Map and function values (already reference types) |
+| メソッドがレシーバーを変更する | レシーバーが小さく不変である |
+| レシーバーに `sync.Mutex` などが含まれる | レシーバーが基本型（int, string）である |
+| レシーバーが大きな構造体である | メソッドが読み取り専用のアクセサである |
+| 一貫性: いずれかのメソッドがポインタを使用する場合、すべてそうすべき | mapと関数の値（既に参照型） |
 
-Receiver type MUST be consistent across all methods of a type — if one method uses a pointer receiver, all methods should.
+レシーバー型は型のすべてのメソッドで一貫していなければなりません。いずれかのメソッドがポインタレシーバーを使用する場合、すべてのメソッドがそうすべきです。
 
-## Preventing Struct Copies with `noCopy`
+## `noCopy` による構造体コピーの防止
 
-Some structs must never be copied after first use (e.g., those containing a mutex, a channel, or internal pointers). Embed a `noCopy` sentinel to make `go vet` catch accidental copies:
+一部の構造体は最初の使用後にコピーしてはなりません（例: mutex、チャネル、内部ポインタを含むもの）。`noCopy` センチネルを埋め込んで `go vet` が偶発的なコピーを検出するようにします:
 
 ```go
 // noCopy may be added to structs which must not be copied after first use.
@@ -346,9 +346,9 @@ type ConnPool struct {
 }
 ```
 
-`go vet` reports an error if a `ConnPool` value is copied (passed by value, assigned, etc.). This is the same technique the standard library uses for `sync.WaitGroup`, `sync.Mutex`, `strings.Builder`, and others.
+`go vet` は `ConnPool` の値がコピーされた場合（値渡し、代入など）にエラーを報告します。これは標準ライブラリが `sync.WaitGroup`、`sync.Mutex`、`strings.Builder` などで使用しているのと同じ手法です。
 
-Always pass these structs by pointer:
+これらの構造体は常にポインタで渡してください:
 
 ```go
 // Good
@@ -358,26 +358,26 @@ func process(pool *ConnPool) { ... }
 func process(pool ConnPool) { ... }
 ```
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-naming` skill for interface naming conventions (Reader, Closer, Stringer)
 - → See `samber/cc-skills-golang@golang-design-patterns` skill for functional options, constructors, and builder patterns
 - → See `samber/cc-skills-golang@golang-dependency-injection` skill for DI patterns using interfaces
 - → See `samber/cc-skills-golang@golang-code-style` skill for value vs pointer function parameters (distinct from receivers)
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正方法 |
 | --- | --- |
-| Large interfaces (5+ methods) | Split into focused 1-3 method interfaces, compose if needed |
-| Defining interfaces in the implementor package | Define where consumed |
-| Returning interfaces from constructors | Return concrete types |
-| Bare type assertions without comma-ok | Always use `v, ok := x.(T)` |
-| Embedding when you only need a few methods | Use a named field and delegate explicitly |
-| Missing field tags on serialized structs | Tag all exported fields in marshaled types |
-| Mixing pointer and value receivers on a type | Pick one and be consistent |
-| Forgetting compile-time interface check | Add `var _ Interface = (*Type)(nil)` |
-| Using `ToString()` instead of `String()` | Honor canonical method names |
-| Premature interface with a single implementation | Start concrete, extract interface when needed |
-| Nil map/slice in zero value struct | Use lazy initialization in methods |
-| Using `any` for type-safe operations | Use generics (`[T comparable]`) instead |
+| 大きなインターフェース（5+メソッド） | 1〜3メソッドの焦点を絞ったインターフェースに分割し、必要に応じて合成する |
+| 実装側パッケージでインターフェースを定義 | 使用される場所で定義する |
+| コンストラクタからインターフェースを返す | 具象型を返す |
+| comma-okなしの型アサーション | 常に `v, ok := x.(T)` を使用する |
+| 数個のメソッドしか必要ないのに埋め込み | 名前付きフィールドを使用し明示的に委譲する |
+| シリアライズされる構造体にフィールドタグがない | マーシャルされる型のすべてのエクスポートフィールドにタグを付ける |
+| 型のポインタレシーバーと値レシーバーの混在 | 一つを選んで一貫させる |
+| コンパイル時インターフェースチェックの忘れ | `var _ Interface = (*Type)(nil)` を追加する |
+| `String()` の代わりに `ToString()` を使用 | 標準的なメソッド名を尊重する |
+| 単一実装での早期インターフェース | 具象型から始め、必要になった時にインターフェースを抽出する |
+| ゼロ値構造体でのnil map/slice | メソッド内で遅延初期化を使用する |
+| 型安全な操作に `any` を使用 | 代わりにジェネリクス（`[T comparable]`）を使用する |

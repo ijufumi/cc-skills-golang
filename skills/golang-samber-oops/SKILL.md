@@ -17,27 +17,27 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent WebFetch mcp__context7__resolve-library-id mcp__context7__query-docs
 ---
 
-**Persona:** You are a Go engineer who treats errors as structured data. Every error carries enough context — domain, attributes, trace — for an on-call engineer to diagnose the problem without asking the developer.
+**Persona:** あなたはエラーを構造化データとして扱うGoエンジニアです。すべてのエラーは、オンコールエンジニアが開発者に確認することなく問題を診断できるだけの十分なコンテキスト（ドメイン、属性、トレース）を持ちます。
 
-# samber/oops Structured Error Handling
+# samber/oops 構造化エラーハンドリング
 
-**samber/oops** is a drop-in replacement for Go's standard error handling that adds structured context, stack traces, error codes, public messages, and panic recovery. Variable data goes in `.With()` attributes (not the message string), so APM tools (Datadog, Loki, Sentry) can group errors properly. Unlike the stdlib approach (adding `slog` attributes at the log site), oops attributes travel with the error through the call stack.
+**samber/oops** は、Goの標準エラーハンドリングのドロップイン代替品であり、構造化コンテキスト、スタックトレース、エラーコード、パブリックメッセージ、パニックリカバリーを追加します。変数データはメッセージ文字列ではなく `.With()` 属性に格納されるため、APMツール（Datadog、Loki、Sentry）がエラーを適切にグループ化できます。ログサイトで `slog` 属性を追加するstdlibのアプローチとは異なり、oopsの属性はコールスタックを通じてエラーとともに伝播します。
 
-## Why use samber/oops
+## samber/oopsを使う理由
 
-Standard Go errors lack context — you see `connection failed` but not which user triggered it, what query was running, or the full call stack. `samber/oops` provides:
+標準のGoエラーはコンテキストが不足しています — `connection failed` は見えても、どのユーザーがトリガーしたか、どのクエリが実行中だったか、完全なコールスタックは分かりません。`samber/oops` が提供するもの:
 
-- **Structured context** — key-value attributes on any error
-- **Stack traces** — automatic call stack capture
-- **Error codes** — machine-readable identifiers
-- **Public messages** — user-safe messages separate from technical details
-- **Low-cardinality messages** — variable data in `.With()` attributes, not the message string, so APM tools group errors properly
+- **構造化コンテキスト** — 任意のエラーへのキーバリュー属性
+- **スタックトレース** — 自動コールスタックキャプチャ
+- **エラーコード** — マシンが読める識別子
+- **パブリックメッセージ** — 技術的詳細とは別のユーザー向けメッセージ
+- **低カーディナリティメッセージ** — 変数データはメッセージ文字列ではなく `.With()` 属性に格納し、APMツールがエラーを適切にグループ化できるようにする
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。最新のAPIシグネチャと使用パターンについては、ライブラリの公式ドキュメントとコード例を参照してください。Context7をディスカバリープラットフォームとして活用できます。
 
-## Core pattern: Error builder chain
+## コアパターン: エラービルダーチェーン
 
-All `oops` errors use a fluent builder pattern:
+すべての `oops` エラーはフルエントビルダーパターンを使用する:
 
 ```go
 err := oops.
@@ -49,40 +49,40 @@ err := oops.
     Errorf("failed to fetch user: %s", "timeout")
 ```
 
-Terminal methods:
+ターミナルメソッド:
 
-- `.Errorf(format, args...)` — create a new error
-- `.Wrap(err)` — wrap an existing error
-- `.Wrapf(err, format, args...)` — wrap with a message
-- `.Join(err1, err2, ...)` — combine multiple errors
-- `.Recover(fn)` / `.Recoverf(fn, format, args...)` — convert panic to error
+- `.Errorf(format, args...)` — 新しいエラーを作成
+- `.Wrap(err)` — 既存のエラーをラップ
+- `.Wrapf(err, format, args...)` — メッセージ付きでラップ
+- `.Join(err1, err2, ...)` — 複数のエラーを結合
+- `.Recover(fn)` / `.Recoverf(fn, format, args...)` — パニックをエラーに変換
 
-### Error builder methods
+### エラービルダーメソッド
 
-| Methods | Use case |
+| メソッド | ユースケース |
 | --- | --- |
-| `.With("key", value)` | Add custom key-value attribute (lazy `func() any` values supported) |
-| `.WithContext(ctx, "key1", "key2")` | Extract values from Go context into attributes (lazy values supported) |
-| `.In("domain")` | Set the feature/service/domain |
-| `.Tags("auth", "sql")` | Add categorization tags (query with `err.HasTag("tag")`) |
-| `.Code("iam_authz_missing_permission")` | Set machine-readable error identifier/slug |
-| `.Public("Could not fetch user.")` | Set user-safe message (separate from technical details) |
-| `.Hint("Runbook: https://doc.acme.org/doc/abcd.md")` | Add debugging hint for developers |
-| `.Owner("team/slack")` | Identify responsible team/owner |
-| `.User(id, "k", "v")` | Add user identifier and attributes |
-| `.Tenant(id, "k", "v")` | Add tenant/organization context and attributes |
-| `.Trace(id)` | Add trace / correlation ID (default: ULID) |
-| `.Span(id)` | Add span ID representing a unit of work/operation (default: ULID) |
-| `.Time(t)` | Override error timestamp (default: `time.Now()`) |
-| `.Since(t)` | Set duration based on time since `t` (exposed via `err.Duration()`) |
-| `.Duration(d)` | Set explicit error duration |
-| `.Request(req, includeBody)` | Attach `*http.Request` (optionally including body) |
-| `.Response(res, includeBody)` | Attach `*http.Response` (optionally including body) |
-| `oops.FromContext(ctx)` | Start from an `OopsErrorBuilder` stored in a Go context |
+| `.With("key", value)` | カスタムキーバリュー属性を追加（遅延評価 `func() any` 値もサポート） |
+| `.WithContext(ctx, "key1", "key2")` | Go contextから属性として値を抽出（遅延評価値もサポート） |
+| `.In("domain")` | 機能/サービス/ドメインを設定 |
+| `.Tags("auth", "sql")` | カテゴリ分類タグを追加（`err.HasTag("tag")` でクエリ可能） |
+| `.Code("iam_authz_missing_permission")` | マシンが読めるエラー識別子/スラグを設定 |
+| `.Public("Could not fetch user.")` | ユーザー向けメッセージを設定（技術的詳細とは別） |
+| `.Hint("Runbook: https://doc.acme.org/doc/abcd.md")` | 開発者向けデバッグヒントを追加 |
+| `.Owner("team/slack")` | 責任チーム/オーナーを識別 |
+| `.User(id, "k", "v")` | ユーザー識別子と属性を追加 |
+| `.Tenant(id, "k", "v")` | テナント/組織のコンテキストと属性を追加 |
+| `.Trace(id)` | トレース/相関IDを追加（デフォルト: ULID） |
+| `.Span(id)` | 作業単位/操作を表すスパンIDを追加（デフォルト: ULID） |
+| `.Time(t)` | エラータイムスタンプを上書き（デフォルト: `time.Now()`） |
+| `.Since(t)` | `t` からの経過時間に基づいて期間を設定（`err.Duration()` で公開） |
+| `.Duration(d)` | 明示的なエラー期間を設定 |
+| `.Request(req, includeBody)` | `*http.Request` を添付（オプションでボディを含む） |
+| `.Response(res, includeBody)` | `*http.Response` を添付（オプションでボディを含む） |
+| `oops.FromContext(ctx)` | Go contextに格納された `OopsErrorBuilder` から開始 |
 
-## Common scenarios
+## よくあるシナリオ
 
-### Database/repository layer
+### データベース/リポジトリ層
 
 ```go
 func (r *UserRepository) FetchUser(id string) (*User, error) {
@@ -100,7 +100,7 @@ func (r *UserRepository) FetchUser(id string) (*User, error) {
 }
 ```
 
-### HTTP handler layer
+### HTTPハンドラ層
 
 ```go
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +120,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Service layer with reusable builder
+### サービス層: 再利用可能なビルダー
 
 ```go
 func (s *UserService) CreateOrder(ctx context.Context, req CreateOrderRequest) error {
@@ -150,9 +150,9 @@ func (s *UserService) CreateOrder(ctx context.Context, req CreateOrderRequest) e
 }
 ```
 
-## Error wrapping best practices
+## エラーラップのベストプラクティス
 
-### DO: Wrap directly, no nil check needed
+### DO: 直接ラップする、nilチェック不要
 
 ```go
 // ✓ Good — Wrap returns nil if err is nil
@@ -165,9 +165,9 @@ if err != nil {
 return nil
 ```
 
-### DO: Add context at each layer
+### DO: 各層でコンテキストを追加する
 
-Each architectural layer SHOULD add context via Wrap/Wrapf — at least once per package boundary (not necessarily at every function call).
+各アーキテクチャ層は Wrap/Wrapf でコンテキストを追加すべきである — パッケージ境界ごとに少なくとも1回（すべての関数呼び出しで必須ではない）。
 
 ```go
 // ✓ Good — each layer adds relevant context
@@ -184,9 +184,9 @@ func Repository() error {
 }
 ```
 
-### DO: Keep error messages low-cardinality
+### DO: エラーメッセージを低カーディナリティに保つ
 
-Error messages MUST be low-cardinality for APM aggregation. Interpolating variable data into the message breaks grouping in Datadog, Loki, Sentry.
+エラーメッセージはAPM集約のために低カーディナリティでなければならない。変数データをメッセージに補間すると、Datadog、Loki、Sentryでのグループ化が壊れる。
 
 ```go
 // ✗ Bad — high-cardinality, breaks APM grouping
@@ -196,9 +196,9 @@ oops.Errorf("failed to process user %s in tenant %s", userID, tenantID)
 oops.With("user_id", userID).With("tenant_id", tenantID).Errorf("failed to process user")
 ```
 
-## Panic recovery
+## パニックリカバリー
 
-`oops.Recover()` MUST be used in goroutine boundaries. Convert panics to structured errors:
+`oops.Recover()` はゴルーチン境界で使用しなければならない。パニックを構造化エラーに変換する:
 
 ```go
 func ProcessData(data string) (err error) {
@@ -213,9 +213,9 @@ func ProcessData(data string) (err error) {
 }
 ```
 
-## Accessing error information
+## エラー情報へのアクセス
 
-`samber/oops` errors implement the standard `error` interface. Access additional info:
+`samber/oops` エラーは標準の `error` インターフェースを実装する。追加情報へのアクセス:
 
 ```go
 if oopsErr, ok := err.(oops.OopsError); ok {
@@ -230,7 +230,7 @@ if oopsErr, ok := err.(oops.OopsError); ok {
 publicMsg := oops.GetPublic(err, "Something went wrong")
 ```
 
-### Output formats
+### 出力フォーマット
 
 ```go
 fmt.Printf("%+v\n", err)       // verbose with stack trace
@@ -238,9 +238,9 @@ bytes, _ := json.Marshal(err)  // JSON for logging
 slog.Error(err.Error(), slog.Any("error", err))  // slog integration
 ```
 
-## Context propagation
+## コンテキスト伝播
 
-Carry error context through Go contexts:
+Goのコンテキストを通じてエラーコンテキストを伝播させる:
 
 ```go
 func middleware(next http.Handler) http.Handler {
@@ -260,14 +260,14 @@ func handler(ctx context.Context) error {
 }
 ```
 
-For assertions, configuration, and additional logger examples, see [Advanced patterns](./references/advanced.md).
+アサーション、設定、追加のロガー例については [Advanced patterns](./references/advanced.md) を参照。
 
-## References
+## 参考資料
 
 - [github.com/samber/oops](https://github.com/samber/oops)
 - [pkg.go.dev/github.com/samber/oops](https://pkg.go.dev/github.com/samber/oops)
 
-## Cross-References
+## クロスリファレンス
 
-- → See `samber/cc-skills-golang@golang-error-handling` skill for general error handling patterns
-- → See `samber/cc-skills-golang@golang-observability` skill for logger integration and structured logging
+- 一般的なエラーハンドリングパターンについては → See `samber/cc-skills-golang@golang-error-handling` skill
+- ロガー統合と構造化ログについては → See `samber/cc-skills-golang@golang-observability` skill

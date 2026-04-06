@@ -26,37 +26,37 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-design-patterns` skill takes precedence.
 
-# Go Design Patterns & Idioms
+# Go デザインパターンとイディオム
 
-Idiomatic Go patterns for production-ready code. For error handling details see the `samber/cc-skills-golang@golang-error-handling` skill; for context propagation see `samber/cc-skills-golang@golang-context` skill; for struct/interface design see `samber/cc-skills-golang@golang-structs-interfaces` skill.
+本番環境対応コードのためのGoのイディオマティックなパターン。エラーハンドリングの詳細は `samber/cc-skills-golang@golang-error-handling` スキル、コンテキストの伝播は `samber/cc-skills-golang@golang-context` スキル、構造体/インターフェース設計は `samber/cc-skills-golang@golang-structs-interfaces` スキルを参照してください。
 
-## Best Practices Summary
+## ベストプラクティスまとめ
 
-1. Constructors SHOULD use **functional options** — they scale better as APIs evolve (one function per option, no breaking changes)
-2. Functional options MUST **return an error** if validation can fail — catch bad config at construction, not at runtime
-3. **Avoid `init()`** — runs implicitly, cannot return errors, makes testing unpredictable. Use explicit constructors
-4. Enums SHOULD **start at 1** (or Unknown sentinel at 0) — Go's zero value silently passes as the first enum member
-5. Error cases MUST be **handled first** with early return — keep happy path flat
-6. **Panic is for bugs, not expected errors** — callers can handle returned errors; panics crash the process
-7. **`defer Close()` immediately after opening** — later code changes can accidentally skip cleanup
-8. **`runtime.AddCleanup`** over `runtime.SetFinalizer` — finalizers are unpredictable and can resurrect objects
-9. Every external call SHOULD **have a timeout** — a slow upstream hangs your goroutine indefinitely
-10. **Limit everything** (pool sizes, queue depths, buffers) — unbounded resources grow until they crash
-11. Retry logic MUST **check context cancellation** between attempts
-12. **Use `strings.Builder`** for concatenation in loops → see `samber/cc-skills-golang@golang-code-style`
-13. string vs []byte: **use `[]byte` for mutation and I/O**, `string` for display and keys — conversions allocate
-14. Iterators (Go 1.23+): **use for lazy evaluation** — avoid loading everything into memory
-15. **Stream large transfers** — loading millions of rows causes OOM; stream keeps memory constant
-16. `//go:embed` for **static assets** — embeds at compile time, eliminates runtime file I/O errors
-17. **Use `crypto/rand`** for keys/tokens — `math/rand` is predictable → see `samber/cc-skills-golang@golang-security`
-18. Regexp MUST be **compiled once at package level** — compilation is O(n) and allocates
-19. Compile-time interface checks: **`var _ Interface = (*Type)(nil)`**
-20. **A little recode > a big dependency** — each dep adds attack surface and maintenance burden
-21. **Design for testability** — accept interfaces, inject dependencies
+1. コンストラクタは **Functional Options** を使うべき — APIの進化に伴いスケールしやすい（オプションごとに1関数、破壊的変更なし）
+2. Functional Optionsはバリデーションが失敗する可能性がある場合、必ず **エラーを返す** こと — 実行時ではなくコンストラクション時に不正な設定をキャッチする
+3. **`init()` を避ける** — 暗黙的に実行され、エラーを返せず、テストを予測不能にする。明示的なコンストラクタを使用する
+4. 列挙型は **1から開始** すべき（または0にUnknownセンチネル） — Goのゼロ値が最初の列挙型メンバーとして暗黙的に通過する
+5. エラーケースは **早期リターンで最初に処理** しなければならない — ハッピーパスをフラットに保つ
+6. **パニックはバグ用であり、期待されるエラー用ではない** — 呼び出し元は返されたエラーを処理できる。パニックはプロセスをクラッシュさせる
+7. **オープン直後に `defer Close()` する** — 後のコード変更がクリーンアップを誤ってスキップする可能性がある
+8. **`runtime.SetFinalizer` より `runtime.AddCleanup`** — ファイナライザは予測不能で、オブジェクトを復活させる可能性がある
+9. すべての外部呼び出しには **タイムアウトを設定** すべき — 遅いアップストリームがゴルーチンを無期限にハングさせる
+10. **すべてを制限する**（プールサイズ、キューの深さ、バッファ） — 制限のないリソースはクラッシュするまで増大する
+11. リトライロジックは試行間で必ず **コンテキストのキャンセルを確認** すること
+12. ループ内の連結には **`strings.Builder` を使用** → `samber/cc-skills-golang@golang-code-style` を参照
+13. string vs []byte: **変異とI/Oには `[]byte`**、表示とキーには `string` を使用 — 変換はアロケーションを伴う
+14. イテレータ (Go 1.23+): **遅延評価に使用** — すべてをメモリにロードすることを避ける
+15. **大量転送はストリーミングする** — 数百万行のロードはOOMを引き起こす。ストリーミングはメモリを一定に保つ
+16. **静的アセット** には `//go:embed` — コンパイル時に埋め込み、実行時のファイルI/Oエラーを排除する
+17. キー/トークンには **`crypto/rand` を使用** — `math/rand` は予測可能 → `samber/cc-skills-golang@golang-security` を参照
+18. 正規表現は必ず **パッケージレベルで一度だけコンパイル** すること — コンパイルはO(n)でアロケーションを伴う
+19. コンパイル時インターフェースチェック: **`var _ Interface = (*Type)(nil)`**
+20. **少しの再実装 > 大きな依存関係** — 各依存は攻撃面とメンテナンス負担を増やす
+21. **テスタビリティのために設計する** — インターフェースを受け入れ、依存関係を注入する
 
-## Constructor Patterns: Functional Options vs Builder
+## コンストラクタパターン: Functional Options vs Builder
 
-### Functional Options (Preferred)
+### Functional Options（推奨）
 
 ```go
 type Server struct {
@@ -101,17 +101,17 @@ srv := NewServer(":8080",
 )
 ```
 
-Constructors SHOULD use **functional options** — they scale better with API evolution and require less code. Use builder pattern only if you need complex validation between configuration steps.
+コンストラクタは **Functional Options** を使うべき — APIの進化に伴いスケールしやすく、コード量も少ない。設定ステップ間で複雑なバリデーションが必要な場合のみビルダーパターンを使用する。
 
-## Constructors & Initialization
+## コンストラクタと初期化
 
-### Avoid `init()` and Mutable Globals
+### `init()` とミュータブルなグローバル変数を避ける
 
-`init()` runs implicitly, makes testing harder, and creates hidden dependencies:
+`init()` は暗黙的に実行され、テストを困難にし、隠れた依存関係を作る:
 
-- Multiple `init()` functions run in declaration order, across files in **filename alphabetical order** — fragile
-- Cannot return errors — failures must panic or `log.Fatal`
-- Runs before `main()` and tests — side effects make tests unpredictable
+- 複数の `init()` 関数は宣言順に実行され、ファイル間では **ファイル名のアルファベット順** — 脆弱
+- エラーを返せない — 失敗時はパニックまたは `log.Fatal` するしかない
+- `main()` やテストの前に実行される — 副作用がテストを予測不能にする
 
 ```go
 // Bad — hidden global state
@@ -131,9 +131,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 ```
 
-### Enums: Start at 1
+### 列挙型: 1から開始する
 
-Zero values should represent invalid/unset state:
+ゼロ値は無効/未設定の状態を表すべき:
 
 ```go
 type Status int
@@ -146,7 +146,7 @@ const (
 )
 ```
 
-### Compile Regexp Once
+### 正規表現は一度だけコンパイルする
 
 ```go
 // Good — compiled once at package level
@@ -157,7 +157,7 @@ func ValidateEmail(email string) bool {
 }
 ```
 
-### Use `//go:embed` for Static Assets
+### 静的アセットには `//go:embed` を使用する
 
 ```go
 import "embed"
@@ -169,41 +169,41 @@ var templateFS embed.FS
 var version string
 ```
 
-### Compile-Time Interface Checks
+### コンパイル時インターフェースチェック
 
 → See `samber/cc-skills-golang@golang-structs-interfaces` for the `var _ Interface = (*Type)(nil)` pattern.
 
-## Error Flow Patterns
+## エラーフローパターン
 
-Error cases MUST be handled first with early return — keep the happy path at minimal indentation. → See `samber/cc-skills-golang@golang-code-style` for the full pattern and examples.
+エラーケースは早期リターンで最初に処理しなければならない — ハッピーパスを最小限のインデントに保つ。→ See `samber/cc-skills-golang@golang-code-style` for the full pattern and examples.
 
-### When to Panic vs Return Error
+### パニックを使うべきとき vs エラーを返すべきとき
 
-- **Return error**: network failures, file not found, invalid input — anything a caller can handle
-- **Panic**: nil pointer in a place that should be impossible, violated invariant, `Must*` constructors used at init time
-- **`.Close()` errors**: acceptable to not check — `defer f.Close()` is fine without error handling
+- **エラーを返す**: ネットワーク障害、ファイルが見つからない、無効な入力 — 呼び出し元が処理できるすべてのケース
+- **パニック**: あり得ないはずの場所でのnilポインタ、不変条件の違反、初期化時に使用される `Must*` コンストラクタ
+- **`.Close()` エラー**: チェックしなくても許容される — エラーハンドリングなしの `defer f.Close()` で問題ない
 
-## Data Handling
+## データハンドリング
 
 ### string vs []byte vs []rune
 
-| Type     | Default for | Use when                                            |
-| -------- | ----------- | --------------------------------------------------- |
-| `string` | Everything  | Immutable, safe, UTF-8                              |
-| `[]byte` | I/O         | Writing to `io.Writer`, building strings, mutations |
-| `[]rune` | Unicode ops | `len()` must mean characters, not bytes             |
+| 型       | デフォルトの用途 | 使用する場面                                          |
+| -------- | -------------- | --------------------------------------------------- |
+| `string` | すべて          | イミュータブル、安全、UTF-8                             |
+| `[]byte` | I/O            | `io.Writer` への書き込み、文字列構築、変異              |
+| `[]rune` | Unicode操作    | `len()` がバイトではなく文字数を意味する必要がある場合    |
 
-Avoid repeated conversions — each one allocates. Stay in one type until you need the other.
+繰り返しの変換を避ける — 各変換はアロケーションを伴う。他方が必要になるまで一つの型にとどまる。
 
-### Iterators & Streaming for Large Data
+### イテレータとストリーミングによる大量データ処理
 
-Use iterators (Go 1.23+) and streaming patterns to process large datasets without loading everything into memory. For large transfers between services (e.g., 1M rows DB to HTTP), stream to prevent OOM.
+イテレータ (Go 1.23+) とストリーミングパターンを使用して、すべてをメモリにロードせずに大量のデータセットを処理する。サービス間の大量転送（例: DBからHTTPへの100万行）には、OOMを防ぐためにストリーミングする。
 
-For code examples, see [Data Handling Patterns](references/data-handling.md).
+コード例は [Data Handling Patterns](references/data-handling.md) を参照。
 
-## Resource Management
+## リソース管理
 
-`defer Close()` immediately after opening — don't wait, don't forget:
+オープン直後に `defer Close()` する — 待たない、忘れない:
 
 ```go
 f, err := os.Open(path)
@@ -219,11 +219,11 @@ if err != nil {
 defer rows.Close()
 ```
 
-For graceful shutdown, resource pools, and `runtime.AddCleanup`, see [Resource Management](references/resource-management.md).
+グレースフルシャットダウン、リソースプール、`runtime.AddCleanup` については [Resource Management](references/resource-management.md) を参照。
 
-## Resilience & Limits
+## レジリエンスと制限
 
-### Timeout Every External Call
+### すべての外部呼び出しにタイムアウトを設定する
 
 ```go
 ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -232,41 +232,41 @@ defer cancel()
 resp, err := httpClient.Do(req.WithContext(ctx))
 ```
 
-### Retry & Context Checks
+### リトライとコンテキストチェック
 
-Retry logic MUST check `ctx.Err()` between attempts and use exponential/linear backoff via `select` on `ctx.Done()`. Long loops MUST check `ctx.Err()` periodically. → See `samber/cc-skills-golang@golang-context` skill.
+リトライロジックは試行間で `ctx.Err()` を確認し、`ctx.Done()` の `select` による指数/線形バックオフを使用しなければならない。長いループは定期的に `ctx.Err()` を確認しなければならない。→ See `samber/cc-skills-golang@golang-context` skill.
 
-## Database Patterns
+## データベースパターン
 
 → See `samber/cc-skills-golang@golang-database` skill for sqlx/pgx, transactions, nullable columns, connection pools, repository interfaces, testing.
 
-## Architecture
+## アーキテクチャ
 
-Ask the developer which architecture they prefer: clean architecture, hexagonal, DDD, or flat layout. Don't impose complex architecture on a small project.
+開発者にどのアーキテクチャを好むか確認する: クリーンアーキテクチャ、ヘキサゴナル、DDD、またはフラットレイアウト。小さなプロジェクトに複雑なアーキテクチャを押し付けない。
 
-Core principles regardless of architecture:
+アーキテクチャに関わらず共通の原則:
 
-- **Keep domain pure** — no framework dependencies in the domain layer
-- **Fail fast** — validate at boundaries, trust internal code
-- **Make illegal states unrepresentable** — use types to enforce invariants
-- **Respect 12-factor app** principles — → see `samber/cc-skills-golang@golang-project-layout`
+- **ドメインを純粋に保つ** — ドメイン層にフレームワーク依存を持たない
+- **早期に失敗する** — 境界でバリデーションし、内部コードを信頼する
+- **不正な状態を表現不可能にする** — 型を使って不変条件を強制する
+- **12-factor app** の原則を尊重する — → see `samber/cc-skills-golang@golang-project-layout`
 
-## Detailed Guides
+## 詳細ガイド
 
-| Guide | Scope |
+| ガイド | 範囲 |
 | --- | --- |
-| [Architecture Patterns](references/architecture.md) | High-level principles, when each architecture fits |
-| [Clean Architecture](references/clean-architecture.md) | Use cases, dependency rule, layered adapters |
-| [Hexagonal Architecture](references/hexagonal-architecture.md) | Ports and adapters, domain core isolation |
-| [Domain-Driven Design](references/ddd.md) | Aggregates, value objects, bounded contexts |
+| [Architecture Patterns](references/architecture.md) | 高レベルの原則、各アーキテクチャが適する場面 |
+| [Clean Architecture](references/clean-architecture.md) | ユースケース、依存関係ルール、レイヤードアダプタ |
+| [Hexagonal Architecture](references/hexagonal-architecture.md) | ポートとアダプタ、ドメインコアの分離 |
+| [Domain-Driven Design](references/ddd.md) | アグリゲート、値オブジェクト、境界づけられたコンテキスト |
 
-## Code Philosophy
+## コード哲学
 
-- **Avoid repetitive code** — but don't abstract prematurely
-- **Minimize dependencies** — a little recode > a big dependency
-- **Design for testability** — accept interfaces, inject dependencies, keep functions pure
+- **繰り返しのコードを避ける** — ただし早すぎる抽象化はしない
+- **依存関係を最小化する** — 少しの再実装 > 大きな依存関係
+- **テスタビリティのために設計する** — インターフェースを受け入れ、依存関係を注入し、関数を純粋に保つ
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-data-structures` skill for data structure selection, internals, and container/ packages
 - → See `samber/cc-skills-golang@golang-error-handling` skill for error wrapping, sentinel errors, and the single handling rule
