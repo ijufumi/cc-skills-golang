@@ -27,59 +27,59 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-observability` skill takes precedence.
 
-# Go Observability Best Practices
+# Go オブザーバビリティベストプラクティス
 
-Observability is the ability to understand a system's internal state from its external outputs. In Go services, this means five complementary signals: **logs**, **metrics**, **traces**, **profiles**, and **RUM**. Each answers different questions, and together they give you full visibility into both system behavior and user experience.
+オブザーバビリティとは、外部出力からシステムの内部状態を理解する能力です。Goサービスにおいては、5つの補完的なシグナルを意味します: **ログ**、**メトリクス**、**トレース**、**プロファイル**、**RUM**。それぞれが異なる質問に答え、合わせてシステムの動作とユーザー体験の両方に対する完全な可視性を提供します。
 
-When using observability libraries (Prometheus client, OpenTelemetry SDK, vendor integrations), refer to the library's official documentation and code examples for current API signatures.
+オブザーバビリティライブラリ（Prometheusクライアント、OpenTelemetry SDK、ベンダー統合）を使用する場合は、最新のAPIシグネチャについてライブラリの公式ドキュメントとコード例を参照してください。
 
-## Best Practices Summary
+## ベストプラクティスの要約
 
-1. **Use structured logging** with `log/slog` — production services MUST emit structured logs (JSON), not freeform strings
-2. **Choose the right log level** — Debug for development, Info for normal operations, Warn for degraded states, Error for failures requiring attention
-3. **Log with context** — use `slog.InfoContext(ctx, ...)` to correlate logs with traces
-4. **Prefer Histogram over Summary** for latency metrics — Histograms support server-side aggregation and percentile queries. Every HTTP endpoint MUST have latency and error rate metrics.
-5. **Keep label cardinality low** in Prometheus — NEVER use unbounded values (user IDs, full URLs) as label values
-6. **Track percentiles** (P50, P90, P99, P99.9) using Histograms + `histogram_quantile()` in PromQL
-7. **Set up OpenTelemetry tracing on new projects** — configure the TracerProvider early, then add spans everywhere
-8. **Add spans to every meaningful operation** — service methods, DB queries, external API calls, message queue operations
-9. **Propagate context everywhere** — context is the vehicle that carries trace_id, span_id, and deadlines across service boundaries
-10. **Enable profiling via environment variables** — toggle pprof and continuous profiling on/off without redeploying
-11. **Correlate signals** — inject trace_id into logs, use exemplars to link metrics to traces
-12. **A feature is not done until it is observable** — declare metrics, add proper logging, create spans
-13. **Use [awesome-prometheus-alerts](https://samber.github.io/awesome-prometheus-alerts/) as a starting point** for infrastructure and dependency alerting — browse by technology, copy rules, customize thresholds
+1. **構造化ログを使用する** `log/slog` — 本番サービスは構造化ログ（JSON）を出力しなければならず（MUST）、自由形式の文字列は不可
+2. **適切なログレベルを選択する** — Debugは開発用、Infoは通常操作、Warnは劣化状態、Errorは対応が必要な障害
+3. **コンテキスト付きでログを記録する** — `slog.InfoContext(ctx, ...)` を使用してログとトレースを相関させる
+4. **レイテンシメトリクスにはSummaryよりHistogramを優先する** — Histogramはサーバーサイド集約とパーセンタイルクエリをサポート。すべてのHTTPエンドポイントにレイテンシとエラーレートのメトリクスが必要（MUST）
+5. **Prometheusのラベルカーディナリティを低く保つ** — 無制限の値（ユーザーID、完全なURL）をラベル値として使用してはならない（NEVER）
+6. **パーセンタイルを追跡する**（P50, P90, P99, P99.9） Histograms + PromQLの `histogram_quantile()` を使用
+7. **新規プロジェクトにOpenTelemetryトレーシングを設定する** — TracerProviderを早期に設定し、あらゆる場所にspanを追加
+8. **すべての意味のある操作にspanを追加する** — サービスメソッド、DBクエリ、外部API呼び出し、メッセージキュー操作
+9. **コンテキストをあらゆる場所に伝播する** — コンテキストはtrace_id、span_id、デッドラインをサービス境界を越えて運ぶ手段
+10. **環境変数でプロファイリングを有効にする** — 再デプロイなしでpprofと継続的プロファイリングのオン/オフを切り替え
+11. **シグナルを相関させる** — ログにtrace_idを注入し、exemplarsを使用してメトリクスとトレースをリンク
+12. **フィーチャーはオブザーバブルになるまで完了ではない** — メトリクスを宣言し、適切なログを追加し、spanを作成
+13. **インフラストラクチャと依存関係のアラートの出発点として [awesome-prometheus-alerts](https://samber.github.io/awesome-prometheus-alerts/) を使用する** — テクノロジー別に閲覧し、ルールをコピーし、しきい値をカスタマイズ
 
-## Cross-References
+## クロスリファレンス
 
 See `samber/cc-skills-golang@golang-error-handling` skill for the single handling rule. See `samber/cc-skills-golang@golang-troubleshooting` skill for using observability signals to diagnose production issues. See `samber/cc-skills-golang@golang-security` skill for protecting pprof endpoints and avoiding PII in logs. See `samber/cc-skills-golang@golang-context` skill for propagating trace context across service boundaries. See `samber/cc-skills@promql-cli` skill for querying and exploring PromQL expressions against Prometheus from the CLI.
 
-## The Five Signals
+## 5つのシグナル
 
-| Signal | Question it answers | Tool | When to use |
+| シグナル | 答える質問 | ツール | 使用場面 |
 | --- | --- | --- | --- |
-| **Logs** | What happened? | `log/slog` | Discrete events, errors, audit trails |
-| **Metrics** | How much / how fast? | Prometheus client | Aggregated measurements, alerting, SLOs |
-| **Traces** | Where did time go? | OpenTelemetry | Request flow across services, latency breakdown |
-| **Profiles** | Why is it slow / using memory? | pprof, Pyroscope | CPU hotspots, memory leaks, lock contention |
-| **RUM** | How do users experience it? | PostHog, Segment | Product analytics, funnels, session replay |
+| **ログ** | 何が起こったか？ | `log/slog` | 離散イベント、エラー、監査証跡 |
+| **メトリクス** | どれくらい／どれくらい速く？ | Prometheusクライアント | 集約測定、アラート、SLO |
+| **トレース** | 時間はどこで使われたか？ | OpenTelemetry | サービス間のリクエストフロー、レイテンシ内訳 |
+| **プロファイル** | なぜ遅い／メモリを使っているのか？ | pprof, Pyroscope | CPUホットスポット、メモリリーク、ロック競合 |
+| **RUM** | ユーザーはどう体験しているか？ | PostHog, Segment | プロダクト分析、ファネル、セッションリプレイ |
 
-## Detailed Guides
+## 詳細ガイド
 
-Each signal has a dedicated guide with full code examples, configuration patterns, and cost analysis:
+各シグナルには、完全なコード例、設定パターン、コスト分析を含む専用ガイドがあります:
 
-- **[Structured Logging](references/logging.md)** — Why structured logging matters for log aggregation at scale. Covers `log/slog` setup, log levels (Debug/Info/Warn/Error) and when to use each, request correlation with trace IDs, context propagation with `slog.InfoContext`, request-scoped attributes, the slog ecosystem (handlers, formatters, middleware), and migration strategies from zap/logrus/zerolog.
+- **[構造化ログ](references/logging.md)** — 大規模なログ集約において構造化ログが重要な理由。`log/slog` のセットアップ、ログレベル（Debug/Info/Warn/Error）と各レベルの使用場面、トレースIDによるリクエスト相関、`slog.InfoContext` によるコンテキスト伝播、リクエストスコープの属性、slogエコシステム（ハンドラー、フォーマッター、ミドルウェア）、zap/logrus/zerologからの移行戦略。
 
-- **[Metrics Collection](references/metrics.md)** — Prometheus client setup and the four metric types (Counter for rate-of-change, Gauge for snapshots, Histogram for latency aggregation). Deep dive: why Histograms beat Summaries (server-side aggregation, supports `histogram_quantile` PromQL), naming conventions, the PromQL-as-comments convention (write queries above metric declarations for discoverability), production-grade PromQL examples, multi-window SLO burn rate alerting, and the high-cardinality label problem (why unbounded values like user IDs destroy performance).
+- **[メトリクス収集](references/metrics.md)** — Prometheusクライアントのセットアップと4つのメトリクスタイプ（変化率のCounter、スナップショットのGauge、レイテンシ集約のHistogram）。詳細: HistogramがSummaryに勝る理由（サーバーサイド集約、`histogram_quantile` PromQLサポート）、命名規則、PromQL-as-comments規則（発見性のためメトリクス宣言の上にクエリを記述）、本番グレードのPromQL例、マルチウィンドウSLOバーンレートアラート、高カーディナリティラベル問題（ユーザーIDのような無制限の値がパフォーマンスを破壊する理由）。
 
-- **[Distributed Tracing](references/tracing.md)** — When and how to use OpenTelemetry SDK to trace request flows across services. Covers spans (creating, attributes, status recording), `otelhttp` middleware for HTTP instrumentation, error recording with `span.RecordError()`, trace sampling (why you can't collect everything at scale), propagating trace context across service boundaries, and cost optimization.
+- **[分散トレーシング](references/tracing.md)** — OpenTelemetry SDKを使用してサービス間のリクエストフローをトレースする方法とタイミング。span（作成、属性、ステータス記録）、HTTP計装のための `otelhttp` ミドルウェア、`span.RecordError()` によるエラー記録、トレースサンプリング（大規模ですべてを収集できない理由）、サービス境界を越えたトレースコンテキストの伝播、コスト最適化。
 
-- **[Profiling](references/profiling.md)** — On-demand profiling with pprof (CPU, heap, goroutine, mutex, block profiles) — how to enable it in production, secure it with auth, and toggle via environment variables without redeploying. Continuous profiling with Pyroscope for always-on performance visibility. Cost implications of each profiling type and mitigation strategies.
+- **[プロファイリング](references/profiling.md)** — pprofによるオンデマンドプロファイリング（CPU、ヒープ、ゴルーチン、ミューテックス、ブロックプロファイル） — 本番環境での有効化方法、認証によるセキュリティ確保、再デプロイなしでの環境変数による切り替え。Pyroscopeによる継続的プロファイリングで常時パフォーマンス可視性を実現。各プロファイリングタイプのコスト影響と緩和戦略。
 
-- **[Real User Monitoring](references/rum.md)** — Understanding how users actually experience your service. Covers product analytics (event tracking, funnels), Customer Data Platform integration, and critical compliance: GDPR/CCPA consent checks, data subject rights (user deletion endpoints), and privacy checklist for tracking. Server-side event tracking (PostHog, Segment) and identity key best practices.
+- **[リアルユーザーモニタリング](references/rum.md)** — ユーザーがサービスを実際にどう体験しているかの理解。プロダクト分析（イベントトラッキング、ファネル）、カスタマーデータプラットフォーム統合、重要なコンプライアンス: GDPR/CCPA同意チェック、データ主体の権利（ユーザー削除エンドポイント）、トラッキングのプライバシーチェックリスト。サーバーサイドイベントトラッキング（PostHog, Segment）とIDキーのベストプラクティス。
 
-- **[Alerting](references/alerting.md)** — Proactive problem detection. Covers the four golden signals (latency, traffic, errors, saturation), [awesome-prometheus-alerts](https://samber.github.io/awesome-prometheus-alerts/) as a rule library with ~500 ready-to-use rules by technology, Go runtime alerts (goroutine leaks, GC pressure, OOM risk), severity levels, and common mistakes that break alerting (using `irate` instead of `rate`, missing `for:` duration to avoid flapping).
+- **[アラート](references/alerting.md)** — プロアクティブな問題検出。4つのゴールデンシグナル（レイテンシ、トラフィック、エラー、飽和）、テクノロジー別に約500のすぐに使えるルールを持つルールライブラリとしての [awesome-prometheus-alerts](https://samber.github.io/awesome-prometheus-alerts/)、Goランタイムアラート（ゴルーチンリーク、GC圧力、OOMリスク）、重大度レベル、アラートを壊すよくある間違い（`rate` の代わりに `irate` を使用、フラッピング防止の `for:` 期間の欠落）。
 
-- **[Grafana Dashboards](references/dashboards.md)** — Prebuilt dashboards for Go runtime monitoring (heap allocation, GC pause frequency, goroutine count, CPU). Explains the standard dashboards to install, how to customize them for your service, and when each dashboard answers a different operational question.
+- **[Grafanaダッシュボード](references/dashboards.md)** — Goランタイムモニタリング用のプリビルトダッシュボード（ヒープアロケーション、GCポーズ頻度、ゴルーチン数、CPU）。インストールすべき標準ダッシュボード、サービスに合わせたカスタマイズ方法、各ダッシュボードがどの運用上の質問に答えるかを説明。
 
 ## Correlating Signals
 

@@ -19,27 +19,27 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Persona:** You are a Go architect setting up dependency injection. You keep the container at the composition root, depend on interfaces not concrete types, and treat provider errors as first-class failures.
 
-# Using samber/do for Dependency Injection in Go
+# Go における samber/do を使った依存性注入
 
-Type-safe dependency injection toolkit for Go based on Go 1.18+ generics.
+Go 1.18+ のジェネリクスに基づく型安全な依存性注入ツールキット。
 
-**Official Resources:**
+**公式リソース:**
 
 - [pkg.go.dev/github.com/samber/do/v2](https://pkg.go.dev/github.com/samber/do/v2)
 - [do.samber.dev](https://do.samber.dev)
 - [github.com/samber/do/v2](https://github.com/samber/do)
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。詳細はライブラリのドキュメントやコード例を参照してください。Context7 がディスカバリプラットフォームとして役立ちます。
 
-DO NOT USE v1 OF THIS LIBRARY. INSTALL v2 INSTEAD:
+このライブラリの v1 は使用しないでください。代わりに v2 をインストールしてください:
 
 ```bash
 go get -u github.com/samber/do/v2
 ```
 
-## Core Concepts
+## コアコンセプト
 
-### The Injector (Container)
+### インジェクター（コンテナ）
 
 ```go
 import "github.com/samber/do/v2"
@@ -47,48 +47,48 @@ import "github.com/samber/do/v2"
 injector := do.New()
 ```
 
-### Service Types
+### サービスタイプ
 
-- **Lazy** (default): Created when first requested
-- **Eager**: Created immediately when the container starts
-- **Transient**: New instance created on every request
-- **Value**: Pre-created value, no instantiation
+- **Lazy**（デフォルト）: 最初にリクエストされたときに作成される
+- **Eager**: コンテナの起動時に即座に作成される
+- **Transient**: リクエストごとに新しいインスタンスが作成される
+- **Value**: 事前に作成された値、インスタンス化なし
 
-### Provider Functions
+### プロバイダー関数
 
-Services MUST be registered via provider functions:
+サービスはプロバイダー関数を通じて登録しなければなりません:
 
 ```go
 type Provider[T any] func(i Injector) (T, error)
 ```
 
-## Basic Usage
+## 基本的な使い方
 
-### 1. Define and Register Services
+### 1. サービスの定義と登録
 
-Follow "Accept Interfaces, Return Structs":
+「インターフェースを受け取り、構造体を返す」に従ってください:
 
 ```go
-// Register a service (lazy by default)
+// サービスを登録（デフォルトは lazy）
 do.Provide(injector, func(i do.Injector) (Database, error) {
     return &PostgreSQLDatabase{connString: "postgres://..."}, nil
 })
 
-// Register a pre-created value
+// 事前作成済みの値を登録
 do.ProvideValue(injector, &Config{Port: 8080})
 
-// Register a transient service (new instance each time)
+// transient サービスを登録（毎回新しいインスタンス）
 do.ProvideTransient(injector, func(i do.Injector) (*Logger, error) {
     return &Logger{}, nil
 })
 
-// Register an eager service (created immediately)
+// eager サービスを登録（即座に作成）
 do.Provide(injector, do.Eager(&Config{Port: 8080}))
 ```
 
-### 2. Invoke Services
+### 2. サービスの呼び出し
 
-The container MUST only be accessed at the composition root:
+コンテナはコンポジションルートでのみアクセスしなければなりません:
 
 ```go
 // Invoke with error handling

@@ -21,45 +21,45 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent WebFetch mcp__context7__resolve-library-id mcp__context7__query-docs Bash(protoc:*) AskUserQuestion
 ---
 
-**Persona:** You are a Go distributed systems engineer. You design gRPC services for correctness and operability — proper status codes, deadlines, interceptors, and graceful shutdown matter as much as the happy path.
+**Persona:** あなたはGo分散システムエンジニアです。正確性と運用性を考慮してgRPCサービスを設計します — 適切なステータスコード、デッドライン、インターセプター、グレースフルシャットダウンはハッピーパスと同じくらい重要です。
 
-**Modes:**
+**モード:**
 
-- **Build mode** — implementing a new gRPC server or client from scratch.
-- **Review mode** — auditing existing gRPC code for correctness, security, and operability issues.
+- **ビルドモード** — 新しいgRPCサーバーまたはクライアントをゼロから実装する。
+- **レビューモード** — 既存のgRPCコードの正確性、セキュリティ、運用上の問題を監査する。
 
-# Go gRPC Best Practices
+# Go gRPC ベストプラクティス
 
-Treat gRPC as a pure transport layer — keep it separate from business logic. The official Go implementation is `google.golang.org/grpc`.
+gRPCを純粋なトランスポート層として扱う — ビジネスロジックと分離する。公式のGo実装は `google.golang.org/grpc`。
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。最新のAPIシグネチャと使用パターンについては、ライブラリの公式ドキュメントとコード例を参照してください。Context7をディスカバリープラットフォームとして活用できます。
 
-## Quick Reference
+## クイックリファレンス
 
-| Concern | Package / Tool |
+| 関心事 | パッケージ / ツール |
 | --- | --- |
-| Service definition | `protoc` or `buf` with `.proto` files |
-| Code generation | `protoc-gen-go`, `protoc-gen-go-grpc` |
-| Error handling | `google.golang.org/grpc/status` with `codes` |
-| Rich error details | `google.golang.org/genproto/googleapis/rpc/errdetails` |
-| Interceptors | `grpc.ChainUnaryInterceptor`, `grpc.ChainStreamInterceptor` |
-| Middleware ecosystem | `github.com/grpc-ecosystem/go-grpc-middleware` |
-| Testing | `google.golang.org/grpc/test/bufconn` |
+| サービス定義 | `.proto` ファイルによる `protoc` または `buf` |
+| コード生成 | `protoc-gen-go`、`protoc-gen-go-grpc` |
+| エラーハンドリング | `codes` と共に `google.golang.org/grpc/status` |
+| リッチエラー詳細 | `google.golang.org/genproto/googleapis/rpc/errdetails` |
+| インターセプター | `grpc.ChainUnaryInterceptor`、`grpc.ChainStreamInterceptor` |
+| ミドルウェアエコシステム | `github.com/grpc-ecosystem/go-grpc-middleware` |
+| テスト | `google.golang.org/grpc/test/bufconn` |
 | TLS / mTLS | `google.golang.org/grpc/credentials` |
-| Health checks | `google.golang.org/grpc/health` |
+| ヘルスチェック | `google.golang.org/grpc/health` |
 
-## Proto File Organization
+## Protoファイルの整理
 
-Organize by domain with versioned directories (`proto/user/v1/`). Always use `Request`/`Response` wrapper messages — bare types like `string` cannot have fields added later. Generate with `buf generate` or `protoc`.
+バージョン付きディレクトリ（`proto/user/v1/`）でドメイン別に整理する。`Request`/`Response` ラッパーメッセージを常に使用する — `string` などのベア型は後でフィールドを追加できない。`buf generate` または `protoc` で生成する。
 
-[Proto & code generation reference](references/protoc-reference.md)
+[Proto & コード生成リファレンス](references/protoc-reference.md)
 
-## Server Implementation
+## サーバー実装
 
-- Implement health check service (`grpc_health_v1`) — Kubernetes probes need it to determine readiness
-- Use interceptors for cross-cutting concerns (logging, auth, recovery) — keeps business logic clean
-- Use `GracefulStop()` with a timeout fallback to `Stop()` — drains in-flight RPCs while preventing hangs
-- Disable reflection in production — it exposes your full API surface
+- ヘルスチェックサービス（`grpc_health_v1`）を実装する — Kubernetesプローブが準備完了を判定するために必要
+- ロギング、認証、リカバリーなどの横断的関心事にインターセプターを使用する — ビジネスロジックをクリーンに保つ
+- タイムアウトフォールバック付きの `GracefulStop()` を使用する — 進行中のRPCをドレインしながらハングを防ぐ
+- プロダクションではリフレクションを無効にする — API全体が公開されてしまう
 
 ```go
 srv := grpc.NewServer(
@@ -80,7 +80,7 @@ case <-time.After(15 * time.Second):
 }
 ```
 
-### Interceptor Pattern
+### インターセプターパターン
 
 ```go
 func loggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
@@ -91,12 +91,12 @@ func loggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo
 }
 ```
 
-## Client Implementation
+## クライアント実装
 
-- Reuse connections — gRPC multiplexes RPCs on a single HTTP/2 connection; one-per-request wastes TCP/TLS handshakes
-- Set deadlines on every call (`context.WithTimeout`) — without one, a slow upstream hangs goroutines indefinitely
-- Use `round_robin` with headless Kubernetes services via `dns:///` scheme
-- Pass metadata (auth tokens, trace IDs) via `metadata.NewOutgoingContext`
+- コネクションを再利用する — gRPCは単一のHTTP/2コネクション上でRPCを多重化する。リクエストごとに作成するとTCP/TLSハンドシェイクが無駄になる
+- すべての呼び出しにデッドラインを設定する（`context.WithTimeout`） — これがないと遅い上流が無期限にゴルーチンをハングさせる
+- `dns:///` スキーム経由でヘッドレスKubernetesサービスと共に `round_robin` を使用する
+- `metadata.NewOutgoingContext` 経由でメタデータ（認証トークン、トレースID）を渡す
 
 ```go
 conn, err := grpc.NewClient("dns:///user-service:50051",
@@ -119,22 +119,22 @@ conn, err := grpc.NewClient("dns:///user-service:50051",
 client := pb.NewUserServiceClient(conn)
 ```
 
-## Error Handling
+## エラーハンドリング
 
-Always return gRPC errors using `status.Error` with a specific code — a raw `error` becomes `codes.Unknown`, telling the client nothing actionable. Clients use codes to decide retry vs fail-fast vs degrade.
+gRPCエラーは常に特定のコードを持つ `status.Error` を使用して返す — 生の `error` は `codes.Unknown` になり、クライアントに何もアクション可能な情報を与えない。クライアントはコードを使ってリトライ、フェイルファスト、デグレードを判断する。
 
-| Code                 | When to Use                                 |
+| コード               | 使用するタイミング                              |
 | -------------------- | ------------------------------------------- |
-| `InvalidArgument`    | Malformed input (missing field, bad format) |
-| `NotFound`           | Entity does not exist                       |
-| `AlreadyExists`      | Create failed, entity exists                |
-| `PermissionDenied`   | Caller lacks permission                     |
-| `Unauthenticated`    | Missing or invalid token                    |
-| `FailedPrecondition` | System not in required state                |
-| `ResourceExhausted`  | Rate limit or quota exceeded                |
-| `Unavailable`        | Transient issue, safe to retry              |
-| `Internal`           | Unexpected bug                              |
-| `DeadlineExceeded`   | Timeout                                     |
+| `InvalidArgument`    | 不正な入力（フィールド欠落、不正なフォーマット） |
+| `NotFound`           | エンティティが存在しない                       |
+| `AlreadyExists`      | 作成失敗、エンティティが既に存在する             |
+| `PermissionDenied`   | 呼び出し元が権限を持たない                     |
+| `Unauthenticated`    | トークンが欠落または無効                       |
+| `FailedPrecondition` | システムが必要な状態にない                     |
+| `ResourceExhausted`  | レート制限またはクォータ超過                   |
+| `Unavailable`        | 一時的な問題、安全にリトライ可能               |
+| `Internal`           | 予期しないバグ                               |
+| `DeadlineExceeded`   | タイムアウト                                |
 
 ```go
 // ✗ Bad — caller gets codes.Unknown, can't decide whether to retry
@@ -147,17 +147,17 @@ if errors.Is(err, ErrNotFound) {
 return nil, status.Errorf(codes.Internal, "lookup failed: %v", err)
 ```
 
-For field-level validation errors, attach `errdetails.BadRequest` via `status.WithDetails`.
+フィールドレベルのバリデーションエラーには、`status.WithDetails` 経由で `errdetails.BadRequest` を添付する。
 
-## Streaming
+## ストリーミング
 
-| Pattern | Use Case |
+| パターン | ユースケース |
 | --- | --- |
-| Server streaming | Server sends a sequence (log tailing, result sets) |
-| Client streaming | Client sends a sequence, server responds once (file upload, batch) |
-| Bidirectional | Both send independently (chat, real-time sync) |
+| サーバーストリーミング | サーバーがシーケンスを送信（ログテーリング、結果セット） |
+| クライアントストリーミング | クライアントがシーケンスを送信し、サーバーが一度レスポンス（ファイルアップロード、バッチ） |
+| 双方向 | 両方が独立して送信（チャット、リアルタイム同期） |
 
-Prefer streaming over large single messages — avoids per-message size limits and lowers memory pressure.
+大きな単一メッセージよりもストリーミングを優先する — メッセージサイズ制限を回避しメモリ圧力を低減する。
 
 ```go
 func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListUsersServer) error {
@@ -170,46 +170,46 @@ func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListU
 }
 ```
 
-## Testing
+## テスト
 
-Use `bufconn` for in-memory connections that exercise the full gRPC stack (serialization, interceptors, metadata) without network overhead. Always test that error scenarios return the expected gRPC status codes.
+ネットワークオーバーヘッドなしにgRPCスタック全体（シリアライゼーション、インターセプター、メタデータ）を検証するインメモリコネクションに `bufconn` を使用する。エラーシナリオが期待されるgRPCステータスコードを返すことを常にテストする。
 
-[Testing patterns and examples](references/testing.md)
+[テストパターンと例](references/testing.md)
 
-## Security
+## セキュリティ
 
-- TLS MUST be enabled in production — credentials travel in metadata
-- For service-to-service auth, use mTLS or delegate to a service mesh (Istio, Linkerd)
-- For user auth, implement `credentials.PerRPCCredentials` and validate tokens in an auth interceptor
-- Reflection SHOULD be disabled in production to prevent API discovery
+- TLSはプロダクションで有効にしなければならない — 認証情報はメタデータで送信される
+- サービス間認証には mTLS を使用するか、サービスメッシュ（Istio、Linkerd）に委任する
+- ユーザー認証には `credentials.PerRPCCredentials` を実装し、認証インターセプターでトークンを検証する
+- API検出を防ぐため、プロダクションではリフレクションを無効にすべき
 
-## Performance
+## パフォーマンス
 
-| Setting | Purpose | Typical Value |
+| 設定 | 目的 | 典型的な値 |
 | --- | --- | --- |
-| `keepalive.ServerParameters.Time` | Ping interval for idle connections | 30s |
-| `keepalive.ServerParameters.Timeout` | Ping ack timeout | 10s |
-| `grpc.MaxRecvMsgSize` | Override 4 MB default for large payloads | 16 MB |
-| Connection pooling | Multiple conns for high-load streaming | 4 connections |
+| `keepalive.ServerParameters.Time` | アイドル接続のpingインターバル | 30秒 |
+| `keepalive.ServerParameters.Timeout` | ping ack タイムアウト | 10秒 |
+| `grpc.MaxRecvMsgSize` | 大きなペイロード用に4MBデフォルトを上書き | 16MB |
+| コネクションプーリング | 高負荷ストリーミング用の複数接続 | 4接続 |
 
-Most services do not need connection pooling — profile before adding complexity.
+ほとんどのサービスはコネクションプーリングを必要としない — 複雑さを追加する前にプロファイリングする。
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正 |
 | --- | --- |
-| Returning raw `error` | Becomes `codes.Unknown` — client can't decide whether to retry. Use `status.Errorf` with a specific code |
-| No deadline on client calls | Slow upstream hangs indefinitely. Always `context.WithTimeout` |
-| New connection per request | Wastes TCP/TLS handshakes. Create once, reuse — HTTP/2 multiplexes RPCs |
-| Reflection enabled in production | Lets attackers enumerate every method. Enable only in dev/staging |
-| `codes.Internal` for all errors | Wrong codes break client retry logic. `Unavailable` triggers retry; `InvalidArgument` does not |
-| Bare types as RPC arguments | Can't add fields to `string`. Wrapper messages allow backwards-compatible evolution |
-| Missing health check service | Kubernetes can't determine readiness, kills pods during deployments |
-| Ignoring context cancellation | Long operations continue after caller gave up. Check `ctx.Err()` |
+| 生の `error` を返す | `codes.Unknown` になる — クライアントがリトライするか判断できない。特定のコードで `status.Errorf` を使用 |
+| クライアント呼び出しにデッドラインなし | 遅い上流が無期限にハング。常に `context.WithTimeout` を使用 |
+| リクエストごとに新規コネクション | TCP/TLSハンドシェイクが無駄。一度作成して再利用 — HTTP/2はRPCを多重化する |
+| プロダクションでリフレクションを有効化 | 攻撃者がすべてのメソッドを列挙できる。開発/ステージングのみで有効化 |
+| すべてのエラーに `codes.Internal` | 誤ったコードはクライアントのリトライロジックを壊す。`Unavailable` はリトライをトリガーし、`InvalidArgument` はしない |
+| RPC引数にベア型 | `string` にフィールドを追加できない。ラッパーメッセージで後方互換の進化が可能 |
+| ヘルスチェックサービスの欠如 | Kubernetesが準備完了を判定できず、デプロイ中にPodを終了させる |
+| コンテキストキャンセルを無視 | 呼び出し元が諦めた後も長い操作が継続する。`ctx.Err()` を確認する |
 
-## Cross-References
+## クロスリファレンス
 
-- → See `samber/cc-skills-golang@golang-context` skill for deadline and cancellation patterns
-- → See `samber/cc-skills-golang@golang-error-handling` skill for gRPC error to Go error mapping
-- → See `samber/cc-skills-golang@golang-observability` skill for gRPC interceptors (logging, tracing, metrics)
-- → See `samber/cc-skills-golang@golang-testing` skill for gRPC testing with bufconn
+- デッドラインとキャンセルパターンについては → See `samber/cc-skills-golang@golang-context` skill
+- gRPCエラーからGoエラーへのマッピングについては → See `samber/cc-skills-golang@golang-error-handling` skill
+- gRPCインターセプター（ログ、トレーシング、メトリクス）については → See `samber/cc-skills-golang@golang-observability` skill
+- bufconnを使ったgRPCテストについては → See `samber/cc-skills-golang@golang-testing` skill

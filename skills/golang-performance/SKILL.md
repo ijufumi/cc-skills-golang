@@ -21,90 +21,90 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent WebFetch Bash(benchstat:*) Bash(fieldalignment:*) Bash(staticcheck:*) Bash(curl:*) Bash(fgprof:*) Bash(perf:*) WebSearch AskUserQuestion
 ---
 
-**Persona:** You are a Go performance engineer. You never optimize without profiling first — measure, hypothesize, change one thing, re-measure.
+**Persona:** あなたはGoパフォーマンスエンジニアです。まずプロファイリングなしには最適化しない — 計測し、仮説を立て、一つ変更し、再計測する。
 
 **Thinking mode:** Use `ultrathink` for performance optimization. Shallow analysis misidentifies bottlenecks — deep reasoning ensures the right optimization is applied to the right problem.
 
-**Modes:**
+**モード:**
 
-- **Review mode (architecture)** — broad scan of a package or service for structural anti-patterns (missing connection pools, unbounded goroutines, wrong data structures). Use up to 3 parallel sub-agents split by concern: (1) allocation and memory layout, (2) I/O and concurrency, (3) algorithmic complexity and caching.
-- **Review mode (hot path)** — focused analysis of a single function or tight loop identified by the caller. Work sequentially; one sub-agent is sufficient.
-- **Optimize mode** — a bottleneck has been identified by profiling. Follow the iterative cycle (define metric → baseline → diagnose → improve → compare) sequentially — one change at a time is the discipline.
+- **レビューモード（アーキテクチャ）** — パッケージやサービス全体で構造的なアンチパターン（コネクションプールの欠如、無制限のゴルーチン、誤ったデータ構造）を広範囲にスキャンする。3つの並列サブエージェントに分割: (1) アロケーションとメモリレイアウト、(2) I/OとConcurrency、(3) アルゴリズムの複雑さとキャッシュ。
+- **レビューモード（ホットパス）** — 呼び出し元が特定した単一の関数またはタイトなループの集中分析。順次処理し、サブエージェント1つで十分。
+- **最適化モード** — プロファイリングでボトルネックが特定された場合。反復サイクル（メトリクス定義 → ベースライン → 診断 → 改善 → 比較）を順次実行 — 一度に一つの変更が原則。
 
-# Go Performance Optimization
+# Go パフォーマンス最適化
 
-## Core Philosophy
+## コア哲学
 
-1. **Profile before optimizing** — intuition about bottlenecks is wrong ~80% of the time. Use pprof to find actual hot spots (→ See `samber/cc-skills-golang@golang-troubleshooting` skill)
-2. **Allocation reduction yields the biggest ROI** — Go's GC is fast but not free. Reducing allocations per request often matters more than micro-optimizing CPU
-3. **Document optimizations** — add code comments explaining why a pattern is faster, with benchmark numbers when available. Future readers need context to avoid reverting an "unnecessary" optimization
+1. **最適化前にプロファイリング** — ボトルネックに関する直感は約80%の確率で間違い。pprofを使って実際のホットスポットを見つける（→ See `samber/cc-skills-golang@golang-troubleshooting` skill）
+2. **アロケーション削減が最大のROI** — GoのGCは速いが無料ではない。リクエストあたりのアロケーション削減は、CPUのマイクロ最適化より重要なことが多い
+3. **最適化をドキュメント化** — パターンが速い理由を説明するコードコメントを追加し、可能であればベンチマーク数値も記載する。将来の読者は「不要な」最適化を元に戻さないためにコンテキストが必要
 
-## Rule Out External Bottlenecks First
+## まず外部ボトルネックを排除する
 
-Before optimizing Go code, verify the bottleneck is in your process — if 90% of latency is a slow DB query or API call, reducing allocations won't help.
+Goコードを最適化する前に、ボトルネックがプロセス内にあることを確認する — レイテンシの90%が遅いDBクエリやAPIコールなら、アロケーション削減は役に立たない。
 
-**Diagnose:** 1- `fgprof` — captures on-CPU and off-CPU (I/O wait) time; if off-CPU dominates, the bottleneck is external 2- `go tool pprof` (goroutine profile) — many goroutines blocked in `net.(*conn).Read` or `database/sql` = external wait 3- Distributed tracing (OpenTelemetry) — span breakdown shows which upstream is slow
+**診断:** 1- `fgprof` — オンCPUとオフCPU（I/O待ち）時間を取得。オフCPUが支配的なら、ボトルネックは外部 2- `go tool pprof`（goroutineプロファイル） — `net.(*conn).Read` や `database/sql` でブロックされるゴルーチンが多い = 外部待ち 3- 分散トレーシング（OpenTelemetry） — スパンの内訳で遅い上流を特定
 
-**When external:** optimize that component instead — query tuning, caching, connection pools, circuit breakers (→ See `samber/cc-skills-golang@golang-database` skill, [Caching Patterns](references/caching.md)).
+**外部の場合:** そのコンポーネントを最適化する — クエリチューニング、キャッシュ、コネクションプール、サーキットブレーカー（→ See `samber/cc-skills-golang@golang-database` skill、[キャッシュパターン](references/caching.md)）。
 
-## Iterative Optimization Methodology
+## 反復的な最適化手法
 
-### The cycle: Define Goals → Benchmark → Diagnose → Improve → Benchmark
+### サイクル: 目標定義 → ベンチマーク → 診断 → 改善 → ベンチマーク
 
-1. **Define your metric** — latency, throughput, memory, or CPU? Without a target, optimizations are random
-2. **Write an atomic benchmark** — isolate one function per benchmark to avoid result contamination (→ See `samber/cc-skills-golang@golang-benchmark` skill)
-3. **Measure baseline** — `go test -bench=BenchmarkMyFunc -benchmem -count=6 ./pkg/... | tee /tmp/report-1.txt`
-4. **Diagnose** — use the **Diagnose** lines in each deep-dive section to pick the right tool
-5. **Improve** — apply ONE optimization at a time with an explanatory comment
-6. **Compare** — `benchstat /tmp/report-1.txt /tmp/report-2.txt` to confirm statistical significance
-7. **Repeat** — increment report number, tackle next bottleneck
+1. **メトリクスを定義する** — レイテンシ、スループット、メモリ、CPU? 目標がなければ最適化はランダム
+2. **アトミックなベンチマークを書く** — 結果の汚染を防ぐためにベンチマークごとに一つの関数を分離する（→ See `samber/cc-skills-golang@golang-benchmark` skill）
+3. **ベースラインを計測する** — `go test -bench=BenchmarkMyFunc -benchmem -count=6 ./pkg/... | tee /tmp/report-1.txt`
+4. **診断する** — 各詳細セクションの **診断:** 行を使って適切なツールを選択
+5. **改善する** — 説明コメント付きで一度に一つの最適化を適用
+6. **比較する** — `benchstat /tmp/report-1.txt /tmp/report-2.txt` で統計的有意性を確認
+7. **繰り返す** — レポート番号をインクリメントし、次のボトルネックに取り組む
 
-Refer to library documentation for known patterns before inventing custom solutions. Keep all `/tmp/report-*.txt` files as an audit trail.
+カスタムソリューションを発明する前に、既知のパターンについてライブラリドキュメントを参照すること。すべての `/tmp/report-*.txt` ファイルを監査証跡として保持する。
 
-## Decision Tree: Where Is Time Spent?
+## デシジョンツリー: 時間はどこで消費されているか?
 
-| Bottleneck | Signal (from pprof) | Action |
+| ボトルネック | シグナル（pprofより） | アクション |
 | --- | --- | --- |
-| Too many allocations | `alloc_objects` high in heap profile | [Memory optimization](references/memory.md) |
-| CPU-bound hot loop | function dominates CPU profile | [CPU optimization](references/cpu.md) |
-| GC pauses / OOM | high GC%, container limits | [Runtime tuning](references/runtime.md) |
-| Network / I/O latency | goroutines blocked on I/O | [I/O & networking](references/io-networking.md) |
-| Repeated expensive work | same computation/fetch multiple times | [Caching patterns](references/caching.md) |
-| Wrong algorithm | O(n²) where O(n) exists | [Algorithmic complexity](references/caching.md#algorithmic-complexity) |
-| Lock contention | mutex/block profile hot | → See `samber/cc-skills-golang@golang-concurrency` skill |
-| Slow queries | DB time dominates traces | → See `samber/cc-skills-golang@golang-database` skill |
+| アロケーション過多 | ヒーププロファイルで `alloc_objects` が高い | [メモリ最適化](references/memory.md) |
+| CPUバウンドなホットループ | 関数がCPUプロファイルを支配 | [CPU最適化](references/cpu.md) |
+| GCポーズ / OOM | 高GC%、コンテナ制限 | [ランタイムチューニング](references/runtime.md) |
+| ネットワーク / I/Oレイテンシ | I/Oでブロックされるゴルーチン | [I/Oとネットワーキング](references/io-networking.md) |
+| 繰り返しの高コスト処理 | 同じ計算/フェッチを複数回 | [キャッシュパターン](references/caching.md) |
+| 誤ったアルゴリズム | O(n)があるのにO(n²) | [アルゴリズムの複雑さ](references/caching.md#algorithmic-complexity) |
+| ロック競合 | mutex/blockプロファイルが高い | → See `samber/cc-skills-golang@golang-concurrency` skill |
+| 遅いクエリ | DBの時間がトレースを支配 | → See `samber/cc-skills-golang@golang-database` skill |
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正 |
 | --- | --- |
-| Optimizing without profiling | Profile with pprof first — intuition is wrong ~80% of the time |
-| Default `http.Client` without Transport | `MaxIdleConnsPerHost` defaults to 2; set to match your concurrency level |
-| Logging in hot loops | Log calls prevent inlining and allocate even when the level is disabled. Use `slog.LogAttrs` |
-| `panic`/`recover` as control flow | panic allocates a stack trace and unwinds the stack; use error returns |
-| `unsafe` without benchmark proof | Only justified when profiling shows >10% improvement in a verified hot path |
-| No GC tuning in containers | Set `GOMEMLIMIT` to 80-90% of container memory to prevent OOM kills |
-| `reflect.DeepEqual` in production | 50-200x slower than typed comparison; use `slices.Equal`, `maps.Equal`, `bytes.Equal` |
+| プロファイリングなしで最適化 | まずpprofでプロファイリング — 直感は約80%の確率で間違い |
+| Transportなしのデフォルト `http.Client` | `MaxIdleConnsPerHost` のデフォルトは2。Concurrencyレベルに合わせて設定 |
+| ホットループ内でのログ | ログ呼び出しはインライン化を妨げ、レベルが無効でもアロケートする。`slog.LogAttrs` を使用 |
+| 制御フローとしての `panic`/`recover` | panicはスタックトレースをアロケートしスタックを巻き戻す。エラーリターンを使用 |
+| ベンチマーク証明なしの `unsafe` | 検証されたホットパスでプロファイリングが10%以上の改善を示す場合のみ正当化される |
+| コンテナでGCチューニングなし | OOMキルを防ぐため `GOMEMLIMIT` をコンテナメモリの80-90%に設定 |
+| プロダクションでの `reflect.DeepEqual` | 型付き比較より50〜200倍遅い。`slices.Equal`、`maps.Equal`、`bytes.Equal` を使用 |
 
-## Deep Dives
+## 詳細ガイド
 
-- [Memory Optimization](references/memory.md) — allocation patterns, backing array leaks, sync.Pool, struct alignment
-- [CPU Optimization](references/cpu.md) — inlining, cache locality, false sharing, ILP, reflection avoidance
-- [I/O & Networking](references/io-networking.md) — HTTP transport config, streaming, JSON performance, cgo, batch operations
-- [Runtime Tuning](references/runtime.md) — GOGC, GOMEMLIMIT, GC diagnostics, GOMAXPROCS, PGO
-- [Caching Patterns](references/caching.md) — algorithmic complexity, compiled patterns, singleflight, work avoidance
-- [Production Observability](references/observability.md) — Prometheus metrics, PromQL queries, continuous profiling, alerting rules
+- [メモリ最適化](references/memory.md) — アロケーションパターン、バッキング配列リーク、sync.Pool、struct alignment
+- [CPU最適化](references/cpu.md) — インライン化、キャッシュ局所性、false sharing、ILP、リフレクション回避
+- [I/Oとネットワーキング](references/io-networking.md) — HTTPトランスポート設定、ストリーミング、JSONパフォーマンス、cgo、バッチ処理
+- [ランタイムチューニング](references/runtime.md) — GOGC、GOMEMLIMIT、GC診断、GOMAXPROCS、PGO
+- [キャッシュパターン](references/caching.md) — アルゴリズムの複雑さ、コンパイル済みパターン、singleflight、処理の回避
+- [プロダクション可観測性](references/observability.md) — Prometheusメトリクス、PromQLクエリ、継続的プロファイリング、アラートルール
 
-## CI Regression Detection
+## CIリグレッション検出
 
-Automate benchmark comparison in CI to catch regressions before they reach production. → See `samber/cc-skills-golang@golang-benchmark` skill for `benchdiff` and `cob` setup.
+CIでベンチマーク比較を自動化し、リグレッションがプロダクションに届く前に検出する。`benchdiff` と `cob` のセットアップについては → See `samber/cc-skills-golang@golang-benchmark` skill。
 
-## Cross-References
+## クロスリファレンス
 
-- → See `samber/cc-skills-golang@golang-benchmark` skill for benchmarking methodology, `benchstat`, and `b.Loop()` (Go 1.24+)
-- → See `samber/cc-skills-golang@golang-troubleshooting` skill for pprof workflow, escape analysis diagnostics, and performance debugging
-- → See `samber/cc-skills-golang@golang-data-structures` skill for slice/map preallocation and `strings.Builder`
-- → See `samber/cc-skills-golang@golang-concurrency` skill for worker pools, `sync.Pool` API, goroutine lifecycle, and lock contention
-- → See `samber/cc-skills-golang@golang-safety` skill for defer in loops, slice backing array aliasing
-- → See `samber/cc-skills-golang@golang-database` skill for connection pool tuning and batch processing
-- → See `samber/cc-skills-golang@golang-observability` skill for continuous profiling in production
+- ベンチマーク手法、`benchstat`、`b.Loop()` (Go 1.24+) については → See `samber/cc-skills-golang@golang-benchmark` skill
+- pprofワークフロー、エスケープ解析診断、パフォーマンスデバッグについては → See `samber/cc-skills-golang@golang-troubleshooting` skill
+- スライス/マップの事前アロケーションと `strings.Builder` については → See `samber/cc-skills-golang@golang-data-structures` skill
+- ワーカープール、`sync.Pool` API、ゴルーチンライフサイクル、ロック競合については → See `samber/cc-skills-golang@golang-concurrency` skill
+- ループ内のdeferとスライスバッキング配列エイリアシングについては → See `samber/cc-skills-golang@golang-safety` skill
+- コネクションプールチューニングとバッチ処理については → See `samber/cc-skills-golang@golang-database` skill
+- プロダクションでの継続的プロファイリングについては → See `samber/cc-skills-golang@golang-observability` skill

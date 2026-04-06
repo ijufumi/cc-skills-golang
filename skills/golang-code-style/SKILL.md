@@ -19,17 +19,17 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-code-style` skill takes precedence.
 
-# Go Code Style
+# Go コードスタイル
 
-Style rules that require human judgment — linters handle formatting, this skill handles clarity. For naming see `samber/cc-skills-golang@golang-naming` skill; for design patterns see `samber/cc-skills-golang@golang-design-patterns` skill; for struct/interface design see `samber/cc-skills-golang@golang-structs-interfaces` skill.
+人間の判断が必要なスタイルルール — リンターがフォーマットを処理し、このスキルは明確さを扱う。命名については `samber/cc-skills-golang@golang-naming` スキル、デザインパターンについては `samber/cc-skills-golang@golang-design-patterns` スキル、構造体/インターフェース設計については `samber/cc-skills-golang@golang-structs-interfaces` スキルを参照。
 
 > "Clear is better than clever." — Go Proverbs
 
-When ignoring a rule, add a comment to the code.
+ルールを無視する場合は、コードにコメントを追加すること。
 
-## Line Length & Breaking
+## 行の長さと改行
 
-No rigid line limit, but lines beyond ~120 characters MUST be broken. Break at **semantic boundaries**, not arbitrary column counts. Function calls with 4+ arguments MUST use one argument per line — even when the prompt asks for single-line code:
+厳密な行制限はないが、約120文字を超える行はMUSTで改行する。任意のカラム数ではなく、**意味的な境界**で改行する。4つ以上の引数を持つ関数呼び出しはMUSTで1引数1行にする — プロンプトが1行コードを要求しても同様:
 
 ```go
 // Good — each argument on its own line, closing paren separate
@@ -45,11 +45,11 @@ mux.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
 })
 ```
 
-When a function signature is too long, the real fix is often **fewer parameters** (use an options struct) rather than better line wrapping. For multi-line signatures, put each parameter on its own line.
+関数シグネチャが長すぎる場合、本当の修正はより良い改行ではなく**パラメータを減らす**こと（オプション構造体を使用）である。複数行のシグネチャでは、各パラメータを独立した行に置く。
 
-## Variable Declarations
+## 変数宣言
 
-SHOULD use `:=` for non-zero values, `var` for zero-value initialization. The form signals intent: `var` means "this starts at zero."
+非ゼロ値には `:=` を、ゼロ値初期化には `var` をSHOULDで使用する。この形式は意図を示す: `var` は「これはゼロから始まる」を意味する。
 
 ```go
 var count int              // zero value, set later
@@ -57,9 +57,9 @@ name := "default"          // non-zero, := is appropriate
 var buf bytes.Buffer       // zero value is ready to use
 ```
 
-### Slice & Map Initialization
+### スライスとマップの初期化
 
-Slices and maps MUST be initialized explicitly, never nil. Nil maps panic on write; nil slices serialize to `null` in JSON (vs `[]` for empty slices), surprising API consumers.
+スライスとマップはMUSTで明示的に初期化し、nilにしない。nilマップは書き込み時にpanicする。nilスライスはJSONで `null` にシリアライズされ（空スライスの `[]` とは異なる）、APIの利用者を驚かせる。
 
 ```go
 users := []User{}                       // always initialized
@@ -68,11 +68,11 @@ users := make([]User, 0, len(ids))      // preallocate when capacity is known
 m := make(map[string]int, len(items))   // preallocate when size is known
 ```
 
-Do not preallocate speculatively — `make([]T, 0, 1000)` wastes memory when the common case is 10 items.
+投機的に事前確保しないこと — 一般的なケースが10要素の場合、`make([]T, 0, 1000)` はメモリの無駄になる。
 
-### Composite Literals
+### 複合リテラル
 
-Composite literals MUST use field names — positional fields break when the type adds or reorders fields:
+複合リテラルはMUSTでフィールド名を使用する — 位置指定フィールドは型がフィールドを追加・並べ替えた際に壊れる:
 
 ```go
 srv := &http.Server{
@@ -82,11 +82,11 @@ srv := &http.Server{
 }
 ```
 
-## Control Flow
+## 制御フロー
 
-### Reduce Nesting
+### ネストの削減
 
-Errors and edge cases MUST be handled first (early return). Keep the happy path at minimal indentation:
+エラーとエッジケースはMUSTで最初に処理する（早期リターン）。正常パスは最小限のインデントに保つ:
 
 ```go
 func process(data []byte) (*Result, error) {
@@ -103,9 +103,9 @@ func process(data []byte) (*Result, error) {
 }
 ```
 
-### Eliminate Unnecessary `else`
+### 不要な `else` の排除
 
-When the `if` body ends with `return`/`break`/`continue`, the `else` MUST be dropped. Use default-then-override for simple assignments — assign a default, then override with independent conditions or a `switch`:
+`if` 本体が `return`/`break`/`continue` で終わる場合、`else` はMUSTで削除する。単純な代入にはデフォルト値設定後に上書きパターンを使用する — デフォルト値を代入し、独立した条件または `switch` で上書きする:
 
 ```go
 // Good — default-then-override with switch (cleanest for mutually exclusive overrides)
@@ -127,9 +127,9 @@ if debug {
 }
 ```
 
-### Complex Conditions & Init Scope
+### 複雑な条件式と初期化スコープ
 
-When an `if` condition has 3+ operands, MUST extract into named booleans — a wall of `||` is unreadable and hides business logic. Keep expensive checks inline for short-circuit benefit. [Details](./references/details.md)
+`if` 条件が3つ以上のオペランドを持つ場合、MUSTで名前付きブール値に抽出する — `||` の壁は読みにくく、ビジネスロジックを隠す。短絡評価の利点のため、コストの高いチェックはインラインに保つ。[Details](./references/details.md)
 
 ```go
 // Good — named booleans make intent clear
@@ -141,7 +141,7 @@ if isAdmin || isOwner || isPublicVerified || permissions.Contains(PermOverride) 
 }
 ```
 
-Scope variables to `if` blocks when only needed for the check:
+チェックにのみ必要な変数は `if` ブロックにスコープを限定する:
 
 ```go
 if err := validate(input); err != nil {
@@ -149,9 +149,9 @@ if err := validate(input); err != nil {
 }
 ```
 
-### Switch Over If-Else Chains
+### if-elseチェーンよりswitchを優先
 
-When comparing the same variable multiple times, prefer `switch`:
+同じ変数を複数回比較する場合は `switch` を優先する:
 
 ```go
 switch status {
@@ -164,21 +164,21 @@ default:
 }
 ```
 
-## Function Design
+## 関数設計
 
-- Functions SHOULD be **short and focused** — one function, one job.
-- Functions SHOULD have **≤4 parameters**. Beyond that, use an options struct (see `samber/cc-skills-golang@golang-design-patterns` skill).
-- **Parameter order**: `context.Context` first, then inputs, then output destinations.
-- Naked returns help in very short functions (1-3 lines) where return values are obvious, but become confusing when readers must scroll to find what's returned — name returns explicitly in longer functions.
+- 関数はSHOULDで**短く焦点を絞る** — 1つの関数に1つの仕事。
+- 関数はSHOULDで**4つ以下のパラメータ**にする。それ以上の場合はオプション構造体を使用する（`samber/cc-skills-golang@golang-design-patterns` スキルを参照）。
+- **パラメータの順序**: `context.Context` を最初に、次に入力、次に出力先。
+- 素の戻り値は非常に短い関数（1-3行）で戻り値が明らかな場合に有用だが、戻り値を見つけるためにスクロールが必要になると混乱を招く — 長い関数では戻り値に明示的に名前を付ける。
 
 ```go
 func FetchUser(ctx context.Context, id string) (*User, error)
 func SendEmail(ctx context.Context, msg EmailMessage) error  // grouped into struct
 ```
 
-### Prefer `range` for Iteration
+### イテレーションには `range` を優先
 
-SHOULD use `range` over index-based loops. Use `range n` (Go 1.22+) for simple counting.
+インデックスベースのループよりSHOULDで `range` を使用する。単純なカウントには `range n`（Go 1.22+）を使用する。
 
 ```go
 for _, user := range users {
@@ -186,48 +186,48 @@ for _, user := range users {
 }
 ```
 
-## Value vs Pointer Arguments
+## 値渡しとポインタ引数
 
-Pass small types (`string`, `int`, `bool`, `time.Time`) by value. Use pointers when mutating, for large structs (~128+ bytes), or when nil is meaningful. [Details](./references/details.md)
+小さな型（`string`、`int`、`bool`、`time.Time`）は値渡しする。ミューテーションが必要な場合、大きな構造体（約128バイト以上）、またはnilに意味がある場合はポインタを使用する。[Details](./references/details.md)
 
-## Code Organization Within Files
+## ファイル内のコード構成
 
-- **Group related declarations**: type, constructor, methods together
-- **Order**: package doc, imports, constants, types, constructors, methods, helpers
-- **One primary type per file** when it has significant methods
-- **Blank imports** (`_ "pkg"`) register side effects (init functions). Restricting them to `main` and test packages makes side effects visible at the application root, not hidden in library code
-- **Dot imports** pollute the namespace and make it impossible to tell where a name comes from — never use in library code
-- **Unexport aggressively** — you can always export later; unexporting is a breaking change
+- **関連する宣言をグループ化**: 型、コンストラクタ、メソッドをまとめる
+- **順序**: パッケージドキュメント、インポート、定数、型、コンストラクタ、メソッド、ヘルパー
+- **1ファイルに1つの主要な型** — 重要なメソッドがある場合
+- **ブランクインポート**（`_ "pkg"`）は副作用（init関数）を登録する。`main` パッケージとテストパッケージに限定することで、副作用がアプリケーションルートで可視化され、ライブラリコード内に隠れない
+- **ドットインポート**は名前空間を汚染し、名前の出所が分からなくなる — ライブラリコードでは決して使用しない
+- **積極的に非公開にする** — 後からいつでも公開できるが、非公開にするのは破壊的変更
 
-## String Handling
+## 文字列の扱い
 
-Use `strconv` for simple conversions (faster), `fmt.Sprintf` for complex formatting. Use `%q` in error messages to make string boundaries visible. Use `strings.Builder` for loops, `+` for simple concatenation.
+単純な変換には `strconv`（より高速）、複雑なフォーマットには `fmt.Sprintf` を使用する。エラーメッセージでは `%q` を使って文字列の境界を可視化する。ループには `strings.Builder`、単純な結合には `+` を使用する。
 
-## Type Conversions
+## 型変換
 
-Prefer explicit, narrow conversions. Use generics over `any` when a concrete type will do:
+明示的で狭い変換を優先する。具象型で十分な場合は `any` よりジェネリクスを使用する:
 
 ```go
 func Contains[T comparable](slice []T, target T) bool  // not []any
 ```
 
-## Philosophy
+## 哲学
 
-- **"A little copying is better than a little dependency"**
-- **Use `slices` and `maps` standard packages**; for filter/group-by/chunk, use `github.com/samber/lo`
-- **"Reflection is never clear"** — avoid `reflect` unless necessary
-- **Don't abstract prematurely** — extract when the pattern is stable
-- **Minimize public surface** — every exported name is a commitment
+- **「少しのコピーは少しの依存関係より良い」**
+- **`slices` と `maps` 標準パッケージを使用する**。filter/group-by/chunkには `github.com/samber/lo` を使用
+- **「リフレクションは決して明確ではない」** — 必要でない限り `reflect` を避ける
+- **早すぎる抽象化をしない** — パターンが安定してから抽出する
+- **公開サーフェスを最小化する** — すべてのエクスポートされた名前はコミットメント
 
-## Parallelizing Code Style Reviews
+## コードスタイルレビューの並列化
 
-When reviewing code style across a large codebase, use up to 5 parallel sub-agents (via the Agent tool), each targeting an independent style concern (e.g. control flow, function design, variable declarations, string handling, code organization).
+大規模コードベースでコードスタイルをレビューする場合、最大5つの並列サブエージェント（Agentツール経由）を使用し、それぞれ独立したスタイルの関心事（例: 制御フロー、関数設計、変数宣言、文字列処理、コード構成）を担当させる。
 
-## Enforce with Linters
+## リンターによる強制
 
-Many rules are enforced automatically: `gofmt`, `gofumpt`, `goimports`, `gocritic`, `revive`, `wsl_v5`. → See the `samber/cc-skills-golang@golang-linter` skill.
+多くのルールは自動的に強制される: `gofmt`、`gofumpt`、`goimports`、`gocritic`、`revive`、`wsl_v5`。→ See the `samber/cc-skills-golang@golang-linter` skill.
 
-## Cross-References
+## クロスリファレンス
 
 - → See the `samber/cc-skills-golang@golang-naming` skill for identifier naming conventions
 - → See the `samber/cc-skills-golang@golang-structs-interfaces` skill for pointer vs value receivers, interface design

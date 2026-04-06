@@ -17,61 +17,61 @@ metadata:
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent mcp__context7__resolve-library-id mcp__context7__query-docs AskUserQuestion
 ---
 
-**Persona:** You are a Go engineer who reaches for reactive streams when data flows asynchronously or infinitely. You use samber/ro to build declarative pipelines instead of manual goroutine/channel wiring, but you know when a simple slice + samber/lo is enough.
+**Persona:** あなたはデータが非同期または無限に流れる場合にリアクティブストリームを使うGoエンジニアです。samber/roを使って手動のgoroutine/channelの配線の代わりに宣言的なパイプラインを構築しますが、シンプルなスライス + samber/loで十分な場合も知っています。
 
 **Thinking mode:** Use `ultrathink` when designing advanced reactive pipelines or choosing between cold/hot observables, subjects, and combining operators. Wrong architecture leads to resource leaks or missed events.
 
-# samber/ro — Reactive Streams for Go
+# samber/ro — GoのReactive Streams
 
-Go implementation of [ReactiveX](https://reactivex.io/). Generics-first, type-safe, composable pipelines for asynchronous data streams with automatic backpressure, error propagation, context integration, and resource cleanup. 150+ operators, 5 subject types, 40+ plugins.
+[ReactiveX](https://reactivex.io/) のGo実装。ジェネリクスファースト、型安全、自動バックプレッシャー、エラー伝播、コンテキスト統合、リソースクリーンアップを備えた非同期データストリームの合成可能パイプライン。150以上のオペレーター、5つのSubjectタイプ、40以上のプラグイン。
 
-**Official Resources:**
+**公式リソース:**
 
 - [github.com/samber/ro](https://github.com/samber/ro)
 - [ro.samber.dev](https://ro.samber.dev)
 - [pkg.go.dev/github.com/samber/ro](https://pkg.go.dev/github.com/samber/ro)
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。最新のAPIシグネチャと使用パターンについては、ライブラリの公式ドキュメントとコード例を参照してください。Context7をディスカバリープラットフォームとして活用できます。
 
-## Why samber/ro (Streams vs Slices)
+## samber/roを使う理由（ストリーム vs スライス）
 
-Go channels + goroutines become unwieldy for complex async pipelines: manual channel closures, verbose goroutine lifecycle, error propagation across nested selects, and no composable operators. `samber/ro` solves this with declarative, chainable stream operators.
+Goのchannels + goroutinesは複雑な非同期パイプラインで扱いにくくなる: 手動のチャネルクローズ、冗長なgoroutineライフサイクル、ネストされたselectを通じたエラー伝播、合成可能なオペレーターがない。`samber/ro` は宣言的でチェーン可能なストリームオペレーターでこれを解決する。
 
-**When to use which tool:**
+**どのツールをいつ使うか:**
 
-| Scenario | Tool | Why |
+| シナリオ | ツール | 理由 |
 | --- | --- | --- |
-| Transform a slice (map, filter, reduce) | `samber/lo` | Finite, synchronous, eager — no stream overhead needed |
-| Simple goroutine fan-out with error handling | `errgroup` | Standard lib, lightweight, sufficient for bounded concurrency |
-| Infinite event stream (WebSocket, tickers, file watcher) | `samber/ro` | Declarative pipeline with backpressure, retry, timeout, combine |
-| Real-time data enrichment from multiple async sources | `samber/ro` | CombineLatest/Zip compose dependent streams without manual select |
-| Pub/sub with multiple consumers sharing one source | `samber/ro` | Hot observables (Share/Subjects) handle multicast natively |
+| スライスの変換（map、filter、reduce） | `samber/lo` | 有限、同期、先行評価 — ストリームオーバーヘッドは不要 |
+| エラーハンドリング付きシンプルなgoroutineファンアウト | `errgroup` | 標準lib、軽量、有界Concurrencyに十分 |
+| 無限イベントストリーム（WebSocket、ティッカー、ファイルウォッチャー） | `samber/ro` | バックプレッシャー、リトライ、タイムアウト、結合を持つ宣言的パイプライン |
+| 複数の非同期ソースからのリアルタイムデータエンリッチメント | `samber/ro` | CombineLatest/Zipが手動selectなしで依存ストリームを合成する |
+| 一つのソースを共有する複数のコンシューマーのPub/sub | `samber/ro` | ホットObservable（Share/Subjects）がマルチキャストをネイティブに処理する |
 
-**Key differences: lo vs ro**
+**主要な違い: lo vs ro**
 
-| Aspect | `samber/lo` | `samber/ro` |
+| 側面 | `samber/lo` | `samber/ro` |
 | --- | --- | --- |
-| Data | Finite slices | Infinite streams |
-| Execution | Synchronous, blocking | Asynchronous, non-blocking |
-| Evaluation | Eager (allocates intermediate slices) | Lazy (processes items as they arrive) |
-| Timing | Immediate | Time-aware (delay, throttle, interval, timeout) |
-| Error model | Return `(T, error)` per call | Error channel propagates through pipeline |
-| Use case | Collection transforms | Event-driven, real-time, async pipelines |
+| データ | 有限スライス | 無限ストリーム |
+| 実行 | 同期、ブロッキング | 非同期、ノンブロッキング |
+| 評価 | 先行評価（中間スライスをアロケート） | 遅延評価（アイテムが到着する際に処理） |
+| タイミング | 即時 | 時間認識（delay、throttle、interval、timeout） |
+| エラーモデル | 呼び出しごとに `(T, error)` を返す | エラーチャネルがパイプラインを伝播 |
+| ユースケース | コレクション変換 | イベント駆動、リアルタイム、非同期パイプライン |
 
-## Installation
+## インストール
 
 ```bash
 go get github.com/samber/ro
 ```
 
-## Core Concepts
+## コアコンセプト
 
-Four building blocks:
+4つの構成要素:
 
-1. **Observable** — a data source that emits values over time. Cold by default: each subscriber triggers independent execution from scratch
-2. **Observer** — a consumer with three callbacks: `onNext(T)`, `onError(error)`, `onComplete()`
-3. **Operator** — a function that transforms an observable into another observable, chained via `Pipe`
-4. **Subscription** — the connection between observable and observer. Call `.Wait()` to block or `.Unsubscribe()` to cancel
+1. **Observable** — 時間の経過とともに値を発行するデータソース。デフォルトでコールド: 各サブスクライバーが独立した実行をゼロからトリガーする
+2. **Observer** — 3つのコールバックを持つコンシューマー: `onNext(T)`、`onError(error)`、`onComplete()`
+3. **Operator** — ObservableをObservableに変換する関数。`Pipe` でチェーンする
+4. **Subscription** — ObservableとObserverの接続。`.Wait()` でブロックするか `.Unsubscribe()` でキャンセルする
 
 ```go
 observable := ro.Pipe2(
@@ -91,90 +91,90 @@ observable.Subscribe(ro.NewObserver(
 values, err := ro.Collect(observable)
 ```
 
-## Cold vs Hot Observables
+## コールド vs ホットObservable
 
-**Cold** (default): each `.Subscribe()` starts a new independent execution. Safe and predictable — use by default.
+**コールド**（デフォルト）: 各 `.Subscribe()` が新しい独立した実行を開始する。安全で予測可能 — デフォルトで使用。
 
-**Hot**: multiple subscribers share a single execution. Use when the source is expensive (WebSocket, DB poll) or subscribers must see the same events.
+**ホット**: 複数のサブスクライバーが単一の実行を共有する。ソースが高コスト（WebSocket、DBポーリング）の場合、またはサブスクライバーが同じイベントを見なければならない場合に使用。
 
-| Convert with | Behavior |
+| 変換方法 | 動作 |
 | --- | --- |
-| `Share()` | Cold → hot with reference counting. Last unsubscribe tears down |
-| `ShareReplay(n)` | Same as Share + buffers last N values for late subscribers |
-| `Connectable()` | Cold → hot, but waits for explicit `.Connect()` call |
-| Subjects | Natively hot — call `.Send()`, `.Error()`, `.Complete()` directly |
+| `Share()` | コールド → リファレンスカウント付きホット。最後のアンサブスクライブで終了 |
+| `ShareReplay(n)` | Shareと同じ + 遅延サブスクライバーのために最後のN値をバッファリング |
+| `Connectable()` | コールド → ホット、ただし明示的な `.Connect()` 呼び出しを待つ |
+| Subjects | ネイティブホット — `.Send()`、`.Error()`、`.Complete()` を直接呼び出す |
 
-| Subject | Constructor | Replay behavior |
+| Subject | コンストラクター | リプレイ動作 |
 | --- | --- | --- |
-| `PublishSubject` | `NewPublishSubject[T]()` | None — late subscribers miss past events |
-| `BehaviorSubject` | `NewBehaviorSubject[T](initial)` | Replays last value to new subscribers |
-| `ReplaySubject` | `NewReplaySubject[T](bufferSize)` | Replays last N values |
-| `AsyncSubject` | `NewAsyncSubject[T]()` | Emits only last value, only on complete |
-| `UnicastSubject` | `NewUnicastSubject[T](bufferSize)` | Single subscriber only |
+| `PublishSubject` | `NewPublishSubject[T]()` | なし — 遅延サブスクライバーは過去のイベントを見逃す |
+| `BehaviorSubject` | `NewBehaviorSubject[T](initial)` | 新しいサブスクライバーに最後の値をリプレイ |
+| `ReplaySubject` | `NewReplaySubject[T](bufferSize)` | 最後のN値をリプレイ |
+| `AsyncSubject` | `NewAsyncSubject[T]()` | 完了時にのみ最後の値を発行 |
+| `UnicastSubject` | `NewUnicastSubject[T](bufferSize)` | 単一サブスクライバーのみ |
 
-For subject details and hot observable patterns, see [Subjects Guide](./references/subjects-guide.md).
+Subjectの詳細とホットObservableパターンについては [Subjects Guide](./references/subjects-guide.md) を参照。
 
-## Operator Quick Reference
+## オペレータークイックリファレンス
 
-| Category | Key operators | Purpose |
+| カテゴリ | 主要オペレーター | 目的 |
 | --- | --- | --- |
-| Creation | `Just`, `FromSlice`, `FromChannel`, `Range`, `Interval`, `Defer`, `Future` | Create observables from various sources |
-| Transform | `Map`, `MapErr`, `FlatMap`, `Scan`, `Reduce`, `GroupBy` | Transform or accumulate stream values |
-| Filter | `Filter`, `Take`, `TakeLast`, `Skip`, `Distinct`, `Find`, `First`, `Last` | Selectively emit values |
-| Combine | `Merge`, `Concat`, `Zip2`–`Zip6`, `CombineLatest2`–`CombineLatest5`, `Race` | Merge multiple observables |
-| Error | `Catch`, `OnErrorReturn`, `OnErrorResumeNextWith`, `Retry`, `RetryWithConfig` | Recover from errors |
-| Timing | `Delay`, `DelayEach`, `Timeout`, `ThrottleTime`, `SampleTime`, `BufferWithTime` | Control emission timing |
-| Side effect | `Tap`/`Do`, `TapOnNext`, `TapOnError`, `TapOnComplete` | Observe without altering stream |
-| Terminal | `Collect`, `ToSlice`, `ToChannel`, `ToMap` | Consume stream into Go types |
+| 生成 | `Just`、`FromSlice`、`FromChannel`、`Range`、`Interval`、`Defer`、`Future` | 様々なソースからObservableを作成 |
+| 変換 | `Map`、`MapErr`、`FlatMap`、`Scan`、`Reduce`、`GroupBy` | ストリーム値の変換または蓄積 |
+| フィルター | `Filter`、`Take`、`TakeLast`、`Skip`、`Distinct`、`Find`、`First`、`Last` | 値を選択的に発行 |
+| 結合 | `Merge`、`Concat`、`Zip2`〜`Zip6`、`CombineLatest2`〜`CombineLatest5`、`Race` | 複数のObservableをマージ |
+| エラー | `Catch`、`OnErrorReturn`、`OnErrorResumeNextWith`、`Retry`、`RetryWithConfig` | エラーからの回復 |
+| タイミング | `Delay`、`DelayEach`、`Timeout`、`ThrottleTime`、`SampleTime`、`BufferWithTime` | 発行タイミングの制御 |
+| 副作用 | `Tap`/`Do`、`TapOnNext`、`TapOnError`、`TapOnComplete` | ストリームを変更せずに観察 |
+| ターミナル | `Collect`、`ToSlice`、`ToChannel`、`ToMap` | ストリームをGoの型に変換 |
 
-Use typed `Pipe2`, `Pipe3` ... `Pipe25` for compile-time type safety across operator chains. The untyped `Pipe` uses `any` and loses type checking.
+オペレーターチェーン全体でコンパイル時型安全性のために、型付き `Pipe2`、`Pipe3` ... `Pipe25` を使用する。型なし `Pipe` は `any` を使用し型チェックを失う。
 
-For the complete operator catalog (150+ operators with signatures), see [Operators Guide](./references/operators-guide.md).
+完全なオペレーターカタログ（シグネチャ付き150以上のオペレーター）については [Operators Guide](./references/operators-guide.md) を参照。
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Why it fails | Fix |
+| 間違い | なぜ失敗するか | 修正 |
 | --- | --- | --- |
-| Using `ro.OnNext()` without error handler | Errors are silently dropped — bugs hide in production | Use `ro.NewObserver(onNext, onError, onComplete)` with all 3 callbacks |
-| Using untyped `Pipe()` instead of `Pipe2`/`Pipe3` | Loses compile-time type safety, errors surface at runtime | Use `Pipe2`, `Pipe3`...`Pipe25` for typed operator chains |
-| Forgetting `.Unsubscribe()` on infinite streams | Goroutine leak — the observable runs forever | Use `TakeUntil(signal)`, context cancellation, or explicit `Unsubscribe()` |
-| Using `Share()` when cold is sufficient | Unnecessary complexity, harder to reason about lifecycle | Use hot observables only when multiple consumers need the same stream |
-| Using `samber/ro` for finite slice transforms | Stream overhead (goroutines, subscriptions) for a synchronous operation | Use `samber/lo` — it's simpler, faster, and purpose-built for slices |
-| Not propagating context for cancellation | Streams ignore shutdown signals, causing resource leaks on termination | Chain `ContextWithTimeout` or `ThrowOnContextCancel` in the pipeline |
+| エラーハンドラーなしで `ro.OnNext()` を使用 | エラーがサイレントにドロップされる — バグがプロダクションで隠れる | 3つのコールバック全てで `ro.NewObserver(onNext, onError, onComplete)` を使用 |
+| `Pipe2`/`Pipe3` の代わりに型なし `Pipe()` を使用 | コンパイル時型安全性を失い、エラーが実行時に表面化する | 型付きオペレーターチェーンに `Pipe2`、`Pipe3`...`Pipe25` を使用 |
+| 無限ストリームで `.Unsubscribe()` を忘れる | goroutineリーク — Observableが永遠に実行し続ける | `TakeUntil(signal)`、コンテキストキャンセル、または明示的な `Unsubscribe()` を使用 |
+| コールドで十分な場合に `Share()` を使用 | 不必要な複雑さ、ライフサイクルの推論が難しくなる | 複数のコンシューマーが同じストリームを必要とする場合のみホットObservableを使用 |
+| 有限スライス変換に `samber/ro` を使用 | 同期操作にストリームオーバーヘッド（goroutines、subscriptions） | `samber/lo` を使用 — よりシンプルで速く、スライス専用 |
+| キャンセルのためにコンテキストを伝播しない | ストリームがシャットダウンシグナルを無視し、終了時にリソースリークを引き起こす | パイプラインに `ContextWithTimeout` または `ThrowOnContextCancel` をチェーンする |
 
-## Best Practices
+## ベストプラクティス
 
-1. **Always handle all three events** — use `NewObserver(onNext, onError, onComplete)`, not just `OnNext`. Unhandled errors cause silent data loss
-2. **Use `Collect()` for synchronous consumption** — when the stream is finite and you need `[]T`, `Collect` blocks until complete and returns the slice + error
-3. **Prefer typed Pipe functions** — `Pipe2`, `Pipe3`...`Pipe25` catch type mismatches at compile time. Reserve untyped `Pipe` for dynamic operator chains
-4. **Bound infinite streams** — use `Take(n)`, `TakeUntil(signal)`, `Timeout(d)`, or context cancellation. Unbounded streams leak goroutines
-5. **Use `Tap`/`Do` for observability** — log, trace, or meter emissions without altering the stream. Chain `TapOnError` for error monitoring
-6. **Prefer `samber/lo` for simple transforms** — if the data is a finite slice and you need Map/Filter/Reduce, use `lo`. Reach for `ro` when data arrives over time, from multiple sources, or needs retry/timeout/backpressure
+1. **常に3つのイベント全てを処理する** — `OnNext` だけでなく `NewObserver(onNext, onError, onComplete)` を使用する。未処理のエラーはサイレントなデータロスを引き起こす
+2. **同期消費に `Collect()` を使用する** — ストリームが有限で `[]T` が必要な場合、`Collect` は完了までブロックしてスライス + エラーを返す
+3. **型付きPipe関数を優先する** — `Pipe2`、`Pipe3`...`Pipe25` はコンパイル時に型の不一致を検出する。動的オペレーターチェーンには型なし `Pipe` を予約する
+4. **無限ストリームを制限する** — `Take(n)`、`TakeUntil(signal)`、`Timeout(d)`、またはコンテキストキャンセルを使用する。制限のないストリームはgoroutineをリークする
+5. **可観測性に `Tap`/`Do` を使用する** — ストリームを変更せずにログ、トレース、または計測する。エラーモニタリングに `TapOnError` をチェーンする
+6. **シンプルな変換には `samber/lo` を優先する** — データが有限スライスでMap/Filter/Reduceが必要な場合は `lo` を使用する。データが時間の経過で到着する、複数のソースからの、またはリトライ/タイムアウト/バックプレッシャーが必要な場合に `ro` を使う
 
-## Plugin Ecosystem
+## プラグインエコシステム
 
-40+ plugins extend ro with domain-specific operators:
+40以上のプラグインがroをドメイン固有のオペレーターで拡張する:
 
-| Category | Plugins | Import path prefix |
+| カテゴリ | プラグイン | インポートパスプレフィックス |
 | --- | --- | --- |
-| Encoding | JSON, CSV, Base64, Gob | `plugins/encoding/...` |
-| Network | HTTP, I/O, FSNotify | `plugins/http`, `plugins/io`, `plugins/fsnotify` |
-| Scheduling | Cron, ICS | `plugins/cron`, `plugins/ics` |
-| Observability | Zap, Slog, Zerolog, Logrus, Sentry, Oops | `plugins/observability/...`, `plugins/samber/oops` |
-| Rate limiting | Native, Ulule | `plugins/ratelimit/...` |
-| Data | Bytes, Strings, Sort, Strconv, Regexp, Template | `plugins/bytes`, `plugins/strings`, etc. |
-| System | Process, Signal | `plugins/proc`, `plugins/signal` |
+| エンコーディング | JSON、CSV、Base64、Gob | `plugins/encoding/...` |
+| ネットワーク | HTTP、I/O、FSNotify | `plugins/http`、`plugins/io`、`plugins/fsnotify` |
+| スケジューリング | Cron、ICS | `plugins/cron`、`plugins/ics` |
+| 可観測性 | Zap、Slog、Zerolog、Logrus、Sentry、Oops | `plugins/observability/...`、`plugins/samber/oops` |
+| レート制限 | Native、Ulule | `plugins/ratelimit/...` |
+| データ | Bytes、Strings、Sort、Strconv、Regexp、Template | `plugins/bytes`、`plugins/strings` など |
+| システム | Process、Signal | `plugins/proc`、`plugins/signal` |
 
-For the full plugin catalog with import paths and usage examples, see [Plugin Ecosystem](./references/plugin-ecosystem.md).
+インポートパスと使用例を含む完全なプラグインカタログについては [Plugin Ecosystem](./references/plugin-ecosystem.md) を参照。
 
-For real-world reactive patterns (retry+timeout, WebSocket fan-out, graceful shutdown, stream combination), see [Patterns](./references/patterns.md).
+リアルワールドのリアクティブパターン（retry+timeout、WebSocketファンアウト、グレースフルシャットダウン、ストリーム結合）については [Patterns](./references/patterns.md) を参照。
 
-If you encounter a bug or unexpected behavior in samber/ro, open an issue at [github.com/samber/ro/issues](https://github.com/samber/ro/issues).
+samber/roでバグや予期しない動作が発生した場合は [github.com/samber/ro/issues](https://github.com/samber/ro/issues) でissueを作成してください。
 
-## Cross-References
+## クロスリファレンス
 
-- → See `samber/cc-skills-golang@golang-samber-lo` skill for finite slice transforms (Map, Filter, Reduce, GroupBy) — use lo when data is already in a slice
-- → See `samber/cc-skills-golang@golang-samber-mo` skill for monadic types (Option, Result, Either) that compose with ro pipelines
-- → See `samber/cc-skills-golang@golang-samber-hot` skill for in-memory caching (also available as an ro plugin)
-- → See `samber/cc-skills-golang@golang-concurrency` skill for goroutine/channel patterns when reactive streams are overkill
-- → See `samber/cc-skills-golang@golang-observability` skill for monitoring reactive pipelines in production
+- 有限スライス変換（Map、Filter、Reduce、GroupBy）については → See `samber/cc-skills-golang@golang-samber-lo` skill — データがすでにスライスにある場合はloを使用
+- roパイプラインと合成するモナド型（Option、Result、Either）については → See `samber/cc-skills-golang@golang-samber-mo` skill
+- インメモリキャッシュ（roプラグインとしても利用可能）については → See `samber/cc-skills-golang@golang-samber-hot` skill
+- リアクティブストリームが過剰な場合のgoroutine/channelパターンについては → See `samber/cc-skills-golang@golang-concurrency` skill
+- プロダクションでのリアクティブパイプライン監視については → See `samber/cc-skills-golang@golang-observability` skill

@@ -19,37 +19,37 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-context` skill takes precedence.
 
-# Go context.Context Best Practices
+# Go context.Context ベストプラクティス
 
-`context.Context` is Go's mechanism for propagating cancellation signals, deadlines, and request-scoped values across API boundaries and between goroutines. Think of it as the "session" of a request — it ties together every operation that belongs to the same unit of work.
+`context.Context`はGoにおけるキャンセルシグナル、デッドライン、リクエストスコープの値をAPI境界やgoroutine間で伝播するためのメカニズムである。リクエストの「セッション」と考えるとよい — 同じ作業単位に属するすべての操作を結びつける。
 
-## Best Practices Summary
+## ベストプラクティスの要約
 
-1. The same context MUST be propagated through the entire request lifecycle: HTTP handler → service → DB → external APIs
-2. `ctx` MUST be the first parameter, named `ctx context.Context`
-3. NEVER store context in a struct — pass explicitly through function parameters
-4. NEVER pass `nil` context — use `context.TODO()` if unsure
-5. `cancel()` MUST always be deferred immediately after `WithCancel`/`WithTimeout`/`WithDeadline`
-6. `context.Background()` MUST only be used at the top level (main, init, tests)
-7. **Use `context.TODO()`** as a placeholder when you know a context is needed but don't have one yet
-8. NEVER create a new `context.Background()` in the middle of a request path
-9. Context value keys MUST be unexported types to prevent collisions
-10. Context values MUST only carry request-scoped metadata — NEVER function parameters
-11. **Use `context.WithoutCancel`** (Go 1.21+) when spawning background work that must outlive the parent request
+1. 同じcontextをリクエストのライフサイクル全体で伝播しなければならない: HTTPハンドラ → サービス → DB → 外部API
+2. `ctx`は最初のパラメータとし、`ctx context.Context`と命名しなければならない
+3. contextを構造体に格納してはならない — 関数パラメータを通じて明示的に渡す
+4. `nil`のcontextを渡してはならない — 不明な場合は`context.TODO()`を使用する
+5. `cancel()`は`WithCancel`/`WithTimeout`/`WithDeadline`の直後に必ずdeferしなければならない
+6. `context.Background()`はトップレベル（main、init、テスト）でのみ使用しなければならない
+7. contextが必要だがまだ利用可能でない場合は、プレースホルダーとして**`context.TODO()`を使用する**
+8. リクエストパスの途中で新しい`context.Background()`を作成してはならない
+9. contextの値のキーは衝突を防ぐためにエクスポートされない型でなければならない
+10. contextの値はリクエストスコープのメタデータのみを運ぶべきであり、関数パラメータを含めてはならない
+11. 親リクエストより長く生存する必要があるバックグラウンド作業を生成する場合は**`context.WithoutCancel`**（Go 1.21+）を使用する
 
-## Creating Contexts
+## contextの作成
 
-| Situation | Use |
+| 状況 | 使用するもの |
 | --- | --- |
-| Entry point (main, init, test) | `context.Background()` |
-| Function needs context but caller doesn't provide one yet | `context.TODO()` |
-| Inside an HTTP handler | `r.Context()` |
-| Need cancellation control | `context.WithCancel(parentCtx)` |
-| Need a deadline/timeout | `context.WithTimeout(parentCtx, duration)` |
+| エントリーポイント（main、init、テスト） | `context.Background()` |
+| 関数がcontextを必要とするが、呼び出し元がまだ提供していない | `context.TODO()` |
+| HTTPハンドラ内 | `r.Context()` |
+| キャンセル制御が必要 | `context.WithCancel(parentCtx)` |
+| デッドライン/タイムアウトが必要 | `context.WithTimeout(parentCtx, duration)` |
 
-## Context Propagation: The Core Principle
+## contextの伝播: 核心原則
 
-The most important rule: **propagate the same context through the entire call chain**. When you propagate correctly, cancelling the parent context cancels all downstream work automatically.
+最も重要なルール: **コールチェーン全体で同じcontextを伝播する**。正しく伝播すれば、親のcontextをキャンセルするとすべての下流の処理が自動的にキャンセルされる。
 
 ```go
 // ✗ Bad — creates a new context, breaking the chain
@@ -63,21 +63,21 @@ func (s *OrderService) Create(ctx context.Context, order Order) error {
 }
 ```
 
-## Deep Dives
+## 詳細
 
-- **[Cancellation, Timeouts & Deadlines](./references/cancellation.md)** — How cancellation propagates: `WithCancel` for manual cancellation, `WithTimeout` for automatic cancellation after a duration, `WithDeadline` for absolute time deadlines. Patterns for listening (`<-ctx.Done()`) in concurrent code, `AfterFunc` callbacks, and `WithoutCancel` for operations that must outlive their parent request (e.g., audit logs).
+- **[キャンセル、タイムアウト、デッドライン](./references/cancellation.md)** — キャンセルの伝播方法: 手動キャンセル用の`WithCancel`、一定時間後の自動キャンセル用の`WithTimeout`、絶対時刻デッドライン用の`WithDeadline`。並行コードでの待ち受けパターン（`<-ctx.Done()`）、`AfterFunc`コールバック、親リクエストより長く生存する必要がある操作（例: 監査ログ）のための`WithoutCancel`。
 
-- **[Context Values & Cross-Service Tracing](./references/values-tracing.md)** — Safe context value patterns: unexported key types to prevent namespace collisions, when to use context values (request ID, user ID) vs function parameters. Trace context propagation: OpenTelemetry trace headers, correlation IDs for log aggregation, and marshaling/unmarshaling context across service boundaries.
+- **[contextの値とサービス間トレーシング](./references/values-tracing.md)** — 安全なcontext値パターン: 名前空間の衝突を防ぐエクスポートされないキー型、context値（リクエストID、ユーザーID）と関数パラメータの使い分け。トレースcontextの伝播: OpenTelemetryトレースヘッダー、ログ集約用の相関ID、サービス境界を越えたcontextのマーシャリング/アンマーシャリング。
 
-- **[Context in HTTP Servers & Service Calls](./references/http-services.md)** — HTTP handler context: `r.Context()` for request-scoped cancellation, middleware integration, and propagating to services. HTTP client patterns: `NewRequestWithContext`, client timeouts, and retries with context awareness. Database operations: always use `*Context` variants (`QueryContext`, `ExecContext`) to respect deadlines.
+- **[HTTPサーバーとサービス呼び出しにおけるcontext](./references/http-services.md)** — HTTPハンドラのcontext: リクエストスコープのキャンセル用`r.Context()`、ミドルウェア統合、サービスへの伝播。HTTPクライアントパターン: `NewRequestWithContext`、クライアントタイムアウト、contextを考慮したリトライ。データベース操作: デッドラインを尊重するため常に`*Context`バリアント（`QueryContext`、`ExecContext`）を使用する。
 
-## Cross-References
+## 相互参照
 
 - → See the `samber/cc-skills-golang@golang-concurrency` skill for goroutine cancellation patterns using context
 - → See the `samber/cc-skills-golang@golang-database` skill for context-aware database operations (QueryContext, ExecContext)
 - → See the `samber/cc-skills-golang@golang-observability` skill for trace context propagation with OpenTelemetry
 - → See the `samber/cc-skills-golang@golang-design-patterns` skill for timeout and resilience patterns
 
-## Enforce with Linters
+## リンターによる検出
 
-Many context pitfalls are caught automatically by linters: `govet`, `staticcheck`. → See the `samber/cc-skills-golang@golang-linter` skill for configuration and usage.
+contextの多くの落とし穴はリンターによって自動的に検出される: `govet`、`staticcheck`。→ See the `samber/cc-skills-golang@golang-linter` skill for configuration and usage.

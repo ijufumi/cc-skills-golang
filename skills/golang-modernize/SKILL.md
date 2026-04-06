@@ -19,38 +19,38 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 <!-- markdownlint-disable ol-prefix -->
 
-**Persona:** You are a Go modernization engineer. You keep codebases current with the latest Go idioms and standard library improvements — you prioritize safety and correctness fixes first, then readability, then gradual improvements.
+**Persona:** あなたはGoモダナイゼーションエンジニアです。コードベースを最新のGoイディオムと標準ライブラリの改善に対応させ続けます — 安全性と正確性の修正を優先し、次に可読性、そして段階的な改善を行います。
 
-**Modes:**
+**モード:**
 
-- **Inline mode** (developer is actively coding): suggest only modernizations relevant to the current file or feature; mention other opportunities you noticed but do not touch unrelated files.
-- **Full-scan mode** (explicit `/golang-modernize` invocation or CI): use up to 5 parallel sub-agents — Agent 1 scans deprecated packages and API replacements, Agent 2 scans language feature opportunities (range-over-int, min/max, any, iterators), Agent 3 scans standard library upgrades (slices, maps, cmp, slog), Agent 4 scans testing patterns (t.Context, b.Loop, synctest), Agent 5 scans tooling and infra (golangci-lint v2, govulncheck, PGO, CI pipeline) — then consolidate and prioritize by the migration priority guide.
+- **インラインモード**（開発者が積極的にコーディング中）: 現在のファイルまたは機能に関連するモダナイゼーションのみを提案。他の機会に気づいた場合は言及するが、無関係なファイルには触れない。
+- **フルスキャンモード**（明示的な `/golang-modernize` 呼び出しまたはCI）: 最大5つの並列サブエージェントを使用 — エージェント1は廃止パッケージとAPI置き換えをスキャン、エージェント2は言語機能の機会（range-over-int、min/max、any、イテレータ）をスキャン、エージェント3は標準ライブラリのアップグレード（slices、maps、cmp、slog）をスキャン、エージェント4はテストパターン（t.Context、b.Loop、synctest）をスキャン、エージェント5はツールとインフラ（golangci-lint v2、govulncheck、PGO、CIパイプライン）をスキャン — その後、マイグレーション優先度ガイドに従って統合・優先順位付けする。
 
-# Go Code Modernization Guide
+# Goコードモダナイゼーションガイド
 
-This skill helps you continuously modernize Go codebases by replacing outdated patterns with their modern equivalents.
+このスキルは、古いパターンを現代的な同等物に置き換えることで、Goコードベースを継続的にモダナイズするのに役立ちます。
 
-**Scope**: This skill covers the last 3 years of Go modernization (Go 1.21 through Go 1.26, released 2023-2026). While this skill can be used for projects targeting Go 1.20 or older, modernization suggestions may be limited for those versions. For best results, consider upgrading the Go version first. Some older modernizations (e.g., `any` instead of `interface{}`, `errors.Is`/`errors.As`, `strings.Cut`) are included because they are still commonly missed, but many pre-1.21 improvements are intentionally omitted because they should have been adopted long ago and are considered baseline Go practices by now.
+**スコープ**: このスキルはGoモダナイゼーションの直近3年（Go 1.21〜1.26、2023〜2026年リリース）をカバーします。Go 1.20以下を対象とするプロジェクトでも使用できますが、その場合モダナイゼーションの提案が制限されることがあります。最良の結果を得るにはまずGoバージョンのアップグレードを検討してください。一部の古いモダナイゼーション（例: `interface{}` の代わりに `any`、`errors.Is`/`errors.As`、`strings.Cut`）は今でもよく見落とされるため含まれていますが、1.21以前の多くの改善は意図的に省略されています（とっくに採用されているべきであり、現在のGoの基本的なプラクティスとみなされているため）。
 
-You MUST NEVER conduct large refactoring if the developer is working on a different task. But TRY TO CONVINCE your human it would improve the code quality.
+開発者が別のタスクに取り組んでいる場合は、大規模なリファクタリングを絶対に行ってはならない。ただし、コード品質が向上することをヒューマンに伝える努力をすること。
 
-## Workflow
+## ワークフロー
 
-When invoked:
+呼び出された時:
 
-1. **Check the project's `go.mod` or `go.work`** to determine the current Go version (`go` directive)
-2. **Check the latest Go version** available at <https://go.dev/dl/> and suggest upgrading if the project is behind
-3. **Read `.modernize`** in the project root — this file contains previously ignored suggestions; do NOT re-suggest anything listed there
-4. **Scan the codebase** for modernization opportunities based on the target Go version
-5. **Run `golangci-lint`** with the `modernize` linter if available
-6. **Suggest improvements contextually**:
-   - If the developer is actively coding, **only suggest improvements related to the code they are currently working on**. Do not refactor unrelated files. Instead, mention opportunities you noticed and explain why the change would be beneficial — but let the developer decide.
-   - If invoked explicitly via `/golang-modernize` or in CI, scan and suggest across the entire codebase.
-7. **For large codebases**, parallelize the scan using up to 5 sub-agents (via the Agent tool), each targeting a different modernization category (e.g. deprecated packages, language features, standard library upgrades, testing patterns, tooling and infra)
-8. **Before suggesting a dependency update**, check the changelog on GitHub (or the project's release notes) to verify there are no breaking changes. If the changelog reveals notable improvements (new features, performance gains, security fixes), highlight them to the developer as additional motivation to upgrade, or perform the code improvement if it is linked to its current task.
-9. **If the developer explicitly ignores a suggestion**, write a short memo to `.modernize` in the project root so it is not suggested again. Format: one line per ignored suggestion, with a short description.
+1. **プロジェクトの `go.mod` または `go.work` を確認する** — 現在のGoバージョン（`go` ディレクティブ）を特定する
+2. **最新のGoバージョンを確認する** (<https://go.dev/dl/>) — プロジェクトが遅れている場合はアップグレードを提案する
+3. **プロジェクトルートの `.modernize` を読む** — 以前に無視された提案が含まれている。リストにあるものは再提案しない
+4. **コードベースをスキャンする** — 対象Goバージョンに基づいてモダナイゼーションの機会を探す
+5. **`golangci-lint` を実行する** — 利用可能であれば `modernize` リンターを使用する
+6. **改善をコンテキストに応じて提案する**:
+   - 開発者が積極的にコーディング中の場合、**現在作業中のコードに関連する改善のみを提案する**。無関係なファイルをリファクタリングしない。代わりに気づいた機会を言及し、変更が有益な理由を説明する — 判断は開発者に任せる。
+   - `/golang-modernize` 経由で明示的に呼び出された場合またはCIの場合は、コードベース全体をスキャンして提案する。
+7. **大規模なコードベースの場合**、最大5つのサブエージェント（Agentツール経由）でスキャンを並列化する（例: 廃止パッケージ、言語機能、標準ライブラリアップグレード、テストパターン、ツールとインフラ）
+8. **依存関係のアップデートを提案する前に**、GitHubのchangelogを確認して破壊的変更がないかを確かめる。注目すべき改善（新機能、パフォーマンス向上、セキュリティ修正）があれば、追加の動機として開発者にハイライトする。または現在のタスクに関連している場合はコード改善を実施する。
+9. **開発者が提案を明示的に無視した場合**、`.modernize` にメモを書き込み、再提案されないようにする。フォーマット: 無視された提案ごとに1行、短い説明付き。
 
-### `.modernize` file format
+### `.modernize` ファイルフォーマット
 
 ```
 # Ignored modernization suggestions
@@ -59,91 +59,91 @@ When invoked:
 2026-02-01 math-rand-v2 Legacy module requires math/rand compatibility
 ```
 
-## Go Version Changelogs
+## GoバージョンのChangelog
 
-Always reference the relevant changelog when suggesting a modernization:
+モダナイゼーションを提案する際は、常に関連するChangelogを参照する:
 
-| Version | Release       | Changelog                   |
+| バージョン | リリース       | Changelog                   |
 | ------- | ------------- | --------------------------- |
-| Go 1.21 | August 2023   | <https://go.dev/doc/go1.21> |
-| Go 1.22 | February 2024 | <https://go.dev/doc/go1.22> |
-| Go 1.23 | August 2024   | <https://go.dev/doc/go1.23> |
-| Go 1.24 | February 2025 | <https://go.dev/doc/go1.24> |
-| Go 1.25 | August 2025   | <https://go.dev/doc/go1.25> |
-| Go 1.26 | February 2026 | <https://go.dev/doc/go1.26> |
+| Go 1.21 | 2023年8月   | <https://go.dev/doc/go1.21> |
+| Go 1.22 | 2024年2月 | <https://go.dev/doc/go1.22> |
+| Go 1.23 | 2024年8月   | <https://go.dev/doc/go1.23> |
+| Go 1.24 | 2025年2月 | <https://go.dev/doc/go1.24> |
+| Go 1.25 | 2025年8月   | <https://go.dev/doc/go1.25> |
+| Go 1.26 | 2026年2月 | <https://go.dev/doc/go1.26> |
 
-Check the latest available release notes: <https://go.dev/doc/devel/release>
+最新のリリースノートを確認: <https://go.dev/doc/devel/release>
 
-When the project's `go.mod` targets an older version, suggest upgrading and explain the benefits they'd unlock.
+プロジェクトの `go.mod` が古いバージョンを対象としている場合は、アップグレードを提案しその恩恵を説明する。
 
-## Using the modernize linter
+## modernizeリンターの使用
 
-The `modernize` linter (available since **golangci-lint v2.6.0**) automatically detects code that can be rewritten using newer Go features. It originates from `golang.org/x/tools/go/analysis/passes/modernize` and is also used by `gopls` and Go 1.26's rewritten `go fix` command. See the `samber/cc-skills-golang@golang-linter` skill for configuration.
+`modernize` リンター（**golangci-lint v2.6.0** 以降で利用可能）は、新しいGo機能を使用して書き直せるコードを自動的に検出する。`golang.org/x/tools/go/analysis/passes/modernize` に由来し、`gopls` やGo 1.26の書き直された `go fix` コマンドでも使用されている。設定については `samber/cc-skills-golang@golang-linter` skillを参照。
 
-## Version-specific modernizations
+## バージョン固有のモダナイゼーション
 
-For detailed before/after examples for each Go version (1.21–1.26) and general modernizations, see [Go version modernizations](./references/versions.md).
+各Goバージョン（1.21〜1.26）の詳細な変更前後の例と一般的なモダナイゼーションについては [Goバージョンモダナイゼーション](./references/versions.md) を参照。
 
-## Tooling modernization
+## ツールモダナイゼーション
 
-For CI tooling, govulncheck, PGO, golangci-lint v2, and AI-powered modernization pipelines, see [Tooling modernization](./references/tooling.md).
+CIツール、govulncheck、PGO、golangci-lint v2、AIを活用したモダナイゼーションパイプラインについては [ツールモダナイゼーション](./references/tooling.md) を参照。
 
-## Deprecated Packages Migration
+## 廃止パッケージのマイグレーション
 
-| Deprecated | Replacement | Since |
+| 廃止 | 代替 | バージョン |
 | --- | --- | --- |
 | `math/rand` | `math/rand/v2` | Go 1.22 |
-| `crypto/elliptic` (most functions) | `crypto/ecdh` | Go 1.21 |
-| `reflect.SliceHeader`, `StringHeader` | `unsafe.Slice`, `unsafe.String` | Go 1.21 |
+| `crypto/elliptic`（大部分の関数） | `crypto/ecdh` | Go 1.21 |
+| `reflect.SliceHeader`、`StringHeader` | `unsafe.Slice`、`unsafe.String` | Go 1.21 |
 | `reflect.PtrTo` | `reflect.PointerTo` | Go 1.22 |
 | `runtime.GOROOT()` | `go env GOROOT` | Go 1.24 |
 | `runtime.SetFinalizer` | `runtime.AddCleanup` | Go 1.24 |
-| `crypto/cipher.NewOFB`, `NewCFB*` | AEAD modes or `NewCTR` | Go 1.24 |
+| `crypto/cipher.NewOFB`、`NewCFB*` | AEADモードまたは `NewCTR` | Go 1.24 |
 | `golang.org/x/crypto/sha3` | `crypto/sha3` | Go 1.24 |
 | `golang.org/x/crypto/hkdf` | `crypto/hkdf` | Go 1.24 |
 | `golang.org/x/crypto/pbkdf2` | `crypto/pbkdf2` | Go 1.24 |
 | `testing/synctest.Run` | `testing/synctest.Test` | Go 1.25 |
-| `crypto.EncryptPKCS1v15` | OAEP encryption | Go 1.26 |
+| `crypto.EncryptPKCS1v15` | OAEP暗号化 | Go 1.26 |
 | `net/http/httputil.ReverseProxy.Director` | `ReverseProxy.Rewrite` | Go 1.26 |
 
-## Migration Priority Guide
+## マイグレーション優先度ガイド
 
-When modernizing a codebase, prioritize changes by impact:
+コードベースをモダナイズする際は、影響度別に変更を優先する:
 
-### High priority (safety and correctness)
+### 高優先度（安全性と正確性）
 
-1. Remove loop variable shadow copies _(Go 1.22+)_ — prevents subtle bugs
-2. Replace `math/rand` with `math/rand/v2` _(Go 1.22+)_ — remove `rand.Seed` calls
-3. Use `os.Root` for user-supplied file paths _(Go 1.24+)_ — prevents path traversal
-4. Run `govulncheck` _(Go 1.22+)_ — catch known vulnerabilities
-5. Use `errors.Is`/`errors.As` instead of direct comparison _(Go 1.13+)_
-6. Migrate deprecated crypto packages _(Go 1.24+)_ — security critical
+1. ループ変数のシャドウコピーを削除する _(Go 1.22+)_ — 微妙なバグを防ぐ
+2. `math/rand` を `math/rand/v2` に置き換える _(Go 1.22+)_ — `rand.Seed` 呼び出しを削除する
+3. ユーザー提供のファイルパスに `os.Root` を使用する _(Go 1.24+)_ — パストラバーサルを防ぐ
+4. `govulncheck` を実行する _(Go 1.22+)_ — 既知の脆弱性を検出する
+5. 直接比較の代わりに `errors.Is`/`errors.As` を使用する _(Go 1.13+)_
+6. 廃止されたcryptoパッケージをマイグレートする _(Go 1.24+)_ — セキュリティ上重要
 
-### Medium priority (readability and maintainability)
+### 中優先度（可読性とメンテナンス性）
 
-7. Replace `interface{}` with `any` _(Go 1.18+)_
-8. Use `min`/`max` builtins _(Go 1.21+)_
-9. Use `range` over int _(Go 1.22+)_
-10. Use `slices` and `maps` packages _(Go 1.21+)_
-11. Use `cmp.Or` for default values _(Go 1.22+)_
-12. Use `sync.OnceValue`/`sync.OnceFunc` _(Go 1.21+)_
-13. Use `sync.WaitGroup.Go` _(Go 1.25+)_
-14. Use `t.Context()` in tests _(Go 1.24+)_
-15. Use `b.Loop()` in benchmarks _(Go 1.24+)_
+7. `interface{}` を `any` に置き換える _(Go 1.18+)_
+8. `min`/`max` 組み込み関数を使用する _(Go 1.21+)_
+9. intに対して `range` を使用する _(Go 1.22+)_
+10. `slices` と `maps` パッケージを使用する _(Go 1.21+)_
+11. デフォルト値に `cmp.Or` を使用する _(Go 1.22+)_
+12. `sync.OnceValue`/`sync.OnceFunc` を使用する _(Go 1.21+)_
+13. `sync.WaitGroup.Go` を使用する _(Go 1.25+)_
+14. テストで `t.Context()` を使用する _(Go 1.24+)_
+15. ベンチマークで `b.Loop()` を使用する _(Go 1.24+)_
 
-### Lower priority (gradual improvement)
+### 低優先度（段階的な改善）
 
-16. Migrate to `slog` from third-party loggers _(Go 1.21+)_
-17. Adopt iterators where they simplify code _(Go 1.23+)_
-18. Replace `sort.Slice` with `slices.SortFunc` _(Go 1.21+)_
-19. Use `strings.SplitSeq` and iterator variants _(Go 1.24+)_
-20. Move tool deps to `go.mod` tool directives _(Go 1.24+)_
-21. Enable PGO for production builds _(Go 1.21+)_
-22. Upgrade to golangci-lint v2 with modernize linter _(golangci-lint v2.6.0+)_
-23. Add `govulncheck` to CI pipeline
-24. Set up monthly modernization CI pipeline
-25. Evaluate `encoding/json/v2` for new code _(Go 1.25+, experimental)_
+16. サードパーティロガーから `slog` にマイグレートする _(Go 1.21+)_
+17. コードを簡素化するイテレータを採用する _(Go 1.23+)_
+18. `sort.Slice` を `slices.SortFunc` に置き換える _(Go 1.21+)_
+19. `strings.SplitSeq` とイテレータバリアントを使用する _(Go 1.24+)_
+20. ツール依存関係を `go.mod` のtoolディレクティブに移動する _(Go 1.24+)_
+21. プロダクションビルドにPGOを有効化する _(Go 1.21+)_
+22. modernizeリンターを含むgolangci-lint v2にアップグレードする _(golangci-lint v2.6.0+)_
+23. CIパイプラインに `govulncheck` を追加する
+24. 月次モダナイゼーションCIパイプラインをセットアップする
+25. 新しいコードに `encoding/json/v2` を評価する _(Go 1.25+、実験的)_
 
-## Related Skills
+## 関連スキル
 
-See `samber/cc-skills-golang@golang-concurrency`, `samber/cc-skills-golang@golang-testing`, `samber/cc-skills-golang@golang-observability`, `samber/cc-skills-golang@golang-error-handling`, `samber/cc-skills-golang@golang-linter` skills.
+`samber/cc-skills-golang@golang-concurrency`、`samber/cc-skills-golang@golang-testing`、`samber/cc-skills-golang@golang-observability`、`samber/cc-skills-golang@golang-error-handling`、`samber/cc-skills-golang@golang-linter` skillを参照。

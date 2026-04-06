@@ -23,51 +23,51 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Persona:** You are a Go dependency steward. You treat every new dependency as a long-term maintenance commitment — you ask whether the standard library already solves the problem before reaching for an external package.
 
-# Go Dependency Management
+# Go 依存関係管理
 
-## AI Agent Rule: Ask Before Adding Dependencies
+## AIエージェントルール: 依存関係追加前に確認する
 
-**Before running `go get` to add any new dependency, AI agents MUST ask the user for confirmation.** AI agents can suggest packages that are unmaintained, low-quality, or unnecessary when the standard library already provides equivalent functionality. Using `go get -u` to upgrade an existing dependency is safe.
+**`go get` で新しい依存関係を追加する前に、AIエージェントは必ずユーザーに確認を求めなければなりません。** AIエージェントはメンテナンスされていない、品質の低い、または標準ライブラリで同等の機能が提供されている不要なパッケージを提案することがあります。`go get -u` で既存の依存関係をアップグレードすることは安全です。
 
-Before proposing a dependency, present:
+依存関係を提案する前に、以下を提示してください:
 
-- Package name and import path
-- What it does and why it's needed
-- Whether the standard library covers the use case
-- GitHub stars, last commit date, and maintenance status (check via `gh repo view`)
-- License compatibility
-- Known alternatives
+- パッケージ名とインポートパス
+- 何をするのか、なぜ必要なのか
+- 標準ライブラリでユースケースをカバーできるかどうか
+- GitHubスター数、最終コミット日、メンテナンス状況（`gh repo view` で確認）
+- ライセンスの互換性
+- 既知の代替手段
 
-The `samber/cc-skills-golang@golang-popular-libraries` skill contains a curated list of vetted, production-ready libraries. Prefer recommending packages from that list. When no vetted option exists, favor well-known packages from the Go team (`golang.org/x/...`) or established organizations over obscure alternatives.
+`samber/cc-skills-golang@golang-popular-libraries` スキルには、厳選された本番環境対応ライブラリのリストが含まれています。そのリストからパッケージを推奨することを優先してください。厳選されたオプションがない場合は、無名の代替手段よりもGoチーム（`golang.org/x/...`）や確立された組織の有名なパッケージを優先してください。
 
-## Key Rules
+## 主要ルール
 
-- `go.sum` MUST be committed — it records cryptographic checksums of every dependency version, letting `go mod verify` detect supply-chain tampering. Without it, a compromised proxy could silently substitute malicious code
-- `govulncheck ./...` before every release — catches known CVEs in your dependency tree before they reach production
-- Check maintenance status, license, and stdlib alternatives before adding a dependency — every dependency increases attack surface, maintenance burden, and binary size
-- `go mod tidy` before every commit that changes dependencies — removes unused modules and adds missing ones, keeping go.mod honest
+- `go.sum` は必ずコミットすること — すべての依存バージョンの暗号チェックサムを記録し、`go mod verify` でサプライチェーンの改ざんを検出できるようにします。これがないと、侵害されたプロキシが悪意のあるコードを静かに差し替える可能性があります
+- リリース前に必ず `govulncheck ./...` を実行すること — 依存関係ツリー内の既知のCVEを本番環境に到達する前にキャッチします
+- 依存関係を追加する前にメンテナンス状況、ライセンス、標準ライブラリの代替手段を確認すること — 依存関係を追加するたびに攻撃面、メンテナンス負担、バイナリサイズが増加します
+- 依存関係を変更するコミットの前に必ず `go mod tidy` を実行すること — 未使用のモジュールを削除し、不足しているモジュールを追加して、go.modを正確に保ちます
 
-## go.mod & go.sum
+## go.mod と go.sum
 
-### Essential Commands
+### 基本コマンド
 
-| Command           | Purpose                                      |
+| コマンド            | 目的                                          |
 | ----------------- | -------------------------------------------- |
-| `go mod tidy`     | Add missing deps, remove unused ones         |
-| `go mod download` | Download modules to local cache              |
-| `go mod verify`   | Verify cached modules match go.sum checksums |
-| `go mod vendor`   | Copy deps into `vendor/` directory           |
-| `go mod edit`     | Edit go.mod programmatically (scripts, CI)   |
-| `go mod graph`    | Print the module requirement graph           |
-| `go mod why`      | Explain why a module or package is needed    |
+| `go mod tidy`     | 不足している依存関係を追加し、未使用のものを削除する  |
+| `go mod download` | モジュールをローカルキャッシュにダウンロードする      |
+| `go mod verify`   | キャッシュされたモジュールがgo.sumのチェックサムと一致するか検証する |
+| `go mod vendor`   | 依存関係を `vendor/` ディレクトリにコピーする       |
+| `go mod edit`     | go.modをプログラム的に編集する（スクリプト、CI）     |
+| `go mod graph`    | モジュール依存関係グラフを表示する                  |
+| `go mod why`      | モジュールやパッケージが必要な理由を説明する          |
 
-### Vendoring
+### ベンダリング
 
-Use `go mod vendor` when you need hermetic builds (no network access), reproducibility guarantees beyond checksums, or when deploying to environments without module proxy access. CI pipelines and Docker builds sometimes benefit from vendoring. Run `go mod vendor` after any dependency change and commit the `vendor/` directory.
+ハーメティックビルド（ネットワークアクセスなし）、チェックサム以上の再現性保証、またはモジュールプロキシアクセスがない環境へのデプロイが必要な場合に `go mod vendor` を使用します。CIパイプラインやDockerビルドはベンダリングの恩恵を受けることがあります。依存関係の変更後に `go mod vendor` を実行し、`vendor/` ディレクトリをコミットしてください。
 
-## Installing & Upgrading Dependencies
+## 依存関係のインストールとアップグレード
 
-### Adding a Dependency
+### 依存関係の追加
 
 ```bash
 go get github.com/pkg/errors           # Latest version
@@ -76,7 +76,7 @@ go get github.com/pkg/errors@latest    # Explicitly latest
 go get github.com/pkg/errors@master    # Specific branch (pseudo-version)
 ```
 
-### Upgrading
+### アップグレード
 
 ```bash
 go get -u ./...            # Upgrade ALL direct+indirect deps to latest minor/patch
@@ -84,26 +84,26 @@ go get -u=patch ./...      # Upgrade to latest patch only (safer)
 go get github.com/pkg@v1.5 # Upgrade specific package
 ```
 
-**Prefer `go get -u=patch`** for routine updates — patch versions change no public API (semver promise), so they're unlikely to break your build. Minor version upgrades may add new APIs but can also deprecate or change behavior unexpectedly.
+定期的なアップデートには **`go get -u=patch` を推奨** — パッチバージョンはパブリックAPIを変更しません（semverの約束）ので、ビルドを壊す可能性は低いです。マイナーバージョンのアップグレードは新しいAPIを追加する場合がありますが、予期せず非推奨化や動作変更が発生することもあります。
 
-### Removing a Dependency
+### 依存関係の削除
 
 ```bash
 go get github.com/pkg/errors@none   # Mark for removal
 go mod tidy                          # Clean up go.mod and go.sum
 ```
 
-### Installing CLI Tools
+### CLIツールのインストール
 
 ```bash
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 ```
 
-`go install` builds and installs a binary to `$GOPATH/bin`. Use `@latest` or a specific version tag — never `@master` for tools you depend on.
+`go install` はバイナリをビルドして `$GOPATH/bin` にインストールします。`@latest` または特定のバージョンタグを使用してください — 依存するツールには絶対に `@master` を使わないでください。
 
-### The tools.go Pattern
+### tools.go パターン
 
-Pin tool versions in your module without importing them in production code:
+本番コードでインポートせずに、モジュール内でツールのバージョンを固定します:
 
 ```go
 //go:build tools
@@ -116,29 +116,29 @@ import (
 )
 ```
 
-The build constraint ensures this file is never compiled. The blank imports keep the tools in `go.mod` so `go install` uses the pinned version. Run `go mod tidy` after creating this file.
+ビルド制約により、このファイルはコンパイルされません。ブランクインポートによりツールが `go.mod` に保持され、`go install` が固定バージョンを使用します。このファイルを作成した後に `go mod tidy` を実行してください。
 
-## Deep Dives
+## 詳細ガイド
 
-- **[Versioning & MVS](./references/versioning.md)** — Semantic versioning rules (major.minor.patch), when to increment each number, pre-release versions, the Minimal Version Selection (MVS) algorithm (why you can't just pick "latest"), and major version suffix conventions (v0, v1, v2 suffixes for breaking changes).
+- **[バージョニングとMVS](./references/versioning.md)** — セマンティックバージョニングのルール（major.minor.patch）、各番号をいつインクリメントするか、プレリリースバージョン、最小バージョン選択（MVS）アルゴリズム（なぜ単に「最新」を選べないのか）、メジャーバージョンサフィックスの規約（破壊的変更に対するv0、v1、v2サフィックス）。
 
-- **[Auditing Dependencies](./references/auditing.md)** — Vulnerability scanning with `govulncheck`, tracking outdated dependencies, analyzing which dependencies make the binary large (`goweight`), and distinguishing test-only vs binary dependencies to keep `go.mod` clean.
+- **[依存関係の監査](./references/auditing.md)** — `govulncheck` による脆弱性スキャン、古い依存関係の追跡、どの依存関係がバイナリを大きくしているかの分析（`goweight`）、`go.mod` をクリーンに保つためのテスト専用依存とバイナリ依存の区別。
 
-- **[Dependency Conflicts & Resolution](./references/conflicts.md)** — Diagnosing version conflicts (what `go get` does when you request incompatible versions), resolution strategies (`replace` directives for local development, `exclude` for broken versions, `retract` for published versions that should be skipped), and workflows for conflicts across your dependency tree.
+- **[依存関係の競合と解決](./references/conflicts.md)** — バージョン競合の診断（互換性のないバージョンを要求した場合に `go get` が何をするか）、解決戦略（ローカル開発用の `replace` ディレクティブ、壊れたバージョン用の `exclude`、スキップすべき公開バージョン用の `retract`）、依存関係ツリー全体での競合のワークフロー。
 
-- **[Go Workspaces](./references/workspaces.md)** — `go.work` files for multi-module development (e.g., library + example application), when to use workspaces vs monorepos, and workspace best practices.
+- **[Goワークスペース](./references/workspaces.md)** — マルチモジュール開発用の `go.work` ファイル（例: ライブラリ + サンプルアプリケーション）、ワークスペースとモノレポの使い分け、ワークスペースのベストプラクティス。
 
-- **[Automated Dependency Updates](./references/automated-updates.md)** — Setting up Dependabot or Renovate for automatic dependency update PRs, auto-merge strategies (when to merge automatically vs require review), and handling security updates.
+- **[依存関係の自動更新](./references/automated-updates.md)** — DependabotまたはRenovateによる自動依存関係更新PRの設定、自動マージ戦略（いつ自動マージするか vs レビューを要求するか）、セキュリティアップデートの処理。
 
-- **[Visualizing the Dependency Graph](./references/visualization.md)** — `go mod graph` to inspect the full dependency tree, `modgraphviz` to visualize it, and interactive tools to find which dependency chains cause bloat.
+- **[依存関係グラフの可視化](./references/visualization.md)** — `go mod graph` で完全な依存関係ツリーを検査し、`modgraphviz` で可視化し、どの依存チェーンが肥大化の原因かを見つけるインタラクティブツール。
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-continuous-integration` skill for Dependabot/Renovate CI setup
 - → See `samber/cc-skills-golang@golang-security` skill for vulnerability scanning with govulncheck
 - → See `samber/cc-skills-golang@golang-popular-libraries` skill for vetted library recommendations
 
-## Quick Reference
+## クイックリファレンス
 
 ```bash
 # Start a new module

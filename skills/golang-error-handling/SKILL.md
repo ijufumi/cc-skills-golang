@@ -27,54 +27,54 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-error-handling` skill takes precedence.
 
-# Go Error Handling Best Practices
+# Go エラーハンドリングのベストプラクティス
 
-This skill guides the creation of robust, idiomatic error handling in Go applications. Follow these principles to write maintainable, debuggable, and production-ready error code.
+このスキルはGoアプリケーションにおける堅牢で慣用的なエラーハンドリングの作成をガイドする。保守性が高く、デバッグ可能で、本番品質のエラーコードを書くために以下の原則に従う。
 
-## Best Practices Summary
+## ベストプラクティスまとめ
 
-1. **Returned errors MUST always be checked** — NEVER discard with `_`
-2. **Errors MUST be wrapped with context** using `fmt.Errorf("{context}: %w", err)`
-3. **Error strings MUST be lowercase**, without trailing punctuation
-4. **Use `%w` internally, `%v` at system boundaries** to control error chain exposure
-5. **MUST use `errors.Is` and `errors.As`** instead of direct comparison or type assertion
-6. **SHOULD use `errors.Join`** (Go 1.20+) to combine independent errors
-7. **Errors MUST be either logged OR returned**, NEVER both (single handling rule)
-8. **Use sentinel errors** for expected conditions, custom types for carrying data
-9. **NEVER use `panic` for expected error conditions** — reserve for truly unrecoverable states
-10. **SHOULD use `slog`** (Go 1.21+) for structured error logging — not `fmt.Println` or `log.Printf`
-11. **Use `samber/oops`** for production errors needing stack traces, user/tenant context, or structured attributes
-12. **Log HTTP requests** with structured middleware capturing method, path, status, and duration
-13. **Use log levels** to indicate error severity
-14. **Never expose technical errors to users** — translate internal errors to user-friendly messages, log technical details separately
-15. **Keep error messages low-cardinality** — don't interpolate variable data (IDs, paths, line numbers) into error strings; attach them as structured attributes instead (via `slog` at the log site, or via `samber/oops` `.With()` on the error itself) so APM/log aggregators (Datadog, Loki, Sentry) can group errors properly
+1. **返されたエラーはMUSTで常にチェックする** — `_` で破棄しない
+2. **エラーはMUSTでコンテキスト付きでラップする** `fmt.Errorf("{context}: %w", err)` を使用
+3. **エラー文字列はMUSTで小文字**、末尾の句読点なし
+4. **内部では `%w`、システム境界では `%v` を使用**してエラーチェーンの露出を制御
+5. **直接比較や型アサーションの代わりにMUSTで `errors.Is` と `errors.As` を使用**
+6. **独立したエラーの結合にはSHOULDで `errors.Join`** を使用（Go 1.20+）
+7. **エラーはMUSTでログ出力または返却のいずれか一方のみ**、両方は行わない（単一処理ルール）
+8. **期待される条件にはセンチネルエラー**、データを持つ場合はカスタム型を使用
+9. **期待されるエラー条件にはpanicを使用しない** — 真に回復不可能な状態のために予約
+10. **構造化エラーログにはSHOULDで `slog`** を使用（Go 1.21+）— `fmt.Println` や `log.Printf` ではなく
+11. **スタックトレース、ユーザー/テナントコンテキスト、または構造化属性が必要な本番エラーには `samber/oops` を使用**
+12. **HTTPリクエストをログ**する — メソッド、パス、ステータス、所要時間をキャプチャする構造化ミドルウェアで
+13. **ログレベルを使用**してエラーの深刻度を示す
+14. **技術的なエラーをユーザーに公開しない** — 内部エラーをユーザーフレンドリーなメッセージに変換し、技術的な詳細は別途ログする
+15. **エラーメッセージは低カーディナリティに保つ** — 可変データ（ID、パス、行番号）をエラー文字列に埋め込まない。代わりに構造化属性として付加する（ログサイトでは `slog` 経由、エラー自体には `samber/oops` の `.With()` 経由）。これによりAPM/ログアグリゲーター（Datadog、Loki、Sentry）がエラーを適切にグループ化できる
 
-## Detailed Reference
+## 詳細リファレンス
 
-- **[Error Creation](./references/error-creation.md)** — How to create errors that tell the story: error messages should be lowercase, no punctuation, and describe what happened without prescribing action. Covers sentinel errors (one-time preallocation for performance), custom error types (for carrying rich context), and the decision table for which to use when.
+- **[エラーの作成](./references/error-creation.md)** — ストーリーを伝えるエラーの作り方: エラーメッセージは小文字で句読点なし、何が起きたかを記述するがアクションを規定しない。センチネルエラー（パフォーマンスのための一度限りの事前割り当て）、カスタムエラー型（リッチなコンテキストを運ぶため）、どちらをいつ使うかの判断表をカバー。
 
-- **[Error Wrapping and Inspection](./references/error-wrapping.md)** — Why `fmt.Errorf("{context}: %w", err)` beats `fmt.Errorf("{context}: %v", err)` (chains vs concatenation). How to inspect chains with `errors.Is`/`errors.As` for type-safe error handling, and `errors.Join` for combining independent errors.
+- **[エラーラッピングと検査](./references/error-wrapping.md)** — なぜ `fmt.Errorf("{context}: %w", err)` が `fmt.Errorf("{context}: %v", err)` より優れているか（チェーンと結合の違い）。型安全なエラーハンドリングのための `errors.Is`/`errors.As` によるチェーン検査と、独立したエラーの結合のための `errors.Join`。
 
-- **[Error Handling Patterns and Logging](./references/error-handling.md)** — The single handling rule: errors are either logged OR returned, NEVER both (prevents duplicate logs cluttering aggregators). Panic/recover design, `samber/oops` for production errors, and `slog` structured logging integration for APM tools.
+- **[エラーハンドリングパターンとロギング](./references/error-handling.md)** — 単一処理ルール: エラーはログ出力または返却のいずれか一方のみ、両方は行わない（アグリゲーターを散らかす重複ログを防止）。panic/recover設計、本番エラー用の `samber/oops`、APMツール用の `slog` 構造化ログ統合。
 
-## Parallelizing Error Handling Audits
+## エラーハンドリング監査の並列化
 
-When auditing error handling across a large codebase, use up to 5 parallel sub-agents (via the Agent tool) — each targets an independent error category:
+大規模コードベースでエラーハンドリングを監査する場合、最大5つの並列サブエージェント（Agentツール経由）を使用する — 各サブエージェントは独立したエラーカテゴリを担当:
 
-- Sub-agent 1: Error creation — validate `errors.New`/`fmt.Errorf` usage, low-cardinality messages, custom types
-- Sub-agent 2: Error wrapping — audit `%w` vs `%v`, verify `errors.Is`/`errors.As` patterns
-- Sub-agent 3: Single handling rule — find log-and-return violations, swallowed errors, discarded errors (`_`)
-- Sub-agent 4: Panic/recover — audit `panic` usage, verify recovery at goroutine boundaries
-- Sub-agent 5: Structured logging — verify `slog` usage at error sites, check for PII in error messages
+- サブエージェント1: エラーの作成 — `errors.New`/`fmt.Errorf` の使用、低カーディナリティメッセージ、カスタム型を検証
+- サブエージェント2: エラーラッピング — `%w` と `%v` を監査、`errors.Is`/`errors.As` パターンを検証
+- サブエージェント3: 単一処理ルール — ログ出力と返却の同時実行、握りつぶされたエラー、破棄されたエラー（`_`）を検出
+- サブエージェント4: panic/recover — `panic` の使用を監査、ゴルーチン境界でのリカバリを検証
+- サブエージェント5: 構造化ログ — エラーサイトでの `slog` 使用を検証、エラーメッセージ内のPIIをチェック
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-samber-oops` for full samber/oops API, builder patterns, and logger integration
 - → See `samber/cc-skills-golang@golang-observability` for structured logging setup, log levels, and request logging middleware
 - → See `samber/cc-skills-golang@golang-safety` for nil interface trap and nil error comparison pitfalls
 - → See `samber/cc-skills-golang@golang-naming` for error naming conventions (ErrNotFound, PathError)
 
-## References
+## リファレンス
 
 - [lmittmann/tint](https://github.com/lmittmann/tint)
 - [samber/oops](https://github.com/samber/oops)

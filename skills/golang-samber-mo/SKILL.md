@@ -21,39 +21,39 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Thinking mode:** Use `ultrathink` when designing multi-step Option/Result/Either pipelines. Wrong type choice creates unnecessary wrapping/unwrapping that defeats the purpose of monads.
 
-# samber/mo — Monads and Functional Abstractions for Go
+# samber/mo — Go向けモナドと関数型抽象
 
-Go 1.18+ library providing type-safe monadic types with zero dependencies. Inspired by Scala, Rust, and fp-ts.
+Go 1.18+ 向けの型安全なモナド型ライブラリ。依存関係ゼロ。Scala、Rust、fp-ts にインスパイア。
 
-**Official Resources:**
+**公式リソース:**
 
 - [pkg.go.dev/github.com/samber/mo](https://pkg.go.dev/github.com/samber/mo)
 - [github.com/samber/mo](https://github.com/samber/mo)
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。最新のAPIシグネチャや使用方法については、ライブラリの公式ドキュメントとコード例を参照してください。Context7がディスカバリプラットフォームとして役立ちます。
 
 ```bash
 go get github.com/samber/mo
 ```
 
-For an introduction to functional programming concepts and why monads are valuable in Go, see [Monads Guide](./references/monads-guide.md).
+関数型プログラミングの概念とGoにおけるモナドの価値についての入門は [Monads Guide](./references/monads-guide.md) を参照。
 
-## Core Types at a Glance
+## コア型の概要
 
-| Type | Purpose | Think of it as... |
+| 型 | 目的 | イメージ |
 | --- | --- | --- |
-| `Option[T]` | Value that may be absent | Rust's `Option`, Java's `Optional` |
-| `Result[T]` | Operation that may fail | Rust's `Result<T, E>`, replaces `(T, error)` |
-| `Either[L, R]` | Value of one of two types | Scala's `Either`, TypeScript discriminated union |
-| `EitherX[L, R]` | Value of one of X types | Scala's `Either`, TypeScript discriminated union |
-| `Future[T]` | Async value not yet available | JavaScript `Promise` |
-| `IO[T]` | Lazy synchronous side effect | Haskell's `IO` |
-| `Task[T]` | Lazy async computation | fp-ts `Task` |
-| `State[S, A]` | Stateful computation | Haskell's `State` monad |
+| `Option[T]` | 存在しない可能性のある値 | Rustの `Option`、Javaの `Optional` |
+| `Result[T]` | 失敗する可能性のある操作 | Rustの `Result<T, E>`、`(T, error)` の代替 |
+| `Either[L, R]` | 2つの型のいずれかの値 | Scalaの `Either`、TypeScriptの判別共用体 |
+| `EitherX[L, R]` | X個の型のいずれかの値 | Scalaの `Either`、TypeScriptの判別共用体 |
+| `Future[T]` | まだ利用できない非同期値 | JavaScriptの `Promise` |
+| `IO[T]` | 遅延同期副作用 | Haskellの `IO` |
+| `Task[T]` | 遅延非同期計算 | fp-tsの `Task` |
+| `State[S, A]` | ステートフル計算 | Haskellの `State` モナド |
 
-## Option[T] — Nullable Values Without nil
+## Option[T] — nilなしのNull許容値
 
-Represents a value that is either present (`Some`) or absent (`None`). Eliminates nil pointer risks at the type level.
+値が存在する（`Some`）か不在（`None`）かを表す。型レベルでnilポインタのリスクを排除する。
 
 ```go
 import "github.com/samber/mo"
@@ -62,46 +62,46 @@ name := mo.Some("Alice")          // Option[string] with value
 empty := mo.None[string]()        // Option[string] without value
 fromPtr := mo.PointerToOption(ptr) // nil pointer -> None
 
-// Safe extraction
+// 安全な値の取り出し
 name.OrElse("Anonymous")  // "Alice"
 empty.OrElse("Anonymous")  // "Anonymous"
 
-// Transform if present, skip if absent
+// 存在すれば変換、不在ならスキップ
 upper := name.Map(func(s string) (string, bool) {
     return strings.ToUpper(s), true
 })
 ```
 
-**Key methods:** `Some`, `None`, `Get`, `MustGet`, `OrElse`, `OrEmpty`, `Map`, `FlatMap`, `Match`, `ForEach`, `ToPointer`, `IsPresent`, `IsAbsent`.
+**主要メソッド:** `Some`, `None`, `Get`, `MustGet`, `OrElse`, `OrEmpty`, `Map`, `FlatMap`, `Match`, `ForEach`, `ToPointer`, `IsPresent`, `IsAbsent`.
 
-Option implements `json.Marshaler/Unmarshaler`, `sql.Scanner`, `driver.Valuer` — use it directly in JSON structs and database models.
+Option は `json.Marshaler/Unmarshaler`、`sql.Scanner`、`driver.Valuer` を実装しており、JSON構造体やデータベースモデルで直接使用可能。
 
-For full API reference, see [Option Reference](./references/option.md).
+完全なAPIリファレンスについては [Option Reference](./references/option.md) を参照。
 
-## Result[T] — Error Handling as Values
+## Result[T] — 値としてのエラーハンドリング
 
-Represents success (`Ok`) or failure (`Err`). Equivalent to `Either[error, T]` but specialized for Go's error pattern.
+成功（`Ok`）または失敗（`Err`）を表す。`Either[error, T]` と同等だが、Goのエラーパターンに特化。
 
 ```go
-// Wrap Go's (value, error) pattern
+// Goの (value, error) パターンをラップ
 result := mo.TupleToResult(os.ReadFile("config.yaml"))
 
-// Same-type transform — errors short-circuit automatically
+// 同じ型の変換 — エラーは自動的にショートサーキットされる
 upper := mo.Ok("hello").Map(func(s string) (string, error) {
     return strings.ToUpper(s), nil
 })
 // Ok("HELLO")
 
-// Extract with fallback
+// フォールバック付きで値を取り出す
 val := upper.OrElse("default")
 ```
 
-**Go limitation:** Direct methods (`.Map`, `.FlatMap`) cannot change the type parameter — `Result[T].Map` returns `Result[T]`, not `Result[U]`. Go methods cannot introduce new type parameters. For type-changing transforms (e.g. `Result[[]byte]` to `Result[Config]`), use sub-package functions or `mo.Do`:
+**Goの制限:** 直接メソッド（`.Map`、`.FlatMap`）は型パラメータを変更できない — `Result[T].Map` は `Result[T]` を返し、`Result[U]` ではない。Goのメソッドは新しい型パラメータを導入できない。型が変わる変換（例: `Result[[]byte]` から `Result[Config]`）にはサブパッケージ関数または `mo.Do` を使う:
 
 ```go
 import "github.com/samber/mo/result"
 
-// Type-changing pipeline: []byte -> Config -> ValidConfig
+// 型が変わるパイプライン: []byte -> Config -> ValidConfig
 parsed := result.Pipe2(
     mo.TupleToResult(os.ReadFile("config.yaml")),
     result.Map(func(data []byte) Config { return parseConfig(data) }),
@@ -109,16 +109,16 @@ parsed := result.Pipe2(
 )
 ```
 
-**Key methods:** `Ok`, `Err`, `Errf`, `TupleToResult`, `Try`, `Get`, `MustGet`, `OrElse`, `Map`, `FlatMap`, `MapErr`, `Match`, `ForEach`, `ToEither`, `IsOk`, `IsError`.
+**主要メソッド:** `Ok`, `Err`, `Errf`, `TupleToResult`, `Try`, `Get`, `MustGet`, `OrElse`, `Map`, `FlatMap`, `MapErr`, `Match`, `ForEach`, `ToEither`, `IsOk`, `IsError`.
 
-For full API reference, see [Result Reference](./references/result.md).
+完全なAPIリファレンスについては [Result Reference](./references/result.md) を参照。
 
-## Either[L, R] — Discriminated Union of Two Types
+## Either[L, R] — 2つの型の判別共用体
 
-Represents a value that is one of two possible types. Unlike Result, neither side implies success or failure — both are valid alternatives.
+2つの可能な型のいずれかの値を表す。Resultとは異なり、どちらの側も成功や失敗を意味しない — 両方とも有効な選択肢。
 
 ```go
-// API that returns either cached data or fresh data
+// キャッシュデータまたは新鮮なデータのいずれかを返すAPI
 func fetchUser(id string) mo.Either[CachedUser, FreshUser] {
     if cached, ok := cache.Get(id); ok {
         return mo.Left[CachedUser, FreshUser](cached)
@@ -126,26 +126,26 @@ func fetchUser(id string) mo.Either[CachedUser, FreshUser] {
     return mo.Right[CachedUser, FreshUser](db.Fetch(id))
 }
 
-// Pattern match
+// パターンマッチ
 result.Match(
     func(cached CachedUser) mo.Either[CachedUser, FreshUser] { /* use cached */ },
     func(fresh FreshUser) mo.Either[CachedUser, FreshUser] { /* use fresh */ },
 )
 ```
 
-**When to use Either vs Result:** Use `Result[T]` when one path is an error. Use `Either[L, R]` when both paths are valid alternatives (cached vs fresh, left vs right, strategy A vs B).
+**Either vs Resultの使い分け:** 一方のパスがエラーの場合は `Result[T]` を使う。両方のパスが有効な選択肢（キャッシュ vs 新鮮、左 vs 右、戦略A vs B）の場合は `Either[L, R]` を使う。
 
-`Either3[T1, T2, T3]`, `Either4`, and `Either5` extend this to 3-5 type variants.
+`Either3[T1, T2, T3]`、`Either4`、`Either5` はこれを3-5個の型バリアントに拡張する。
 
-For full API reference, see [Either Reference](./references/either.md).
+完全なAPIリファレンスについては [Either Reference](./references/either.md) を参照。
 
-## Do Notation — Imperative Style with Monadic Safety
+## Do記法 — モナドの安全性を持つ命令型スタイル
 
-`mo.Do` wraps imperative code in a `Result`, catching panics from `MustGet()` calls:
+`mo.Do` は命令型コードを `Result` でラップし、`MustGet()` 呼び出しからのpanicをキャッチする:
 
 ```go
 result := mo.Do(func() int {
-    // MustGet panics on None/Err — Do catches it as Result error
+    // MustGet は None/Err でpanicする — Do はそれを Result のエラーとしてキャッチ
     a := mo.Some(21).MustGet()
     b := mo.Ok(2).MustGet()
     return a * b  // 42
@@ -153,19 +153,19 @@ result := mo.Do(func() int {
 // result is Ok(42)
 
 result := mo.Do(func() int {
-    val := mo.None[int]().MustGet()  // panics
+    val := mo.None[int]().MustGet()  // panicする
     return val
 })
 // result is Err("no such element")
 ```
 
-Do notation bridges imperative Go style with monadic safety — write straight-line code, get automatic error propagation.
+Do記法は命令型のGoスタイルとモナドの安全性を橋渡しする — 直線的なコードを書き、自動的なエラー伝播を得る。
 
-## Pipeline Sub-Packages vs Direct Chaining
+## パイプラインサブパッケージ vs 直接チェーン
 
-samber/mo provides two ways to compose operations:
+samber/mo は操作を合成する2つの方法を提供する:
 
-**Direct methods** (`.Map`, `.FlatMap`) — work when the output type equals the input type:
+**直接メソッド**（`.Map`、`.FlatMap`）— 出力型が入力型と同じ場合に機能:
 
 ```go
 opt := mo.Some(42)
@@ -174,18 +174,18 @@ doubled := opt.Map(func(v int) (int, bool) {
 })  // Option[int]
 ```
 
-**Sub-package functions** (`option.Map`, `result.Map`) — required when the output type differs from input:
+**サブパッケージ関数**（`option.Map`、`result.Map`）— 出力型が入力型と異なる場合に必要:
 
 ```go
 import "github.com/samber/mo/option"
 
-// int -> string type change: use sub-package Map
+// int -> string の型変更: サブパッケージの Map を使用
 strOpt := option.Map(func(v int) string {
     return fmt.Sprintf("value: %d", v)
 })(mo.Some(42))  // Option[string]
 ```
 
-**Pipe functions** (`option.Pipe3`, `result.Pipe3`) — chain multiple type-changing transformations readably:
+**Pipe関数**（`option.Pipe3`、`result.Pipe3`）— 複数の型変更変換を読みやすくチェーン:
 
 ```go
 import "github.com/samber/mo/option"
@@ -201,13 +201,13 @@ result := option.Pipe3(
 )
 ```
 
-**Rule of thumb:** Use direct methods for same-type transforms. Use sub-package functions + pipes when types change across steps.
+**経験則:** 同じ型の変換には直接メソッドを使う。ステップ間で型が変わる場合はサブパッケージ関数 + パイプを使う。
 
-For detailed pipeline API reference, see [Pipelines Reference](./references/pipelines.md).
+詳細なパイプラインAPIリファレンスについては [Pipelines Reference](./references/pipelines.md) を参照。
 
-## Common Patterns
+## よくあるパターン
 
-### JSON API responses with Option
+### Optionを使ったJSON APIレスポンス
 
 ```go
 type UserResponse struct {
@@ -217,7 +217,7 @@ type UserResponse struct {
 }
 ```
 
-### Database nullable columns
+### データベースのNULL許容カラム
 
 ```go
 type User struct {
@@ -229,42 +229,42 @@ type User struct {
 err := row.Scan(&u.ID, &u.Email, &u.Phone)
 ```
 
-### Wrapping existing Go APIs
+### 既存のGo APIのラッピング
 
 ```go
-// Convert map lookup to Option
+// マップルックアップをOptionに変換
 func MapGet[K comparable, V any](m map[K]V, key K) mo.Option[V] {
     return mo.TupleToOption(m[key])  // m[key] returns (V, bool)
 }
 ```
 
-### Uniform extraction with Fold
+### Foldによる統一的な値の取り出し
 
-`mo.Fold` works uniformly across Option, Result, and Either via the `Foldable` interface:
+`mo.Fold` は `Foldable` インターフェースを通じてOption、Result、Eitherで統一的に機能する:
 
 ```go
 str := mo.Fold[error, int, string](
-    mo.Ok(42),  // works with Option, Result, or Either
+    mo.Ok(42),  // Option、Result、Eitherで動作
     func(v int) string { return fmt.Sprintf("got %d", v) },
     func(err error) string { return "failed" },
 )
 // "got 42"
 ```
 
-## Best Practices
+## ベストプラクティス
 
-1. **Prefer `OrElse` over `MustGet`** — `MustGet` panics on absent/error values; use it only inside `mo.Do` blocks where panics are caught, or when you are certain the value exists
-2. **Use `TupleToResult` at API boundaries** — convert Go's `(T, error)` to `Result[T]` at the boundary, then chain with `Map`/`FlatMap` inside your domain logic
-3. **Use `Result[T]` for errors, `Either[L, R]` for alternatives** — Result is specialized for success/failure; Either is for two valid types
-4. **Option for nullable fields, not zero values** — `Option[string]` distinguishes "absent" from "empty string"; use plain `string` when empty string is a valid value
-5. **Chain, don't nest** — `result.Map(...).FlatMap(...).OrElse(default)` reads left-to-right; avoid nested if/else patterns when monadic chaining is cleaner
-6. **Use sub-package pipes for multi-step type transformations** — when 3+ steps each change the type, `option.Pipe3(...)` is more readable than nested function calls
+1. **`MustGet` より `OrElse` を優先** — `MustGet` は不在/エラー値でpanicする。panicがキャッチされる `mo.Do` ブロック内、または値の存在が確実な場合にのみ使用する
+2. **APIバウンダリで `TupleToResult` を使う** — バウンダリでGoの `(T, error)` を `Result[T]` に変換し、ドメインロジック内で `Map`/`FlatMap` でチェーンする
+3. **エラーには `Result[T]`、選択肢には `Either[L, R]`** — Resultは成功/失敗に特化。Eitherは2つの有効な型のため
+4. **NULL許容フィールドにはOption、ゼロ値には使わない** — `Option[string]` は「不在」と「空文字列」を区別する。空文字列が有効な値の場合は通常の `string` を使う
+5. **ネストせずチェーンする** — `result.Map(...).FlatMap(...).OrElse(default)` は左から右に読める。モナドのチェーンの方がクリーンな場合はネストしたif/elseパターンを避ける
+6. **複数ステップの型変換にはサブパッケージパイプを使う** — 3つ以上のステップでそれぞれ型が変わる場合、`option.Pipe3(...)` はネストした関数呼び出しより読みやすい
 
-For advanced types (Future, IO, Task, State), see [Advanced Types Reference](./references/advanced-types.md).
+高度な型（Future、IO、Task、State）については [Advanced Types Reference](./references/advanced-types.md) を参照。
 
-If you encounter a bug or unexpected behavior in samber/mo, open an issue at <https://github.com/samber/mo/issues>.
+samber/mo でバグや予期しない動作に遭遇した場合は、<https://github.com/samber/mo/issues> で Issue を作成してください。
 
-## Cross-References
+## 相互参照
 
 - -> See `samber/cc-skills-golang@golang-samber-lo` skill for functional collection transforms (Map, Filter, Reduce on slices) that compose with mo types
 - -> See `samber/cc-skills-golang@golang-error-handling` skill for idiomatic Go error handling patterns

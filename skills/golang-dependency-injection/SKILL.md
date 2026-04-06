@@ -26,43 +26,43 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-dependency-injection` skill takes precedence.
 
-# Dependency Injection in Go
+# Goにおける依存性注入
 
-Dependency injection (DI) means passing dependencies to a component rather than having it create or find them. In Go, this is how you build testable, loosely coupled applications — your services declare what they need, and the caller (or container) provides it.
+依存性注入（DI）とは、コンポーネントが自ら依存関係を作成・検索するのではなく、外部から渡すことを意味する。Goでは、テスト可能で疎結合なアプリケーションを構築する方法であり、サービスが必要なものを宣言し、呼び出し元（またはコンテナ）がそれを提供する。
 
-This skill is not exhaustive. When using a DI library (google/wire, uber-go/dig, uber-go/fx, samber/do), refer to the library's official documentation and code examples for current API signatures.
+このスキルは網羅的ではない。DIライブラリ（google/wire、uber-go/dig、uber-go/fx、samber/do）を使用する際は、最新のAPIシグネチャについてライブラリの公式ドキュメントとコード例を参照すること。
 
-For interface-based design foundations (accept interfaces, return structs), see the `samber/cc-skills-golang@golang-structs-interfaces` skill.
+インターフェースベースの設計基盤（インターフェースを受け取り、構造体を返す）については、`samber/cc-skills-golang@golang-structs-interfaces`スキルを参照。
 
-## Best Practices Summary
+## ベストプラクティスの要約
 
-1. Dependencies MUST be injected via constructors — NEVER use global variables or `init()` for service setup
-2. Small projects (< 10 services) SHOULD use manual constructor injection — no library needed
-3. Interfaces MUST be defined where consumed, not where implemented — accept interfaces, return structs
-4. NEVER use global registries or package-level service locators
-5. The DI container MUST only exist at the composition root (`main()` or app startup) — NEVER pass the container as a dependency
-6. **Prefer lazy initialization** — only create services when first requested
-7. **Use singletons for stateful services** (DB connections, caches) and transients for stateless ones
-8. **Mock at the interface boundary** — DI makes this trivial
-9. **Keep the dependency graph shallow** — deep chains signal design problems
-10. **Choose the right DI library** for your project size and team — see the decision table below
+1. 依存関係はコンストラクタ経由で注入しなければならない — サービスセットアップにグローバル変数や`init()`を使用してはならない
+2. 小規模プロジェクト（10サービス未満）は手動コンストラクタ注入を使用すべき — ライブラリは不要
+3. インターフェースは実装側ではなく使用側で定義しなければならない — インターフェースを受け取り、構造体を返す
+4. グローバルレジストリやパッケージレベルのサービスロケータを使用してはならない
+5. DIコンテナはコンポジションルート（`main()`またはアプリ起動時）にのみ存在しなければならない — コンテナを依存関係として渡してはならない
+6. **遅延初期化を優先する** — サービスは最初にリクエストされた時にのみ作成する
+7. ステートフルなサービス（DB接続、キャッシュ）には**シングルトンを使用し**、ステートレスなものにはトランジェントを使用する
+8. **インターフェース境界でモックする** — DIによりこれが容易になる
+9. **依存関係グラフを浅く保つ** — 深いチェーンは設計上の問題を示す
+10. プロジェクトの規模とチームに適した**DIライブラリを選択する** — 以下の判断テーブルを参照
 
-## Why Dependency Injection?
+## なぜ依存性注入が必要か？
 
-| Problem without DI | How DI solves it |
+| DIなしの問題 | DIによる解決方法 |
 | --- | --- |
-| Functions create their own dependencies | Dependencies are injected — swap implementations freely |
-| Testing requires real databases, APIs | Pass mock implementations in tests |
-| Changing one component breaks others | Loose coupling via interfaces — components don't know each other's internals |
-| Services initialized everywhere | Centralized container manages lifecycle (singleton, factory, lazy) |
-| All services loaded at startup | Lazy loading — services created only when first requested |
-| Global state and `init()` functions | Explicit wiring at startup — predictable, debuggable |
+| 関数が自身の依存関係を作成する | 依存関係が注入される — 実装を自由に入れ替え可能 |
+| テストに実際のデータベースやAPIが必要 | テストでモック実装を渡す |
+| 1つのコンポーネントの変更が他を壊す | インターフェースによる疎結合 — コンポーネントは互いの内部を知らない |
+| サービスがあちこちで初期化される | 集中管理されたコンテナがライフサイクルを管理（シングルトン、ファクトリ、遅延） |
+| すべてのサービスが起動時にロードされる | 遅延ロード — サービスは最初にリクエストされた時にのみ作成 |
+| グローバル状態と`init()`関数 | 起動時の明示的なワイヤリング — 予測可能でデバッグ可能 |
 
-DI shines in applications with many interconnected services — HTTP servers, microservices, CLI tools with plugins. For a small script with 2-3 functions, manual wiring is fine. Don't over-engineer.
+DIは多くのサービスが相互接続されたアプリケーション（HTTPサーバー、マイクロサービス、プラグイン付きCLIツール）で真価を発揮する。2-3個の関数からなる小さなスクリプトでは、手動ワイヤリングで十分。過剰設計しないこと。
 
-## Manual Constructor Injection (No Library)
+## 手動コンストラクタ注入（ライブラリなし）
 
-For small projects, pass dependencies through constructors. See [Manual DI examples](./references/manual-di.md) for a complete application example.
+小規模プロジェクトでは、コンストラクタを通じて依存関係を渡す。完全なアプリケーション例については[手動DIの例](./references/manual-di.md)を参照。
 
 ```go
 // ✓ Good — explicit dependencies, testable
@@ -100,46 +100,46 @@ func NewUserService() *UserService {
 }
 ```
 
-Manual DI breaks down when:
+手動DIが破綻するケース:
 
-- You have 15+ services with cross-dependencies
-- You need lifecycle management (health checks, graceful shutdown)
-- You want lazy initialization or scoped containers
-- Wiring order becomes fragile and hard to maintain
+- 相互依存のある15以上のサービスがある
+- ライフサイクル管理（ヘルスチェック、グレースフルシャットダウン）が必要
+- 遅延初期化やスコープ付きコンテナが必要
+- ワイヤリング順序が脆弱になり保守が困難
 
-## DI Library Comparison
+## DIライブラリの比較
 
-Go has three main approaches to DI libraries:
+GoにはDIライブラリの3つの主要なアプローチがある:
 
-- [google/wire examples](./references/google-wire.md) — Compile-time code generation
-- [uber-go/dig + fx examples](./references/uber-dig-fx.md) — Reflection-based framework
-- [samber/do examples](./references/samber-do.md) — Generics-based, no code generation
+- [google/wireの例](./references/google-wire.md) — コンパイル時コード生成
+- [uber-go/dig + fxの例](./references/uber-dig-fx.md) — リフレクションベースのフレームワーク
+- [samber/doの例](./references/samber-do.md) — ジェネリクスベース、コード生成なし
 
-### Decision Table
+### 判断テーブル
 
-| Criteria | Manual | google/wire | uber-go/dig + fx | samber/do |
+| 基準 | 手動 | google/wire | uber-go/dig + fx | samber/do |
 | --- | --- | --- | --- | --- |
-| **Project size** | Small (< 10 services) | Medium-Large | Large | Any size |
-| **Type safety** | Compile-time | Compile-time (codegen) | Runtime (reflection) | Compile-time (generics) |
-| **Code generation** | None | Required (`wire_gen.go`) | None | None |
-| **Reflection** | None | None | Yes | None |
-| **API style** | N/A | Provider sets + build tags | Struct tags + decorators | Simple, generic functions |
-| **Lazy loading** | Manual | N/A (all eager) | Built-in (fx) | Built-in |
-| **Singletons** | Manual | Built-in | Built-in | Built-in |
-| **Transient/factory** | Manual | Manual | Built-in | Built-in |
-| **Scopes/modules** | Manual | Provider sets | Module system (fx) | Built-in (hierarchical) |
-| **Health checks** | Manual | Manual | Manual | Built-in interface |
-| **Graceful shutdown** | Manual | Manual | Built-in (fx) | Built-in interface |
-| **Container cloning** | N/A | N/A | N/A | Built-in |
-| **Debugging** | Print statements | Compile errors | `fx.Visualize()` | `ExplainInjector()`, web interface |
-| **Go version** | Any | Any | Any | 1.18+ (generics) |
-| **Learning curve** | None | Medium | High | Low |
+| **プロジェクト規模** | 小規模（10サービス未満） | 中〜大規模 | 大規模 | あらゆる規模 |
+| **型安全性** | コンパイル時 | コンパイル時（コード生成） | 実行時（リフレクション） | コンパイル時（ジェネリクス） |
+| **コード生成** | なし | 必須（`wire_gen.go`） | なし | なし |
+| **リフレクション** | なし | なし | あり | なし |
+| **APIスタイル** | N/A | プロバイダセット + ビルドタグ | 構造体タグ + デコレータ | シンプルなジェネリック関数 |
+| **遅延ロード** | 手動 | N/A（すべて即時） | 組み込み（fx） | 組み込み |
+| **シングルトン** | 手動 | 組み込み | 組み込み | 組み込み |
+| **トランジェント/ファクトリ** | 手動 | 手動 | 組み込み | 組み込み |
+| **スコープ/モジュール** | 手動 | プロバイダセット | モジュールシステム（fx） | 組み込み（階層型） |
+| **ヘルスチェック** | 手動 | 手動 | 手動 | 組み込みインターフェース |
+| **グレースフルシャットダウン** | 手動 | 手動 | 組み込み（fx） | 組み込みインターフェース |
+| **コンテナクローン** | N/A | N/A | N/A | 組み込み |
+| **デバッグ** | print文 | コンパイルエラー | `fx.Visualize()` | `ExplainInjector()`、Webインターフェース |
+| **Goバージョン** | 任意 | 任意 | 任意 | 1.18+（ジェネリクス） |
+| **学習コスト** | なし | 中 | 高 | 低 |
 
-### Quick Comparison: Same App, Four Ways
+### クイック比較: 同じアプリを4つの方法で
 
-The dependency graph: `Config -> Database -> UserStore -> UserService -> API`
+依存関係グラフ: `Config -> Database -> UserStore -> UserService -> API`
 
-**Manual**:
+**手動**:
 
 ```go
 cfg := NewConfig()
@@ -185,9 +185,9 @@ api.Run()
 // defer i.Shutdown() — handles all cleanup automatically
 ```
 
-## Testing with DI
+## DIを使ったテスト
 
-DI makes testing straightforward — inject mocks instead of real implementations:
+DIによりテストが簡単になる — 実際の実装の代わりにモックを注入する:
 
 ```go
 // Define a mock
@@ -220,9 +220,9 @@ func TestUserService_GetUser(t *testing.T) {
 }
 ```
 
-### Testing with samber/do — Clone and Override
+### samber/doを使ったテスト — クローンとオーバーライド
 
-Container cloning creates an isolated copy where you override only the services you need to mock:
+コンテナのクローンは、モックが必要なサービスのみをオーバーライドした分離されたコピーを作成する:
 
 ```go
 func TestUserService_WithDo(t *testing.T) {
@@ -245,37 +245,37 @@ func TestUserService_WithDo(t *testing.T) {
 }
 ```
 
-This is particularly useful for integration tests where you want most services to be real but need to mock a specific boundary (database, external API, mailer).
+これは特に、ほとんどのサービスを実際のものにしつつ特定の境界（データベース、外部API、メーラー）をモックしたいインテグレーションテストで有用である。
 
-## When to Adopt a DI Library
+## DIライブラリを採用するタイミング
 
-| Signal | Action |
+| シグナル | アクション |
 | --- | --- |
-| < 10 services, simple dependencies | Stay with manual constructor injection |
-| 10-20 services, some cross-cutting concerns | Consider a DI library |
-| 20+ services, lifecycle management needed | Strongly recommended |
-| Need health checks, graceful shutdown | Use a library with built-in lifecycle support |
-| Team unfamiliar with DI concepts | Start manual, migrate incrementally |
+| 10サービス未満、単純な依存関係 | 手動コンストラクタ注入を続ける |
+| 10-20サービス、横断的関心事がある | DIライブラリを検討する |
+| 20以上のサービス、ライフサイクル管理が必要 | 強く推奨 |
+| ヘルスチェック、グレースフルシャットダウンが必要 | 組み込みライフサイクルサポート付きのライブラリを使用する |
+| チームがDIの概念に不慣れ | 手動から始め、段階的に移行する |
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正方法 |
 | --- | --- |
-| Global variables as dependencies | Pass through constructors or DI container |
-| `init()` for service setup | Explicit initialization in `main()` or container |
-| Depending on concrete types | Accept interfaces at consumption boundaries |
-| Passing the container everywhere (service locator) | Inject specific dependencies, not the container |
-| Deep dependency chains (A->B->C->D->E) | Flatten — most services should depend on repositories and config directly |
-| Creating a new container per request | One container per application; use scopes for request-level isolation |
+| 依存関係としてのグローバル変数 | コンストラクタまたはDIコンテナを通じて渡す |
+| サービスセットアップに`init()`を使用 | `main()`またはコンテナでの明示的な初期化 |
+| 具象型への依存 | 使用境界でインターフェースを受け取る |
+| コンテナをどこにでも渡す（サービスロケータ） | コンテナではなく、特定の依存関係を注入する |
+| 深い依存関係チェーン (A->B->C->D->E) | フラット化する — ほとんどのサービスはリポジトリと設定に直接依存すべき |
+| リクエストごとに新しいコンテナを作成 | アプリケーションにつき1つのコンテナ; リクエストレベルの分離にはスコープを使用する |
 
-## Cross-References
+## 相互参照
 
 - → See `samber/cc-skills-golang@golang-samber-do` skill for detailed samber/do usage patterns
 - → See `samber/cc-skills-golang@golang-structs-interfaces` skill for interface design and composition
 - → See `samber/cc-skills-golang@golang-testing` skill for testing with dependency injection
 - → See `samber/cc-skills-golang@golang-project-layout` skill for DI initialization placement
 
-## References
+## 参考資料
 
 - [samber/do/v2 documentation](https://do.samber.dev) | [github.com/samber/do/v2](https://github.com/samber/do)
 - [google/wire user guide](https://github.com/google/wire/blob/main/docs/guide.md)

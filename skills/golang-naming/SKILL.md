@@ -19,48 +19,48 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-naming` skill takes precedence.
 
-# Go Naming Conventions
+# Go 命名規則
 
-Go favors short, readable names. Capitalization controls visibility — uppercase is exported, lowercase is unexported. All identifiers MUST use MixedCaps, NEVER underscores.
+Goは短く読みやすい名前を好みます。大文字・小文字で可視性が制御されます — 大文字はエクスポート、小文字は非エクスポートです。すべての識別子はMixedCapsを使用しなければならず（MUST）、アンダースコアは使用してはいけません（NEVER）。
 
 > "Clear is better than clever." — Go Proverbs
 >
 > "Design the architecture, name the components, document the details." — Go Proverbs
 
-To ignore a rule, just add a comment to the code.
+ルールを無視する場合は、コードにコメントを追加してください。
 
-## Quick Reference
+## クイックリファレンス
 
-| Element | Convention | Example |
+| 要素 | 規則 | 例 |
 | --- | --- | --- |
-| Package | lowercase, single word | `json`, `http`, `tabwriter` |
-| File | lowercase, underscores OK | `user_handler.go` |
-| Exported name | UpperCamelCase | `ReadAll`, `HTTPClient` |
-| Unexported | lowerCamelCase | `parseToken`, `userCount` |
-| Interface | method name + `-er` | `Reader`, `Closer`, `Stringer` |
-| Struct | MixedCaps noun | `Request`, `FileHeader` |
-| Constant | MixedCaps (not ALL_CAPS) | `MaxRetries`, `defaultTimeout` |
-| Receiver | 1-2 letter abbreviation | `func (s *Server)`, `func (b *Buffer)` |
-| Error variable | `Err` prefix | `ErrNotFound`, `ErrTimeout` |
-| Error type | `Error` suffix | `PathError`, `SyntaxError` |
-| Constructor | `New` (single type) or `NewTypeName` (multi-type) | `ring.New`, `http.NewRequest` |
-| Boolean field | `is`, `has`, `can` prefix on **fields** and methods | `isReady`, `IsConnected()` |
-| Test function | `Test` + function name | `TestParseToken` |
-| Acronym | all caps or all lower | `URL`, `HTTPServer`, `xmlParser` |
-| Variant: context | `WithContext` suffix | `FetchWithContext`, `QueryContext` |
-| Variant: in-place | `In` suffix | `SortIn()`, `ReverseIn()` |
-| Variant: error | `Must` prefix | `MustParse()`, `MustLoadConfig()` |
-| Option func | `With` + field name | `WithPort()`, `WithLogger()` |
-| Enum (iota) | type name prefix, zero-value = unknown | `StatusUnknown` at 0, `StatusReady` |
-| Named return | descriptive, for docs only | `(n int, err error)` |
-| Error string | lowercase (incl. acronyms), no punctuation | `"image: unknown format"`, `"invalid id"` |
-| Import alias | short, only on collision | `mrand "math/rand"`, `pb "app/proto"` |
-| Format func | `f` suffix | `Errorf`, `Wrapf`, `Logf` |
-| Test table fields | `got`/`expected` prefixes | `input string`, `expected int` |
+| パッケージ | 小文字、単一単語 | `json`, `http`, `tabwriter` |
+| ファイル | 小文字、アンダースコア可 | `user_handler.go` |
+| エクスポート名 | UpperCamelCase | `ReadAll`, `HTTPClient` |
+| 非エクスポート | lowerCamelCase | `parseToken`, `userCount` |
+| インターフェース | メソッド名 + `-er` | `Reader`, `Closer`, `Stringer` |
+| 構造体 | MixedCaps 名詞 | `Request`, `FileHeader` |
+| 定数 | MixedCaps（ALL_CAPSではない） | `MaxRetries`, `defaultTimeout` |
+| レシーバー | 1-2文字の略称 | `func (s *Server)`, `func (b *Buffer)` |
+| エラー変数 | `Err` プレフィックス | `ErrNotFound`, `ErrTimeout` |
+| エラー型 | `Error` サフィックス | `PathError`, `SyntaxError` |
+| コンストラクタ | `New`（単一型）または `NewTypeName`（複数型） | `ring.New`, `http.NewRequest` |
+| ブーリアンフィールド | **フィールド**とメソッドに `is`, `has`, `can` プレフィックス | `isReady`, `IsConnected()` |
+| テスト関数 | `Test` + 関数名 | `TestParseToken` |
+| 頭字語 | すべて大文字またはすべて小文字 | `URL`, `HTTPServer`, `xmlParser` |
+| バリアント: context | `WithContext` サフィックス | `FetchWithContext`, `QueryContext` |
+| バリアント: in-place | `In` サフィックス | `SortIn()`, `ReverseIn()` |
+| バリアント: error | `Must` プレフィックス | `MustParse()`, `MustLoadConfig()` |
+| オプション関数 | `With` + フィールド名 | `WithPort()`, `WithLogger()` |
+| 列挙型 (iota) | 型名プレフィックス、ゼロ値 = unknown | `StatusUnknown` at 0, `StatusReady` |
+| 名前付き戻り値 | 説明的、ドキュメント用途のみ | `(n int, err error)` |
+| エラー文字列 | 小文字（頭字語含む）、句読点なし | `"image: unknown format"`, `"invalid id"` |
+| インポートエイリアス | 短く、衝突時のみ | `mrand "math/rand"`, `pb "app/proto"` |
+| フォーマット関数 | `f` サフィックス | `Errorf`, `Wrapf`, `Logf` |
+| テストテーブルフィールド | `got`/`expected` プレフィックス | `input string`, `expected int` |
 
 ## MixedCaps
 
-All Go identifiers MUST use `MixedCaps` (or `mixedCaps`). NEVER use underscores in identifiers — the only exceptions are test function subcases (`TestFoo_InvalidInput`), generated code, and OS/cgo interop. This is load-bearing, not cosmetic — Go's export mechanism relies on capitalization, and tooling assumes MixedCaps throughout.
+すべてのGo識別子は `MixedCaps`（または `mixedCaps`）を使用しなければなりません（MUST）。識別子にアンダースコアを使用してはいけません（NEVER） — 唯一の例外はテスト関数のサブケース（`TestFoo_InvalidInput`）、生成コード、OS/cgo連携です。これは装飾的なものではなく機能的に重要です — Goのエクスポート機構は大文字・小文字に依存しており、ツールはMixedCapsを前提としています。
 
 ```go
 // ✓ Good
@@ -74,9 +74,9 @@ max_packet_size   // snake_case
 kMaxBufferSize    // Hungarian notation
 ```
 
-## Avoid Stuttering
+## 吃音（スタッタリング）を避ける
 
-Go call sites always include the package name, so repeating it in the identifier wastes the reader's time — `http.HTTPClient` forces parsing "HTTP" twice. A name MUST NOT repeat information already present in the package name, type name, or surrounding context.
+Goの呼び出し元には常にパッケージ名が含まれるため、識別子でそれを繰り返すと読み手の時間を無駄にします — `http.HTTPClient` は「HTTP」を2回読ませることになります。名前はパッケージ名、型名、または周囲のコンテキストに既に存在する情報を繰り返してはなりません（MUST NOT）。
 
 ```go
 // Good — clean at the call site
@@ -95,68 +95,68 @@ type Status struct{}      // not PoolStatus — callers write dbpool.Status
 type Option func(*Pool)   // not PoolOption
 ```
 
-## Frequently Missed Conventions
+## 見落とされがちな規則
 
-These conventions are correct but non-obvious — they are the most common source of naming mistakes:
+これらの規則は正しいものの自明ではなく、命名ミスの最も一般的な原因です：
 
-**Constructor naming:** When a package exports a single primary type, the constructor is `New()`, not `NewTypeName()`. This avoids stuttering — callers write `apiclient.New()` not `apiclient.NewClient()`. Use `NewTypeName()` only when a package has multiple constructible types (like `http.NewRequest`, `http.NewServeMux`).
+**コンストラクタの命名:** パッケージが単一のプライマリ型をエクスポートする場合、コンストラクタは `New()` であり、`NewTypeName()` ではありません。これによりスタッタリングを避けます — 呼び出し元は `apiclient.NewClient()` ではなく `apiclient.New()` と書きます。`NewTypeName()` を使うのは、パッケージに複数のコンストラクト可能な型がある場合のみです（例: `http.NewRequest`, `http.NewServeMux`）。
 
-**Boolean struct fields:** Unexported boolean fields MUST use `is`/`has`/`can` prefix — `isConnected`, `hasPermission`, not bare `connected` or `permission`. The exported getter keeps the prefix: `IsConnected() bool`. This reads naturally as a question and distinguishes booleans from other types.
+**ブーリアン構造体フィールド:** 非エクスポートのブーリアンフィールドは `is`/`has`/`can` プレフィックスを使用しなければなりません（MUST） — `connected` や `permission` ではなく `isConnected`, `hasPermission` です。エクスポートされたgetterもプレフィックスを保持します: `IsConnected() bool`。これは質問として自然に読め、ブーリアンを他の型と区別します。
 
-**Error strings are fully lowercase — including acronyms.** Write `"invalid message id"` not `"invalid message ID"`, because error strings are often concatenated with other context (`fmt.Errorf("parsing token: %w", err)`) and mixed case looks wrong mid-sentence. Sentinel errors should include the package name as prefix: `errors.New("apiclient: not found")`.
+**エラー文字列は頭字語を含めすべて小文字です。** `"invalid message ID"` ではなく `"invalid message id"` と書いてください。エラー文字列は他のコンテキストと結合されることが多く（`fmt.Errorf("parsing token: %w", err)`）、文中に大文字小文字が混在すると不自然に見えるためです。センチネルエラーにはパッケージ名をプレフィックスとして含めるべきです: `errors.New("apiclient: not found")`。
 
-**Enum zero values:** Always place an explicit `Unknown`/`Invalid` sentinel at iota position 0. A `var s Status` silently becomes 0 — if that maps to a real state like `StatusReady`, code can behave as if a status was deliberately chosen when it wasn't.
+**列挙型のゼロ値:** iotaの位置0には常に明示的な `Unknown`/`Invalid` センチネルを配置してください。`var s Status` は暗黙的に0になります — それが `StatusReady` のような実際の状態にマッピングされている場合、意図的にステータスが選択されたかのようにコードが動作する可能性があります。
 
-**Subtest names:** Table-driven test case names in `t.Run()` should be fully lowercase descriptive phrases: `"valid id"`, `"empty input"` — not `"valid ID"` or `"Valid Input"`.
+**サブテスト名:** `t.Run()` のテーブル駆動テストケース名はすべて小文字の説明的なフレーズにすべきです: `"valid id"`, `"empty input"` — `"valid ID"` や `"Valid Input"` ではありません。
 
-## Detailed Categories
+## 詳細カテゴリ
 
-For complete rules, examples, and rationale, see:
+完全なルール、例、根拠については以下を参照してください：
 
-- **[Packages, Files & Import Aliasing](./references/packages-files.md)** — Package naming (single word, lowercase, no plurals), file naming conventions, import alias patterns (only use on collision to avoid cognitive load), and directory structure.
+- **[パッケージ、ファイル、インポートエイリアス](./references/packages-files.md)** — パッケージ命名（単一単語、小文字、複数形なし）、ファイル命名規則、インポートエイリアスパターン（認知負荷を避けるため衝突時のみ使用）、ディレクトリ構造。
 
-- **[Variables, Booleans, Receivers & Acronyms](./references/identifiers.md)** — Scope-based naming (length matches scope: `i` for 3-line loops, longer names for package-level), single-letter receiver conventions (`s` for Server), acronym casing (URL not Url, HTTPServer not HttpServer), and boolean naming patterns (isReady, hasPrefix).
+- **[変数、ブーリアン、レシーバー、頭字語](./references/identifiers.md)** — スコープベースの命名（長さはスコープに一致: 3行ループには `i`、パッケージレベルにはより長い名前）、1文字レシーバー規則（Serverには `s`）、頭字語の大文字化（UrlではなくURL、HttpServerではなくHTTPServer）、ブーリアン命名パターン（isReady, hasPrefix）。
 
-- **[Functions, Methods & Options](./references/functions-methods.md)** — Getter/setter patterns (Go omits `Get` so `user.Name()` reads naturally), constructor conventions (`New` or `NewTypeName`), named returns (for documentation only), format function suffixes (`Errorf`, `Wrapf`), and functional options (`WithPort`, `WithLogger`).
+- **[関数、メソッド、オプション](./references/functions-methods.md)** — Getter/Setterパターン（Goは `Get` を省略するため `user.Name()` が自然に読める）、コンストラクタ規則（`New` または `NewTypeName`）、名前付き戻り値（ドキュメント用途のみ）、フォーマット関数サフィックス（`Errorf`, `Wrapf`）、関数オプション（`WithPort`, `WithLogger`）。
 
-- **[Types, Constants & Errors](./references/types-errors.md)** — Interface naming (`Reader`, `Closer` suffix with `-er`), struct naming (nouns, MixedCaps), constants (MixedCaps, not ALL_CAPS), enums (type name prefix like `StatusReady`), sentinel errors (`ErrNotFound` variables), error types (`PathError` suffix), and error message conventions (lowercase, no punctuation).
+- **[型、定数、エラー](./references/types-errors.md)** — インターフェース命名（`Reader`, `Closer` の `-er` サフィックス）、構造体命名（名詞、MixedCaps）、定数（MixedCaps、ALL_CAPSではない）、列挙型（`StatusReady` のような型名プレフィックス）、センチネルエラー（`ErrNotFound` 変数）、エラー型（`PathError` サフィックス）、エラーメッセージ規則（小文字、句読点なし）。
 
-- **[Test Naming](./references/testing.md)** — Test function naming (`TestFunctionName`), table-driven test field conventions (`input`, `expected`), test helper naming, and subcase naming patterns.
+- **[テスト命名](./references/testing.md)** — テスト関数命名（`TestFunctionName`）、テーブル駆動テストフィールド規則（`input`, `expected`）、テストヘルパー命名、サブケース命名パターン。
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正 |
 | --- | --- |
-| `ALL_CAPS` constants | Go reserves casing for visibility, not emphasis — use `MixedCaps` (`MaxRetries`) |
-| `GetName()` getter | Go omits `Get` because `user.Name()` reads naturally at call sites. But `Is`/`Has`/`Can` prefixes are kept for boolean predicates: `IsHealthy() bool` not `Healthy() bool` |
-| `Url`, `Http`, `Json` acronyms | Mixed-case acronyms create ambiguity (`HttpsUrl` — is it `Https+Url`?). Use all caps or all lower |
-| `this` or `self` receiver | Go methods are called frequently — use 1-2 letter abbreviation (`s` for `Server`) to reduce visual noise |
-| `util`, `helper` packages | These names say nothing about content — use specific names that describe the abstraction |
-| `http.HTTPClient` stuttering | Package name is always present at call site — `http.Client` avoids reading "HTTP" twice |
-| `user.NewUser()` constructor | Single primary type uses `New()` — `user.New()` avoids repeating the type name |
-| `connected bool` field | Bare adjective is ambiguous — use `isConnected` so the field reads as a true/false question |
-| `"invalid message ID"` error | Error strings must be fully lowercase including acronyms — `"invalid message id"` |
-| `StatusReady` at iota 0 | Zero value should be a sentinel — `StatusUnknown` at 0 catches uninitialized values |
-| `"not found"` error string | Sentinel errors should include the package name — `"mypackage: not found"` identifies the origin |
-| `userSlice` type-in-name | Types encode implementation detail — `users` describes what it holds, not how |
-| Inconsistent receiver names | Switching names across methods of the same type confuses readers — use one name consistently |
-| `snake_case` identifiers | Underscores conflict with Go's MixedCaps convention and tooling expectations — use `mixedCaps` |
-| Long names for short scopes | Name length should match scope — `i` is fine for a 3-line loop, `userIndex` is noise |
-| Naming constants by value | Values change, roles don't — `DefaultPort` survives a port change, `Port8080` doesn't |
-| `FetchCtx()` context variant | `WithContext` is the standard Go suffix — `FetchWithContext()` is instantly recognizable |
-| `sort()` in-place but no `In` | Readers assume functions return new values. `SortIn()` signals mutation |
-| `parse()` panicking on error | `MustParse()` warns callers that failure panics — surprises belong in the name |
-| Mixing `With*`, `Set*`, `Use*` | Consistency across the codebase — `With*` is the Go convention for functional options |
-| Plural package names | Go convention is singular (`net/url` not `net/urls`) — keeps import paths consistent |
-| `Wrapf` without `f` suffix | The `f` suffix signals format-string semantics — `Wrapf`, `Errorf` tell callers to pass format args |
-| Unnecessary import aliases | Aliases add cognitive load. Only alias on collision — `mrand "math/rand"` |
-| Inconsistent concept names | Using `user`/`account`/`person` for the same concept forces readers to track synonyms — pick one name |
+| `ALL_CAPS` 定数 | Goは大文字小文字を可視性のために使用し、強調のためではない — `MixedCaps` を使用（`MaxRetries`） |
+| `GetName()` getter | Goは `Get` を省略する。`user.Name()` は呼び出し元で自然に読めるため。ただしブーリアン述語には `Is`/`Has`/`Can` プレフィックスを保持: `Healthy() bool` ではなく `IsHealthy() bool` |
+| `Url`, `Http`, `Json` 頭字語 | 大文字小文字混在の頭字語は曖昧さを生む（`HttpsUrl` — `Https+Url`？）。すべて大文字またはすべて小文字を使用 |
+| `this` または `self` レシーバー | Goのメソッドは頻繁に呼ばれる — 視覚的ノイズを減らすため1-2文字の略称を使用（`Server` には `s`） |
+| `util`, `helper` パッケージ | これらの名前は内容について何も語らない — 抽象化を説明する具体的な名前を使用 |
+| `http.HTTPClient` スタッタリング | パッケージ名は呼び出し元に常に存在する — `http.Client` は「HTTP」を2回読むことを避ける |
+| `user.NewUser()` コンストラクタ | 単一のプライマリ型には `New()` を使用 — `user.New()` は型名の繰り返しを避ける |
+| `connected bool` フィールド | 裸の形容詞は曖昧 — `isConnected` にすることで真偽の質問として読める |
+| `"invalid message ID"` エラー | エラー文字列は頭字語を含めすべて小文字でなければならない — `"invalid message id"` |
+| `StatusReady` を iota 0 に配置 | ゼロ値はセンチネルであるべき — `StatusUnknown` を0にすることで未初期化値を検出 |
+| `"not found"` エラー文字列 | センチネルエラーにはパッケージ名を含めるべき — `"mypackage: not found"` で発生元を特定 |
+| `userSlice` 型名を含む名前 | 型は実装の詳細をエンコードする — `users` は何を保持するかを説明し、方法ではない |
+| 一貫しないレシーバー名 | 同じ型のメソッド間で名前を切り替えると読み手が混乱する — 一貫して1つの名前を使用 |
+| `snake_case` 識別子 | アンダースコアはGoのMixedCaps規則とツールの期待に反する — `mixedCaps` を使用 |
+| 短いスコープに長い名前 | 名前の長さはスコープに一致すべき — 3行ループに `i` で十分、`userIndex` はノイズ |
+| 値で定数を命名 | 値は変わるが役割は変わらない — `DefaultPort` はポート変更後も生き残るが `Port8080` は生き残らない |
+| `FetchCtx()` context バリアント | `WithContext` がGoの標準サフィックス — `FetchWithContext()` は即座に認識可能 |
+| `sort()` がin-placeだが `In` なし | 読み手は関数が新しい値を返すと仮定する。`SortIn()` は変異を示す |
+| `parse()` がエラー時にpanic | `MustParse()` は失敗時にpanicすることを呼び出し元に警告する — サプライズは名前に含めるべき |
+| `With*`, `Set*`, `Use*` の混在 | コードベース全体での一貫性 — `With*` が関数オプションのGo規則 |
+| 複数形パッケージ名 | Go規則は単数形（`net/urls` ではなく `net/url`） — インポートパスの一貫性を保つ |
+| `Wrapf` に `f` サフィックスなし | `f` サフィックスはフォーマット文字列セマンティクスを示す — `Wrapf`, `Errorf` はフォーマット引数を渡すことを伝える |
+| 不要なインポートエイリアス | エイリアスは認知負荷を増やす。衝突時のみエイリアスを使用 — `mrand "math/rand"` |
+| 一貫しない概念名 | 同じ概念に `user`/`account`/`person` を使用すると読み手が同義語を追跡する必要がある — 1つの名前を選ぶ |
 
-## Enforce with Linters
+## リンターによる強制
 
-Many naming convention issues are caught automatically by linters: `revive`, `predeclared`, `misspell`, `errname`. See `samber/cc-skills-golang@golang-linter` skill for configuration and usage.
+多くの命名規則の問題はリンターによって自動的に検出されます: `revive`, `predeclared`, `misspell`, `errname`。設定と使用方法については `samber/cc-skills-golang@golang-linter` skill を参照してください。
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-code-style` skill for broader formatting and style decisions
 - → See `samber/cc-skills-golang@golang-structs-interfaces` skill for interface naming depth and receiver design

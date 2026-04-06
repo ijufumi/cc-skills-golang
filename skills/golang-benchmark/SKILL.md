@@ -25,17 +25,17 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Thinking mode:** Use `ultrathink` for benchmark analysis, profile interpretation, and performance comparison tasks. Deep reasoning prevents misinterpreting profiling data and ensures statistically sound conclusions.
 
-# Go Benchmarking & Performance Measurement
+# Go ベンチマーク & パフォーマンス計測
 
-Performance improvement does not exist without measures — if you can measure it, you can improve it.
+計測なくしてパフォーマンス改善なし — 計測できるものは改善できる。
 
-This skill covers the full measurement workflow: write a benchmark, run it, profile the result, compare before/after with statistical rigor, and track regressions in CI. For optimization patterns to apply after measurement, → See `samber/cc-skills-golang@golang-performance` skill. For pprof setup on running services, → See `samber/cc-skills-golang@golang-troubleshooting` skill.
+このスキルは計測ワークフロー全体をカバーする: ベンチマークの作成、実行、結果のプロファイリング、統計的に厳密な前後比較、そしてCIでのリグレッション検出。計測後に適用する最適化パターンについては、→ See `samber/cc-skills-golang@golang-performance` skill。実行中のサービスでのpprof設定については、→ See `samber/cc-skills-golang@golang-troubleshooting` skill。
 
-## Writing Benchmarks
+## ベンチマークの書き方
 
-### `b.Loop()` (Go 1.24+) — preferred
+### `b.Loop()` (Go 1.24+) — 推奨
 
-`b.Loop()` prevents the compiler from optimizing away the code under test — without it, the compiler can detect dead results and eliminate them, producing misleadingly fast numbers. It also excludes setup code before the loop from timing automatically.
+`b.Loop()` はコンパイラがテスト対象コードを最適化で除去するのを防ぐ — これがないと、コンパイラが未使用の結果を検出して除去し、誤解を招く高速な数値を出力する。また、ループ前のセットアップコードを自動的にタイミング計測から除外する。
 
 ```go
 func BenchmarkParse(b *testing.B) {
@@ -46,9 +46,9 @@ func BenchmarkParse(b *testing.B) {
 }
 ```
 
-Existing `for range b.N` benchmarks still work but should migrate to `b.Loop()` — the old pattern requires manual `b.ResetTimer()` and a package-level sink variable to prevent dead code elimination.
+既存の `for range b.N` ベンチマークは引き続き動作するが、`b.Loop()` に移行すべきである — 旧パターンでは手動の `b.ResetTimer()` とパッケージレベルのシンク変数によるデッドコード除去防止が必要になる。
 
-### Memory tracking
+### メモリ追跡
 
 ```go
 func BenchmarkAlloc(b *testing.B) {
@@ -59,13 +59,13 @@ func BenchmarkAlloc(b *testing.B) {
 }
 ```
 
-`b.ReportMetric()` adds custom metrics (e.g., throughput):
+`b.ReportMetric()` でカスタムメトリクス（例: スループット）を追加できる:
 
 ```go
 b.ReportMetric(float64(totalBytes)/b.Elapsed().Seconds(), "bytes/s")
 ```
 
-### Sub-benchmarks and table-driven
+### サブベンチマークとテーブル駆動
 
 ```go
 func BenchmarkEncode(b *testing.B) {
@@ -80,28 +80,28 @@ func BenchmarkEncode(b *testing.B) {
 }
 ```
 
-## Running Benchmarks
+## ベンチマークの実行
 
 ```bash
 go test -bench=BenchmarkEncode -benchmem -count=10 ./pkg/... | tee bench.txt
 ```
 
-| Flag                   | Purpose                                   |
+| フラグ                   | 目的                                       |
 | ---------------------- | ----------------------------------------- |
-| `-bench=.`             | Run all benchmarks (regexp filter)        |
-| `-benchmem`            | Report allocations (B/op, allocs/op)      |
-| `-count=10`            | Run 10 times for statistical significance |
-| `-benchtime=3s`        | Minimum time per benchmark (default 1s)   |
-| `-cpu=1,2,4`           | Run with different GOMAXPROCS values      |
-| `-cpuprofile=cpu.prof` | Write CPU profile                         |
-| `-memprofile=mem.prof` | Write memory profile                      |
-| `-trace=trace.out`     | Write execution trace                     |
+| `-bench=.`             | 全ベンチマークを実行（正規表現フィルタ）        |
+| `-benchmem`            | アロケーションを報告（B/op, allocs/op）      |
+| `-count=10`            | 統計的有意性のため10回実行                    |
+| `-benchtime=3s`        | ベンチマークあたりの最小時間（デフォルト1秒）   |
+| `-cpu=1,2,4`           | 異なるGOMAXPROCS値で実行                    |
+| `-cpuprofile=cpu.prof` | CPUプロファイルを出力                        |
+| `-memprofile=mem.prof` | メモリプロファイルを出力                      |
+| `-trace=trace.out`     | 実行トレースを出力                           |
 
-**Output format:** `BenchmarkEncode/size=64-8  5000000  230.5 ns/op  128 B/op  2 allocs/op` — the `-8` suffix is GOMAXPROCS, `ns/op` is time per operation, `B/op` is bytes allocated per op, `allocs/op` is heap allocation count per op.
+**出力フォーマット:** `BenchmarkEncode/size=64-8  5000000  230.5 ns/op  128 B/op  2 allocs/op` — `-8` サフィックスはGOMAXPROCS、`ns/op` は1操作あたりの時間、`B/op` は1操作あたりのアロケートバイト数、`allocs/op` は1操作あたりのヒープアロケーション数。
 
-## Profiling from Benchmarks
+## ベンチマークからのプロファイリング
 
-Generate profiles directly from benchmark runs — no HTTP server needed:
+ベンチマーク実行から直接プロファイルを生成する — HTTPサーバー不要:
 
 ```bash
 # CPU profile
@@ -117,30 +117,30 @@ go test -bench=BenchmarkParse -trace=trace.out ./pkg/parser
 go tool trace trace.out
 ```
 
-For full pprof CLI reference (all commands, non-interactive mode, profile interpretation), see [pprof Reference](./references/pprof.md). For execution trace interpretation, see [Trace Reference](./references/trace.md). For statistical comparison, see [benchstat Reference](./references/benchstat.md).
+pprofのCLIリファレンス全体（全コマンド、非インタラクティブモード、プロファイル解釈）については [pprof Reference](./references/pprof.md) を参照。実行トレースの解釈については [Trace Reference](./references/trace.md)。統計的比較については [benchstat Reference](./references/benchstat.md)。
 
-## Reference Files
+## リファレンスファイル
 
-- **[pprof Reference](./references/pprof.md)** — Interactive and non-interactive analysis of CPU, memory, and goroutine profiles. Full CLI commands, profile types (CPU vs alloc*objects vs inuse_space), web UI navigation, and interpretation patterns. Use this to dive deep into \_where* time and memory are being spent in your code.
+- **[pprof Reference](./references/pprof.md)** — CPU、メモリ、ゴルーチンプロファイルのインタラクティブおよび非インタラクティブ分析。完全なCLIコマンド、プロファイルタイプ（CPU vs alloc_objects vs inuse_space）、WebUIナビゲーション、解釈パターン。コードのどこで時間とメモリが消費されているかを深く掘り下げる際に使用。
 
-- **[benchstat Reference](./references/benchstat.md)** — Statistical comparison of benchmark runs with rigorous confidence intervals and p-value tests. Covers output reading, filtering old benchmarks, interleaving results for visual clarity, and regression detection. Use this when you need to prove a change made a meaningful performance difference, not just a lucky run.
+- **[benchstat Reference](./references/benchstat.md)** — 厳密な信頼区間とp値テストによるベンチマーク実行の統計的比較。出力の読み方、古いベンチマークのフィルタリング、視覚的な明瞭さのための結果のインタリーブ、リグレッション検出をカバー。変更が意味のある差をもたらしたことを証明する際に使用（幸運な実行ではなく）。
 
-- **[Trace Reference](./references/trace.md)** — Execution tracer for understanding _when_ and _why_ code runs. Visualizes goroutine scheduling, garbage collection phases, network blocking, and custom span annotations. Use this when pprof (which shows _where_ CPU goes) isn't enough — you need to see the timeline of what happened.
+- **[Trace Reference](./references/trace.md)** — コードがいつ、なぜ実行されるかを理解するための実行トレーサー。ゴルーチンスケジューリング、GCフェーズ、ネットワークブロッキング、カスタムスパンアノテーションを可視化。pprofでは不十分な場合（CPUがどこに行くかを示すだけ）に使用 — 何が起きたかのタイムラインが必要な場合。
 
-- **[Diagnostic Tools](./references/tools.md)** — Quick reference for ancillary tools: fieldalignment (struct padding waste), GODEBUG (runtime logging flags), fgprof (frame graph profiles), race detector (concurrency bugs), and others. Use this when you have a specific symptom and need a focused diagnostic — don't reach for pprof if a simpler tool already answers your question.
+- **[Diagnostic Tools](./references/tools.md)** — 補助ツールのクイックリファレンス: fieldalignment（構造体パディングの無駄）、GODEBUG（ランタイムログフラグ）、fgprof（フレームグラフプロファイル）、レースデテクター（Concurrencyバグ）など。特定の症状があり、集中的な診断が必要な場合に使用 — シンプルなツールで答えが出るならpprofを使わない。
 
-- **[Compiler Analysis](./references/compiler-analysis.md)** — Low-level compiler optimization insights: escape analysis (when values move to the heap), inlining decisions (which function calls are eliminated), SSA dump (intermediate representation), and assembly output. Use this when benchmarks show allocations you didn't expect, or when you want to verify the compiler did what you intended.
+- **[Compiler Analysis](./references/compiler-analysis.md)** — 低レベルのコンパイラ最適化インサイト: エスケープ解析（値がヒープに移動するとき）、インライン化の決定（どの関数呼び出しが除去されるか）、SSAダンプ（中間表現）、アセンブリ出力。ベンチマークが予期しないアロケーションを示す場合、またはコンパイラが意図した通りに動作したことを確認したい場合に使用。
 
-- **[CI Regression Detection](./references/ci-regression.md)** — Automated performance regression gating in CI pipelines. Covers three tools (benchdiff for quick PR comparisons, cob for strict threshold-based gating, gobenchdata for long-term trend dashboards), noisy neighbor mitigation strategies (why cloud CI benchmarks vary 5-10% even on quiet machines), and self-hosted runner tuning to make benchmarks reproducible. Use this when you want to ensure pull requests don't silently slow down your codebase — detecting regressions early prevents shipping performance debt.
+- **[CI Regression Detection](./references/ci-regression.md)** — CIパイプラインでの自動パフォーマンスリグレッションゲーティング。3つのツール（PRのクイック比較用benchdiff、厳格な閾値ベースのゲーティング用cob、長期トレンドダッシュボード用gobenchdata）、ノイジーネイバー緩和策（なぜクラウドCIベンチマークが静かなマシンでも5〜10%変動するか）、ベンチマークを再現可能にするためのセルフホストランナーチューニングをカバー。PRが静かにコードベースを遅くしないことを保証したい場合に使用 — 早期にリグレッションを検出することでパフォーマンス負債の出荷を防ぐ。
 
-- **[Investigation Session](./references/investigation-session.md)** — Production performance troubleshooting workflow combining Prometheus runtime metrics (heap size, GC frequency, goroutine counts), PromQL queries to correlate metrics with code changes, runtime configuration flags (GODEBUG env vars to enable GC logging), and cost warnings (when you're hitting performance tax). Use this when production benchmarks look good but real traffic behaves differently.
+- **[Investigation Session](./references/investigation-session.md)** — Prometheusランタイムメトリクス（ヒープサイズ、GC頻度、ゴルーチン数）、メトリクスとコード変更を相関させるPromQLクエリ、ランタイム設定フラグ（GCログを有効にするGODEBUG環境変数）、コスト警告（パフォーマンス税を払っている場合）を組み合わせたプロダクションパフォーマンストラブルシューティングワークフロー。プロダクションのベンチマークは良好でも実際のトラフィックが異なる動作をする場合に使用。
 
-- **[Prometheus Go Metrics Reference](./references/prometheus-go-metrics.md)** — Complete listing of Go runtime metrics actually exposed as Prometheus metrics by `prometheus/client_golang`. Covers 30 default metrics, 40+ optional metrics (Go 1.17+), process metrics, and common PromQL queries. Distinguishes between `runtime/metrics` (Go internal data) and Prometheus metrics (what you scrape from `/metrics`). Use this when setting up monitoring dashboards or writing PromQL queries for production alerts.
+- **[Prometheus Go Metrics Reference](./references/prometheus-go-metrics.md)** — `prometheus/client_golang` によってPrometheusメトリクスとして実際に公開されるGoランタイムメトリクスの完全リスト。30のデフォルトメトリクス、40以上のオプションメトリクス（Go 1.17+）、プロセスメトリクス、一般的なPromQLクエリをカバー。`runtime/metrics`（Go内部データ）とPrometheusメトリクス（`/metrics` からスクレイプするもの）の違いを明確化。モニタリングダッシュボードのセットアップやプロダクションアラートのPromQLクエリ作成時に使用。
 
-## Cross-References
+## クロスリファレンス
 
-- → See `samber/cc-skills-golang@golang-performance` skill for optimization patterns to apply after measuring ("if X bottleneck, apply Y")
-- → See `samber/cc-skills-golang@golang-troubleshooting` skill for pprof setup on running services (enable, secure, capture), Delve debugger, GODEBUG flags, root cause methodology
-- → See `samber/cc-skills-golang@golang-observability` skill for everyday always-on monitoring, continuous profiling (Pyroscope), distributed tracing (OpenTelemetry)
-- → See `samber/cc-skills-golang@golang-testing` skill for general testing practices
-- → See `samber/cc-skills@promql-cli` skill for querying Prometheus runtime metrics in production to validate benchmark findings
+- 計測後に適用する最適化パターン（「Xがボトルネックなら、Yを適用する」）については → See `samber/cc-skills-golang@golang-performance` skill
+- 実行中サービスでのpprof設定（有効化、保護、取得）、Delveデバッガー、GODEBUGフラグ、根本原因の方法論については → See `samber/cc-skills-golang@golang-troubleshooting` skill
+- 日常的な常時モニタリング、継続的プロファイリング（Pyroscope）、分散トレーシング（OpenTelemetry）については → See `samber/cc-skills-golang@golang-observability` skill
+- 一般的なテストプラクティスについては → See `samber/cc-skills-golang@golang-testing` skill
+- プロダクションでのPrometheusランタイムメトリクスのクエリによるベンチマーク結果の検証については → See `samber/cc-skills@promql-cli` skill

@@ -19,42 +19,42 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 <!-- markdownlint-disable table-column-style -->
 
-# Stay Updated with Go
+# Goの最新情報をキャッチアップする
 
-A curated guide to keeping your finger on the pulse of the Go ecosystem.
+Goエコシステムの最新動向を把握するための厳選ガイドです。
 
-## Official Go Resources
+## 公式Goリソース
 
-| Resource            | URL                                          |
+| リソース            | 説明                                          |
 | ------------------- | -------------------------------------------- |
-| **go.dev**          | Official Go website with tutorials and tools |
-| **pkg.go.dev**      | Discover Go packages and documentation       |
-| **tour.golang.org** | Interactive Go tutorial                      |
-| **play.golang.org** | Go playground for testing code               |
-| **go.dev/blog**     | Official Go blog                             |
+| **go.dev**          | チュートリアルとツールを備えた公式Goウェブサイト |
+| **pkg.go.dev**      | Goパッケージの検索とドキュメント       |
+| **tour.golang.org** | インタラクティブなGoチュートリアル                      |
+| **play.golang.org** | コードをテストするためのGoプレイグラウンド               |
+| **go.dev/blog**     | 公式Goブログ                             |
 
-## Newsletters
+## ニュースレター
 
-| Newsletter | Description | Subscribe |
+| ニュースレター | 説明 | 購読 |
 | --- | --- | --- |
-| **Golang Weekly** | Weekly curated Go content, news, and articles | <https://golangweekly.com/> |
-| **Awesome Go Newsletter** | Updates on new Go libraries and tools | <https://go.libhunt.com/> |
+| **Golang Weekly** | 毎週キュレーションされたGoコンテンツ、ニュース、記事 | <https://golangweekly.com/> |
+| **Awesome Go Newsletter** | 新しいGoライブラリとツールの最新情報 | <https://go.libhunt.com/> |
 
-## Reddit & Communities
+## Reddit & コミュニティ
 
-| Community | Description | URL |
+| コミュニティ | 説明 | URL |
 | --- | --- | --- |
-| r/golang | Main Go subreddit with 300K+ members | <https://www.reddit.com/r/golang> |
-| golang wiki | Official wiki with resources and FAQs | <https://go.dev/wiki/> |
-| gophers.slack.com | Official Go Slack community | <https://invite.slack.golangbridge.org> |
-| Go Forum | Official Go discussion forum | <https://forum.golangbridge.org> |
-| Discuss Go | Official Go team discussion | <https://groups.google.com/g/golang-nuts> |
+| r/golang | 30万人以上のメンバーを持つメインのGo subreddit | <https://www.reddit.com/r/golang> |
+| golang wiki | リソースとFAQを含む公式wiki | <https://go.dev/wiki/> |
+| gophers.slack.com | 公式Go Slackコミュニティ | <https://invite.slack.golangbridge.org> |
+| Go Forum | 公式Goディスカッションフォーラム | <https://forum.golangbridge.org> |
+| Discuss Go | 公式Goチームのディスカッション | <https://groups.google.com/g/golang-nuts> |
 
-## Famous Go Developers
+## 著名なGo開発者
 
-Follow these influential Go developers and contributors:
+影響力のあるGo開発者とコントリビューターをフォローしましょう:
 
-### Core Go Team
+### コアGoチーム
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
@@ -66,7 +66,7 @@ Follow these influential Go developers and contributors:
 | **Robert Griesemer** | griesemer |  |  |  |
 | **Dmitry Vyukov** | dvyukov | @dvyukov |  |  |
 
-### Go Tooling & Infrastructure
+### Goツール & インフラストラクチャ
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
@@ -75,7 +75,7 @@ Follow these influential Go developers and contributors:
 | **Matt Butcher** | technosophos |  |  |  |
 | **Jaana Dogan** | rakyll | @rakyll | <https://www.linkedin.com/in/rakyll/> |  |
 
-### Popular Go Authors & Educators
+### 人気のあるGo著者 & 教育者
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
@@ -85,7 +85,7 @@ Follow these influential Go developers and contributors:
 | **Johnny Boursiquot** | jboursiquot | @jboursiquot | <https://linkedin.com/in/jboursiquot> |  |
 | **Michał Łowicki** | mlowicki | @mlowicki | <https://linkedin.com/in/michał-łowicki-a60402b> |  |
 
-### Library & Framework Authors
+### ライブラリ & フレームワーク著者
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ Follow these influential Go developers and contributors:
 | **Tomás Senart** | tsenart | @tsenart | <https://www.linkedin.com/in/tsenart/> |  |
 | **Björn Rabenstein** | beorn7 |  |  |  |
 
-### Conference Speakers & Community Leaders
+### カンファレンススピーカー & コミュニティリーダー
 
 | Name | GitHub | Twitter/X | LinkedIn | Bluesky |
 | --- | --- | --- | --- | --- |
@@ -104,37 +104,37 @@ Follow these influential Go developers and contributors:
 | **Erik St. Martin** | erikstmartin | @erikstmartin |  |  |
 | **Brian Ketelsen** | bketelsen |  |  | @brian.dev |
 
-## Must-Follow Blogs
+## 必読ブログ
 
-| Blog            | Author       | URL                                  |
+| ブログ            | 著者       | URL                                  |
 | --------------- | ------------ | ------------------------------------ |
 | The Go Blog     | Go Team      | <https://go.dev/blog>                |
 | Rob Pike's Blog | Rob Pike     | <https://commandcenter.blogspot.com> |
 | Dave Cheney     | Dave Cheney  | <https://dave.cheney.net>            |
 | Ardan Labs Blog | Bill Kennedy | <https://www.ardanlabs.com/blog>     |
 
-## YouTube Channels
+## YouTubeチャンネル
 
-| Channel | Content | URL |
+| チャンネル | コンテンツ | URL |
 | --- | --- | --- |
-| Go | Official Go team | <https://www.youtube.com/@golang> |
-| Gopher Academy | Talks & tutorials | <https://www.youtube.com/@GopherAcademy> |
-| GopherCon Europe | European conference talks | <https://www.youtube.com/@GopherConEurope> |
-| GopherCon UK | UK conference talks | <https://www.youtube.com/@GopherConUK> |
-| Golang Singapore | Singapore meetup & conf talks | <https://www.youtube.com/@golangSG> |
-| Ardan Labs | Go training & tips | <https://www.youtube.com/@ArdanLabs> |
-| Applied Go | Go tutorials | <https://youtube.com/appliedgocode> |
-| Learn Go Programming | Beginner tutorials | <https://youtube.com/learn_goprogramming> |
+| Go | 公式Goチーム | <https://www.youtube.com/@golang> |
+| Gopher Academy | トーク & チュートリアル | <https://www.youtube.com/@GopherAcademy> |
+| GopherCon Europe | ヨーロッパのカンファレンストーク | <https://www.youtube.com/@GopherConEurope> |
+| GopherCon UK | イギリスのカンファレンストーク | <https://www.youtube.com/@GopherConUK> |
+| Golang Singapore | シンガポールのミートアップ & カンファレンストーク | <https://www.youtube.com/@golangSG> |
+| Ardan Labs | Goトレーニング & ヒント | <https://www.youtube.com/@ArdanLabs> |
+| Applied Go | Goチュートリアル | <https://youtube.com/appliedgocode> |
+| Learn Go Programming | 初心者向けチュートリアル | <https://youtube.com/learn_goprogramming> |
 
-## Quick Tips for Staying Updated
+## 最新情報をキャッチアップするためのヒント
 
-1. **Subscribe to 1-2 newsletters** - Don't overload yourself
-2. **Follow 10-20 key people** on X/Bluesky who post regularly
-3. **Check Go.dev/blog weekly** for official announcements
-4. **Join Go Slack** for real-time discussions
-5. **Bookmark pkg.go.dev** to discover new libraries
-6. **Attend a GopherCon** (virtual or in-person) yearly
+1. **1〜2つのニュースレターを購読する** — 情報過多にならないようにしましょう
+2. **X/Blueskyで定期的に投稿している10〜20人のキーパーソンをフォローする**
+3. **Go.dev/blogを毎週チェックする** — 公式アナウンス用
+4. **Go Slackに参加する** — リアルタイムのディスカッション用
+5. **pkg.go.devをブックマークする** — 新しいライブラリの発見用
+6. **年に一度GopherConに参加する**（バーチャルまたは対面）
 
 ---
 
-_Note: This guide is regularly updated. Suggest additions via GitHub issues._
+_注: このガイドは定期的に更新されます。追加の提案はGitHub issuesからどうぞ。_

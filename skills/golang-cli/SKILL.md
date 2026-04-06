@@ -25,30 +25,30 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 - **Extend** — adding subcommands, flags, or completions to an existing CLI: read the current command tree first, then apply changes consistent with the existing structure.
 - **Review** — auditing an existing CLI for correctness: check the Common Mistakes table, verify `SilenceUsage`/`SilenceErrors`, flag-to-Viper binding, exit codes, and stdout/stderr discipline.
 
-# Go CLI Best Practices
+# Go CLI ベストプラクティス
 
-Use Cobra + Viper as the default stack for Go CLI applications. Cobra provides the command/subcommand/flag structure and Viper handles configuration from files, environment variables, and flags with automatic layering. This combination powers kubectl, docker, gh, hugo, and most production Go CLIs.
+Go CLIアプリケーションのデフォルトスタックとしてCobra + Viperを使用する。Cobraはコマンド/サブコマンド/フラグの構造を提供し、Viperはファイル、環境変数、フラグからの設定を自動レイヤリングで処理する。この組み合わせはkubectl、docker、gh、hugoなど、ほとんどのプロダクションGo CLIで使われている。
 
-When using Cobra or Viper, refer to the library's official documentation and code examples for current API signatures.
+CobraまたはViperを使用する際は、最新のAPIシグネチャについてライブラリの公式ドキュメントとコード例を参照すること。
 
-For trivial single-purpose tools with no subcommands and few flags, stdlib `flag` is sufficient.
+サブコマンドがなくフラグも少ない単純なツールの場合、標準ライブラリの`flag`で十分である。
 
-## Quick Reference
+## クイックリファレンス
 
-| Concern             | Package / Tool                       |
+| 項目                | パッケージ / ツール                  |
 | ------------------- | ------------------------------------ |
-| Commands & flags    | `github.com/spf13/cobra`             |
-| Configuration       | `github.com/spf13/viper`             |
-| Flag parsing        | `github.com/spf13/pflag` (via Cobra) |
-| Colored output      | `github.com/fatih/color`             |
-| Table output        | `github.com/olekukonko/tablewriter`  |
-| Interactive prompts | `github.com/charmbracelet/bubbletea` |
-| Version injection   | `go build -ldflags`                  |
-| Distribution        | `goreleaser`                         |
+| コマンドとフラグ    | `github.com/spf13/cobra`             |
+| 設定管理            | `github.com/spf13/viper`             |
+| フラグ解析          | `github.com/spf13/pflag` (via Cobra) |
+| カラー出力          | `github.com/fatih/color`             |
+| テーブル出力        | `github.com/olekukonko/tablewriter`  |
+| 対話型プロンプト    | `github.com/charmbracelet/bubbletea` |
+| バージョン注入      | `go build -ldflags`                  |
+| 配布                | `goreleaser`                         |
 
-## Project Structure
+## プロジェクト構成
 
-Organize CLI commands in `cmd/myapp/` with one file per command. Keep `main.go` minimal — it only calls `Execute()`.
+CLIコマンドは`cmd/myapp/`に配置し、コマンドごとに1ファイルとする。`main.go`は最小限にし、`Execute()`を呼び出すだけにする。
 
 ```
 myapp/
@@ -63,69 +63,69 @@ myapp/
 └── go.sum
 ```
 
-`main.go` should be minimal — see [assets/examples/main.go](assets/examples/main.go).
+`main.go`は最小限にすべき — [assets/examples/main.go](assets/examples/main.go)を参照。
 
-## Root Command Setup
+## ルートコマンドの設定
 
-The root command initializes Viper configuration and sets up global behavior via `PersistentPreRunE`. See [assets/examples/root.go](assets/examples/root.go).
+ルートコマンドはViperの設定を初期化し、`PersistentPreRunE`を通じてグローバルな動作を設定する。[assets/examples/root.go](assets/examples/root.go)を参照。
 
-Key points:
+重要なポイント:
 
-- `SilenceUsage: true` MUST be set — prevents printing the full usage text on every error
-- `SilenceErrors: true` MUST be set — lets you control error output format yourself
-- `PersistentPreRunE` runs before every subcommand, so config is always initialized
-- Logs go to stderr, output goes to stdout
+- `SilenceUsage: true`は必ず設定すること — エラーのたびに完全な使用方法テキストが出力されるのを防ぐ
+- `SilenceErrors: true`は必ず設定すること — エラー出力のフォーマットを自分で制御できるようにする
+- `PersistentPreRunE`はすべてのサブコマンドの前に実行されるため、設定は常に初期化される
+- ログはstderrへ、出力はstdoutへ
 
-## Subcommands
+## サブコマンド
 
-Add subcommands by creating separate files in `cmd/myapp/` and registering them in `init()`. See [assets/examples/serve.go](assets/examples/serve.go) for a complete subcommand example including command groups.
+`cmd/myapp/`にファイルを分けてサブコマンドを追加し、`init()`で登録する。コマンドグループを含む完全なサブコマンドの例は[assets/examples/serve.go](assets/examples/serve.go)を参照。
 
-## Flags
+## フラグ
 
-See [assets/examples/flags.go](assets/examples/flags.go) for all flag patterns:
+すべてのフラグパターンについては[assets/examples/flags.go](assets/examples/flags.go)を参照:
 
-### Persistent vs Local
+### 永続フラグ vs ローカルフラグ
 
-- **Persistent** flags are inherited by all subcommands (e.g., `--config`)
-- **Local** flags only apply to the command they're defined on (e.g., `--port`)
+- **永続(Persistent)**フラグはすべてのサブコマンドに継承される（例: `--config`）
+- **ローカル(Local)**フラグは定義されたコマンドにのみ適用される（例: `--port`）
 
-### Required Flags
+### 必須フラグ
 
-Use `MarkFlagRequired`, `MarkFlagsMutuallyExclusive`, and `MarkFlagsOneRequired` for flag constraints.
+フラグの制約には`MarkFlagRequired`、`MarkFlagsMutuallyExclusive`、`MarkFlagsOneRequired`を使用する。
 
-### Flag Validation with RegisterFlagCompletionFunc
+### RegisterFlagCompletionFuncによるフラグ検証
 
-Provide completion suggestions for flag values.
+フラグの値に対する補完候補を提供する。
 
-### Always Bind Flags to Viper
+### フラグは必ずViperにバインドする
 
-This ensures `viper.GetInt("port")` returns the flag value, env var `MYAPP_PORT`, or config file value — whichever has highest precedence.
+これにより`viper.GetInt("port")`がフラグの値、環境変数`MYAPP_PORT`、または設定ファイルの値のうち、最も優先度の高いものを返すようになる。
 
-## Argument Validation
+## 引数の検証
 
-Cobra provides built-in validators for positional arguments. See [assets/examples/args.go](assets/examples/args.go) for both built-in and custom validation examples.
+Cobraは位置引数のバリデータを組み込みで提供している。組み込みおよびカスタム検証の例は[assets/examples/args.go](assets/examples/args.go)を参照。
 
-| Validator                   | Description                          |
+| バリデータ                  | 説明                                 |
 | --------------------------- | ------------------------------------ |
-| `cobra.NoArgs`              | Fails if any args provided           |
-| `cobra.ExactArgs(n)`        | Requires exactly n args              |
-| `cobra.MinimumNArgs(n)`     | Requires at least n args             |
-| `cobra.MaximumNArgs(n)`     | Allows at most n args                |
-| `cobra.RangeArgs(min, max)` | Requires between min and max         |
-| `cobra.ExactValidArgs(n)`   | Exactly n args, must be in ValidArgs |
+| `cobra.NoArgs`              | 引数が提供されると失敗               |
+| `cobra.ExactArgs(n)`        | 正確にn個の引数が必要                |
+| `cobra.MinimumNArgs(n)`     | 最低n個の引数が必要                  |
+| `cobra.MaximumNArgs(n)`     | 最大n個の引数まで許可               |
+| `cobra.RangeArgs(min, max)` | minからmaxの間の引数が必要           |
+| `cobra.ExactValidArgs(n)`   | 正確にn個の引数、ValidArgsに含まれる必要あり |
 
-## Configuration with Viper
+## Viperによる設定管理
 
-Viper resolves configuration values in this order (highest to lowest precedence):
+Viperは以下の順序で設定値を解決する（優先度の高い順）:
 
-1. **CLI flags** (explicit user input)
-2. **Environment variables** (deployment config)
-3. **Config file** (persistent settings)
-4. **Defaults** (set in code)
+1. **CLIフラグ**（明示的なユーザー入力）
+2. **環境変数**（デプロイ設定）
+3. **設定ファイル**（永続的な設定）
+4. **デフォルト値**（コードで設定）
 
-See [assets/examples/config.go](assets/examples/config.go) for complete Viper integration including struct unmarshaling and config file watching.
+構造体へのアンマーシャリングや設定ファイルの監視を含む完全なViper統合については[assets/examples/config.go](assets/examples/config.go)を参照。
 
-### Example Config File (.myapp.yaml)
+### 設定ファイルの例 (.myapp.yaml)
 
 ```yaml
 port: 8080
@@ -136,70 +136,70 @@ database:
   max-conn: 25
 ```
 
-With the setup above, these are all equivalent:
+上記の設定では、以下はすべて同等:
 
-- Flag: `--port 9090`
-- Env var: `MYAPP_PORT=9090`
-- Config file: `port: 9090`
+- フラグ: `--port 9090`
+- 環境変数: `MYAPP_PORT=9090`
+- 設定ファイル: `port: 9090`
 
-## Version and Build Info
+## バージョンとビルド情報
 
-Version SHOULD be embedded at compile time using `ldflags`. See [assets/examples/version.go](assets/examples/version.go) for the version command and build instructions.
+バージョンは`ldflags`を使用してコンパイル時に埋め込むべきである。バージョンコマンドとビルド手順については[assets/examples/version.go](assets/examples/version.go)を参照。
 
-## Exit Codes
+## 終了コード
 
-Exit codes MUST follow Unix conventions:
+終了コードはUnixの慣例に従わなければならない:
 
-| Code  | Meaning           | When to Use                               |
-| ----- | ----------------- | ----------------------------------------- |
-| 0     | Success           | Operation completed normally              |
-| 1     | General error     | Runtime failure                           |
-| 2     | Usage error       | Invalid flags or arguments                |
-| 64-78 | BSD sysexits      | Specific error categories                 |
-| 126   | Cannot execute    | Permission denied                         |
-| 127   | Command not found | Missing dependency                        |
-| 128+N | Signal N          | Terminated by signal (e.g., 130 = SIGINT) |
+| コード | 意味              | 使用タイミング                            |
+| ------ | ----------------- | ----------------------------------------- |
+| 0      | 成功              | 操作が正常に完了                          |
+| 1      | 一般エラー        | 実行時の失敗                              |
+| 2      | 使用法エラー      | 無効なフラグまたは引数                    |
+| 64-78  | BSD sysexits      | 特定のエラーカテゴリ                      |
+| 126    | 実行不可          | 権限拒否                                  |
+| 127    | コマンド未検出    | 依存関係の欠如                            |
+| 128+N  | シグナル N        | シグナルによる終了（例: 130 = SIGINT）    |
 
-See [assets/examples/exit_codes.go](assets/examples/exit_codes.go) for a pattern mapping errors to exit codes.
+エラーを終了コードにマッピングするパターンについては[assets/examples/exit_codes.go](assets/examples/exit_codes.go)を参照。
 
-## I/O Patterns
+## I/Oパターン
 
-See [assets/examples/output.go](assets/examples/output.go) for all I/O patterns:
+すべてのI/Oパターンについては[assets/examples/output.go](assets/examples/output.go)を参照:
 
-- **stdout vs stderr**: NEVER write diagnostic output to stdout — stdout is for program output (pipeable), stderr for logs/errors/diagnostics
-- **Detecting pipe vs terminal**: check `os.ModeCharDevice` on stdout
-- **Machine-readable output**: support `--output` flag for table/json/plain formats
-- **Colors**: use `fatih/color` which auto-disables when output is not a terminal
+- **stdout vs stderr**: 診断出力をstdoutに書き込んではならない — stdoutはプログラム出力用（パイプ可能）、stderrはログ/エラー/診断用
+- **パイプ vs ターミナルの検出**: stdoutの`os.ModeCharDevice`をチェック
+- **機械可読出力**: table/json/plain形式の`--output`フラグをサポート
+- **カラー**: 出力がターミナルでない場合に自動的に無効化される`fatih/color`を使用
 
-## Signal Handling
+## シグナル処理
 
-Signal handling MUST use `signal.NotifyContext` to propagate cancellation through context. See [assets/examples/signal.go](assets/examples/signal.go) for graceful HTTP server shutdown.
+シグナル処理はcontextを通じてキャンセルを伝播するために`signal.NotifyContext`を使用しなければならない。グレースフルなHTTPサーバーシャットダウンについては[assets/examples/signal.go](assets/examples/signal.go)を参照。
 
-## Shell Completions
+## シェル補完
 
-Cobra generates completions for bash, zsh, fish, and PowerShell automatically. See [assets/examples/completion.go](assets/examples/completion.go) for both the completion command and custom flag/argument completions.
+Cobraはbash、zsh、fish、PowerShell用の補完を自動的に生成する。補完コマンドとカスタムフラグ/引数補完については[assets/examples/completion.go](assets/examples/completion.go)を参照。
 
-## Testing CLI Commands
+## CLIコマンドのテスト
 
-Test commands by executing them programmatically and capturing output. See [assets/examples/cli_test.go](assets/examples/cli_test.go).
+コマンドをプログラム的に実行し、出力をキャプチャしてテストする。[assets/examples/cli_test.go](assets/examples/cli_test.go)を参照。
 
-Use `cmd.OutOrStdout()` and `cmd.ErrOrStderr()` in commands (instead of `os.Stdout` / `os.Stderr`) so output can be captured in tests.
+テストで出力をキャプチャできるように、コマンドでは（`os.Stdout` / `os.Stderr`の代わりに）`cmd.OutOrStdout()`と`cmd.ErrOrStderr()`を使用する。
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正方法 |
 | --- | --- |
-| Writing to `os.Stdout` directly | Tests can't capture output. Use `cmd.OutOrStdout()` which tests can redirect to a buffer |
-| Calling `os.Exit()` inside `RunE` | Cobra's error handling, deferred functions, and cleanup code never run. Return an error, let `main()` decide |
-| Not binding flags to Viper | Flags won't be configurable via env/config. Call `viper.BindPFlag` for every configurable flag |
-| Missing `viper.SetEnvPrefix` | `PORT` collides with other tools. Use a prefix (`MYAPP_PORT`) to namespace env vars |
-| Logging to stdout | Unix pipes chain stdout — logs corrupt the data stream for the next program. Logs go to stderr |
-| Printing usage on every error | Full help text on every error is noise. Set `SilenceUsage: true`, save full usage for `--help` |
-| Config file required | Users without a config file get a crash. Ignore `viper.ConfigFileNotFoundError` — config should be optional |
-| Not using `PersistentPreRunE` | Config initialization must happen before any subcommand. Use root's `PersistentPreRunE` |
-| Hardcoded version string | Version gets out of sync with tags. Inject via `ldflags` at build time from git tags |
-| Not supporting `--output` format | Scripts can't parse human-readable output. Add JSON/table/plain for machine consumption |
+| `os.Stdout`に直接書き込む | テストが出力をキャプチャできない。テストでバッファにリダイレクトできる`cmd.OutOrStdout()`を使用する |
+| `RunE`内で`os.Exit()`を呼び出す | Cobraのエラー処理、defer関数、クリーンアップコードが実行されない。エラーを返し、`main()`に判断させる |
+| フラグをViperにバインドしていない | フラグが環境変数/設定ファイルで設定できなくなる。設定可能なすべてのフラグに`viper.BindPFlag`を呼び出す |
+| `viper.SetEnvPrefix`がない | `PORT`が他のツールと衝突する。環境変数の名前空間化のためにプレフィックスを使用する（`MYAPP_PORT`） |
+| stdoutにログを出力する | Unixパイプはstdoutをチェーンする — ログが次のプログラムへのデータストリームを破壊する。ログはstderrへ |
+| エラーのたびに使用法を表示する | エラーのたびにフルヘルプテキストはノイズ。`SilenceUsage: true`を設定し、`--help`用にフル使用法を温存する |
+| 設定ファイルを必須にする | 設定ファイルがないユーザーがクラッシュする。`viper.ConfigFileNotFoundError`を無視する — 設定は任意であるべき |
+| `PersistentPreRunE`を使っていない | 設定の初期化はすべてのサブコマンドの前に行う必要がある。ルートの`PersistentPreRunE`を使用する |
+| バージョン文字列のハードコード | バージョンがタグと同期しなくなる。ビルド時にgitタグから`ldflags`で注入する |
+| `--output`フォーマットをサポートしていない | スクリプトが人間可読出力を解析できない。機械消費用にJSON/table/plainを追加する |
 
-## Related Skills
+## 関連スキル
 
 See `samber/cc-skills-golang@golang-project-layout`, `samber/cc-skills-golang@golang-dependency-injection`, `samber/cc-skills-golang@golang-testing`, `samber/cc-skills-golang@golang-design-patterns` skills.

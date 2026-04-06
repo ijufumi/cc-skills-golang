@@ -19,48 +19,48 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Persona:** You are a Go logging architect. You design log pipelines where every record flows through the right handlers — sampling drops noise early, formatters strip PII before records leave the process, and routers send errors to Sentry while info goes to Loki.
 
-# samber/slog-\*\*\*\* — Structured Logging Pipeline for Go
+# samber/slog-\*\*\*\* — Go向け構造化ログパイプライン
 
-20+ composable `slog.Handler` packages for Go 1.21+. Three core pipeline libraries plus HTTP middlewares and backend sinks that all implement the standard `slog.Handler` interface.
+Go 1.21+向けの20以上のコンポーザブルな `slog.Handler` パッケージ。3つのコアパイプラインライブラリに加え、標準の `slog.Handler` インターフェースを実装するHTTPミドルウェアとバックエンドシンクを提供します。
 
-**Official resources:**
+**公式リソース:**
 
-- [github.com/samber/slog-multi](https://github.com/samber/slog-multi) — handler composition
-- [github.com/samber/slog-sampling](https://github.com/samber/slog-sampling) — throughput control
-- [github.com/samber/slog-formatter](https://github.com/samber/slog-formatter) — attribute transformation
+- [github.com/samber/slog-multi](https://github.com/samber/slog-multi) — ハンドラー合成
+- [github.com/samber/slog-sampling](https://github.com/samber/slog-sampling) — スループット制御
+- [github.com/samber/slog-formatter](https://github.com/samber/slog-formatter) — 属性変換
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。詳細はライブラリのドキュメントとコード例を参照してください。Context7はディスカバリプラットフォームとして活用できます。
 
-## The Pipeline Model
+## パイプラインモデル
 
-Every samber/slog pipeline follows a canonical ordering. Records flow left to right — place sampling first to drop early and avoid wasting CPU on records that never reach a sink.
+すべてのsamber/slogパイプラインは標準的な順序に従います。レコードは左から右に流れます。サンプリングを最初に配置して、シンクに到達しないレコードを早期にドロップし、CPUの無駄遣いを避けてください。
 
 ```
 record → [Sampling] → [Pipe: trace/PII] → [Router] → [Sinks]
 ```
 
-Order matters: sampling before formatting saves CPU. Formatting before routing ensures all sinks receive clean attributes. Reversing this wastes work on records that get dropped.
+順序が重要です。サンプリングをフォーマットの前に行うことでCPUを節約できます。フォーマットをルーティングの前に行うことで、すべてのシンクがクリーンな属性を受け取ることが保証されます。この順序を逆にすると、ドロップされるレコードに対して無駄な処理が発生します。
 
-## Core Libraries
+## コアライブラリ
 
-| Library | Purpose | Key constructors |
+| ライブラリ | 目的 | 主なコンストラクタ |
 | --- | --- | --- |
-| `slog-multi` | Handler composition | `Fanout`, `Router`, `FirstMatch`, `Failover`, `Pool`, `Pipe` |
-| `slog-sampling` | Throughput control | `UniformSamplingOption`, `ThresholdSamplingOption`, `AbsoluteSamplingOption`, `CustomSamplingOption` |
-| `slog-formatter` | Attribute transforms | `PIIFormatter`, `ErrorFormatter`, `FormatByType[T]`, `FormatByKey`, `FlattenFormatterMiddleware` |
+| `slog-multi` | ハンドラー合成 | `Fanout`, `Router`, `FirstMatch`, `Failover`, `Pool`, `Pipe` |
+| `slog-sampling` | スループット制御 | `UniformSamplingOption`, `ThresholdSamplingOption`, `AbsoluteSamplingOption`, `CustomSamplingOption` |
+| `slog-formatter` | 属性変換 | `PIIFormatter`, `ErrorFormatter`, `FormatByType[T]`, `FormatByKey`, `FlattenFormatterMiddleware` |
 
-## slog-multi — Handler Composition
+## slog-multi — ハンドラー合成
 
-Six composition patterns, each for a different routing need:
+6つの合成パターン。それぞれ異なるルーティングニーズに対応します:
 
-| Pattern | Behavior | Latency impact |
+| パターン | 動作 | レイテンシへの影響 |
 | --- | --- | --- |
-| `Fanout(handlers...)` | Broadcast to all handlers sequentially | Sum of all handler latencies |
-| `Router().Add(h, predicate).Handler()` | Route to ALL matching handlers | Sum of matching handlers |
-| `Router().Add(...).FirstMatch().Handler()` | Route to FIRST match only | Single handler latency |
-| `Failover()(handlers...)` | Try sequentially until one succeeds | Primary handler latency (happy path) |
-| `Pool()(handlers...)` | Concurrent broadcast to all handlers | Max of all handler latencies |
-| `Pipe(middlewares...).Handler(sink)` | Middleware chain before sink | Middleware overhead + sink |
+| `Fanout(handlers...)` | すべてのハンドラーに順次ブロードキャスト | 全ハンドラーのレイテンシの合計 |
+| `Router().Add(h, predicate).Handler()` | マッチするすべてのハンドラーにルーティング | マッチしたハンドラーの合計 |
+| `Router().Add(...).FirstMatch().Handler()` | 最初のマッチのみにルーティング | 単一ハンドラーのレイテンシ |
+| `Failover()(handlers...)` | 成功するまで順次試行 | プライマリハンドラーのレイテンシ（正常時） |
+| `Pool()(handlers...)` | すべてのハンドラーに並行ブロードキャスト | 全ハンドラーのレイテンシの最大値 |
+| `Pipe(middlewares...).Handler(sink)` | シンク前のミドルウェアチェーン | ミドルウェアのオーバーヘッド + シンク |
 
 ```go
 // Route errors to Sentry, all logs to stdout
@@ -72,20 +72,20 @@ logger := slog.New(
 )
 ```
 
-Built-in predicates: `LevelIs`, `LevelIsNot`, `MessageIs`, `MessageIsNot`, `MessageContains`, `MessageNotContains`, `AttrValueIs`, `AttrKindIs`.
+組み込みの述語: `LevelIs`, `LevelIsNot`, `MessageIs`, `MessageIsNot`, `MessageContains`, `MessageNotContains`, `AttrValueIs`, `AttrKindIs`。
 
-For full code examples of every pattern, see [Pipeline Patterns](references/pipeline-patterns.md).
+すべてのパターンの完全なコード例は [Pipeline Patterns](references/pipeline-patterns.md) を参照してください。
 
-## slog-sampling — Throughput Control
+## slog-sampling — スループット制御
 
-| Strategy | Behavior | Best for |
+| 戦略 | 動作 | 最適な用途 |
 | --- | --- | --- |
-| Uniform | Drop fixed % of all records | Dev/staging noise reduction |
-| Threshold | Log first N per interval, then sample at rate R | Production — preserves initial visibility |
-| Absolute | Cap at N records per interval globally | Hard cost control |
-| Custom | User function returns sample rate per record | Level-aware or time-aware rules |
+| Uniform | 全レコードの固定%をドロップ | 開発/ステージングのノイズ削減 |
+| Threshold | インターバルごとに最初のN件をログ出力し、その後レートRでサンプリング | 本番環境 — 初期の可視性を維持 |
+| Absolute | グローバルでインターバルごとにN件に制限 | 厳密なコスト管理 |
+| Custom | ユーザー関数がレコードごとのサンプルレートを返す | レベル対応またはタイムベースのルール |
 
-Sampling MUST be the outermost handler in the pipeline — placing it after formatting wastes CPU on records that get dropped.
+サンプリングはパイプラインの最も外側のハンドラーでなければなりません。フォーマットの後に配置すると、ドロップされるレコードに対してCPUが無駄に消費されます。
 
 ```go
 // Threshold: log first 10 per 5s, then 10% — errors always pass through via Router
@@ -98,13 +98,13 @@ logger := slog.New(
 )
 ```
 
-Matchers group similar records for deduplication: `MatchByLevel()`, `MatchByMessage()`, `MatchByLevelAndMessage()` (default), `MatchBySource()`, `MatchByAttribute(groups, key)`.
+マッチャーは重複排除のために類似レコードをグループ化します: `MatchByLevel()`, `MatchByMessage()`, `MatchByLevelAndMessage()`（デフォルト）, `MatchBySource()`, `MatchByAttribute(groups, key)`。
 
-For strategy comparison and configuration details, see [Sampling Strategies](references/sampling-strategies.md).
+戦略の比較と設定の詳細は [Sampling Strategies](references/sampling-strategies.md) を参照してください。
 
-## slog-formatter — Attribute Transformation
+## slog-formatter — 属性変換
 
-Apply as a `Pipe` middleware so all downstream handlers receive clean attributes.
+`Pipe` ミドルウェアとして適用し、すべての下流ハンドラーがクリーンな属性を受け取るようにします。
 
 ```go
 logger := slog.New(
@@ -116,15 +116,15 @@ logger := slog.New(
 )
 ```
 
-Key formatters: `PIIFormatter`, `ErrorFormatter`, `TimeFormatter`, `UnixTimestampFormatter`, `IPAddressFormatter`, `HTTPRequestFormatter`, `HTTPResponseFormatter`. Generic formatters: `FormatByType[T]`, `FormatByKey`, `FormatByKind`, `FormatByGroup`, `FormatByGroupKey`. Flatten nested attributes with `FlattenFormatterMiddleware`.
+主要なフォーマッター: `PIIFormatter`, `ErrorFormatter`, `TimeFormatter`, `UnixTimestampFormatter`, `IPAddressFormatter`, `HTTPRequestFormatter`, `HTTPResponseFormatter`。汎用フォーマッター: `FormatByType[T]`, `FormatByKey`, `FormatByKind`, `FormatByGroup`, `FormatByGroupKey`。ネストされた属性のフラット化には `FlattenFormatterMiddleware` を使用します。
 
-## HTTP Middlewares
+## HTTPミドルウェア
 
-Consistent pattern across frameworks: `router.Use(slogXXX.New(logger))`.
+フレームワーク間で一貫したパターン: `router.Use(slogXXX.New(logger))`。
 
-Available: `slog-gin`, `slog-echo`, `slog-fiber`, `slog-chi`, `slog-http` (net/http).
+利用可能: `slog-gin`, `slog-echo`, `slog-fiber`, `slog-chi`, `slog-http` (net/http)。
 
-All share a `Config` struct with: `DefaultLevel`, `ClientErrorLevel`, `ServerErrorLevel`, `WithRequestBody`, `WithResponseBody`, `WithUserAgent`, `WithRequestID`, `WithTraceID`, `WithSpanID`, `Filters`.
+すべてが共通の `Config` 構造体を持ちます: `DefaultLevel`, `ClientErrorLevel`, `ServerErrorLevel`, `WithRequestBody`, `WithResponseBody`, `WithUserAgent`, `WithRequestID`, `WithTraceID`, `WithSpanID`, `Filters`。
 
 ```go
 // Gin with filters — skip health checks
@@ -139,57 +139,57 @@ router.Use(sloggin.NewWithConfig(logger, sloggin.Config{
 }))
 ```
 
-For framework-specific setup, see [HTTP Middlewares](references/http-middlewares.md).
+フレームワーク固有のセットアップについては [HTTP Middlewares](references/http-middlewares.md) を参照してください。
 
-## Backend Sinks
+## バックエンドシンク
 
-All follow the `Option{}.NewXxxHandler()` constructor pattern.
+すべて `Option{}.NewXxxHandler()` コンストラクタパターンに従います。
 
-| Category     | Packages                                                   |
+| カテゴリ     | パッケージ                                                   |
 | ------------ | ---------------------------------------------------------- |
-| Cloud        | `slog-datadog`, `slog-sentry`, `slog-loki`, `slog-graylog` |
-| Messaging    | `slog-kafka`, `slog-fluentd`, `slog-logstash`, `slog-nats` |
-| Notification | `slog-slack`, `slog-telegram`, `slog-webhook`              |
-| Storage      | `slog-parquet`                                             |
-| Bridges      | `slog-zap`, `slog-zerolog`, `slog-logrus`                  |
+| クラウド        | `slog-datadog`, `slog-sentry`, `slog-loki`, `slog-graylog` |
+| メッセージング    | `slog-kafka`, `slog-fluentd`, `slog-logstash`, `slog-nats` |
+| 通知 | `slog-slack`, `slog-telegram`, `slog-webhook`              |
+| ストレージ      | `slog-parquet`                                             |
+| ブリッジ      | `slog-zap`, `slog-zerolog`, `slog-logrus`                  |
 
-**Batch handlers require graceful shutdown** — `slog-datadog`, `slog-loki`, `slog-kafka`, and `slog-parquet` buffer records internally. Flush on shutdown (e.g., `handler.Stop(ctx)` for Datadog, `lokiClient.Stop()` for Loki, `writer.Close()` for Kafka) or buffered logs are lost.
+**バッチハンドラーにはグレースフルシャットダウンが必要です** — `slog-datadog`, `slog-loki`, `slog-kafka`, `slog-parquet` はレコードを内部的にバッファリングします。シャットダウン時にフラッシュしてください（例: Datadogの `handler.Stop(ctx)`, Lokiの `lokiClient.Stop()`, Kafkaの `writer.Close()`）。そうしないとバッファされたログが失われます。
 
-For configuration examples and shutdown patterns, see [Backend Handlers](references/backend-handlers.md).
+設定例とシャットダウンパターンについては [Backend Handlers](references/backend-handlers.md) を参照してください。
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Why it fails | Fix |
+| 間違い | 失敗する理由 | 修正方法 |
 | --- | --- | --- |
-| Sampling after formatting | Wastes CPU formatting records that get dropped | Place sampling as outermost handler |
-| Fanout to many synchronous handlers | Blocks caller — latency is sum of all handlers | Use `Pool()` for concurrent dispatch |
-| Missing shutdown flush on batch handlers | Buffered logs lost on shutdown | `defer handler.Stop(ctx)` (Datadog), `defer lokiClient.Stop()` (Loki), `defer writer.Close()` (Kafka) |
-| Router without default/catch-all handler | Unmatched records silently dropped | Add a handler with no predicate as catch-all |
-| `AttrFromContext` without HTTP middleware | Context has no request attributes to extract | Install `slog-gin`/`echo`/`fiber`/`chi` middleware first |
-| Using `Pipe` with no middleware | No-op wrapper adding per-record overhead | Remove `Pipe()` if no middleware needed |
+| フォーマット後にサンプリング | ドロップされるレコードのフォーマットにCPUが無駄に使われる | サンプリングを最も外側のハンドラーに配置する |
+| 多数の同期ハンドラーへのFanout | 呼び出し元をブロック — レイテンシはすべてのハンドラーの合計 | 並行ディスパッチに `Pool()` を使用する |
+| バッチハンドラーのシャットダウンフラッシュ漏れ | シャットダウン時にバッファされたログが失われる | `defer handler.Stop(ctx)` (Datadog), `defer lokiClient.Stop()` (Loki), `defer writer.Close()` (Kafka) |
+| デフォルト/キャッチオールハンドラーなしのRouter | マッチしないレコードが無視される | 述語なしのハンドラーをキャッチオールとして追加する |
+| HTTPミドルウェアなしで `AttrFromContext` を使用 | コンテキストにリクエスト属性が含まれていない | まず `slog-gin`/`echo`/`fiber`/`chi` ミドルウェアをインストールする |
+| ミドルウェアなしで `Pipe` を使用 | レコードごとのオーバーヘッドが追加されるだけのno-opラッパー | ミドルウェアが不要な場合は `Pipe()` を削除する |
 
-## Performance Warnings
+## パフォーマンスに関する警告
 
-- **Fanout latency** = sum of all handler latencies (sequential). With 5 handlers at 10ms each, every log call costs 50ms. Use `Pool()` to reduce to max(latencies)
-- **Pipe middleware** adds per-record function call overhead — keep chains short (2-4 middlewares)
-- **slog-formatter** processes attributes sequentially — many formatters compound. For hot-path attribute formatting, prefer implementing `slog.LogValuer` on your types instead
-- **Benchmark** your pipeline with `go test -bench` before production deployment
+- **Fanoutのレイテンシ** = すべてのハンドラーのレイテンシの合計（順次実行）。10msのハンドラーが5つある場合、ログ呼び出しごとに50msかかります。`Pool()` を使ってmax(latencies)に削減してください
+- **Pipeミドルウェア** はレコードごとの関数呼び出しオーバーヘッドを追加します — チェーンは短く保ってください（2〜4ミドルウェア）
+- **slog-formatter** は属性を順次処理します — フォーマッターが多いと複合的に遅くなります。ホットパスの属性フォーマットには、代わりに型に `slog.LogValuer` を実装することを推奨します
+- 本番デプロイ前にパイプラインを `go test -bench` で**ベンチマーク**してください
 
-**Diagnose:** measure per-record allocation and latency of your pipeline and identify which handler in the chain allocates most.
+**診断:** パイプラインのレコードごとのアロケーションとレイテンシを測定し、チェーン内でどのハンドラーが最もアロケーションしているかを特定してください。
 
-## Best Practices
+## ベストプラクティス
 
-1. **Sample first, format second, route last** — this canonical ordering minimizes wasted work and ensures all sinks see clean data
-2. **Use Pipe for cross-cutting concerns** — trace ID injection and PII scrubbing belong in middleware, not per-handler logic
-3. **Test pipelines with `slogmulti.NewHandleInlineHandler`** — assert on records reaching each stage without real sinks
-4. **Use `AttrFromContext`** to propagate request-scoped attributes from HTTP middleware to all handlers
-5. **Prefer Router over Fanout** when handlers need different record subsets — Router evaluates predicates and skips non-matching handlers
+1. **サンプリングを最初に、フォーマットを次に、ルーティングを最後に** — この標準的な順序により無駄な処理が最小化され、すべてのシンクがクリーンなデータを受け取ることが保証されます
+2. **横断的関心事にはPipeを使用する** — トレースIDの注入やPIIスクラビングはミドルウェアに属し、ハンドラーごとのロジックには属しません
+3. **`slogmulti.NewHandleInlineHandler` でパイプラインをテストする** — 実際のシンクなしで各ステージに到達するレコードを検証できます
+4. **`AttrFromContext` を使用して** HTTPミドルウェアからすべてのハンドラーにリクエストスコープの属性を伝播させてください
+5. **ハンドラーが異なるレコードサブセットを必要とする場合はFanoutよりRouterを優先する** — Routerは述語を評価し、マッチしないハンドラーをスキップします
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-observability` skill for slog fundamentals (levels, context, handler setup, migration)
 - → See `samber/cc-skills-golang@golang-error-handling` skill for the log-or-return rule
 - → See `samber/cc-skills-golang@golang-security` skill for PII handling in logs
 - → See `samber/cc-skills-golang@golang-samber-oops` skill for structured error context with `samber/oops`
 
-If you encounter a bug or unexpected behavior in any samber/slog-\* package, open an issue at the relevant repository (e.g., [slog-multi/issues](https://github.com/samber/slog-multi/issues), [slog-sampling/issues](https://github.com/samber/slog-sampling/issues)).
+samber/slog-\* パッケージでバグや予期しない動作に遭遇した場合は、該当するリポジトリでissueを作成してください（例: [slog-multi/issues](https://github.com/samber/slog-multi/issues), [slog-sampling/issues](https://github.com/samber/slog-sampling/issues)）。

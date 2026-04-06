@@ -19,67 +19,67 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Persona:** You are a Go engineer who prefers declarative collection transforms over manual loops. You reach for `lo` to eliminate boilerplate, but you know when the stdlib is enough and when to upgrade to `lop`, `lom`, or `loi`.
 
-# samber/lo — Functional Utilities for Go
+# samber/lo — Go向け関数型ユーティリティ
 
-Lodash-inspired, generics-first utility library with 500+ type-safe helpers for slices, maps, strings, math, channels, tuples, and concurrency. Zero external dependencies. Immutable by default.
+Lodashにインスパイアされた、ジェネリクスファーストのユーティリティライブラリ。スライス、マップ、文字列、数学、チャネル、タプル、並行処理のための500以上の型安全なヘルパー。外部依存なし。デフォルトでイミュータブル。
 
-**Official Resources:**
+**公式リソース:**
 
 - [github.com/samber/lo](https://github.com/samber/lo)
 - [lo.samber.dev](https://lo.samber.dev)
 - [pkg.go.dev/github.com/samber/lo](https://pkg.go.dev/github.com/samber/lo)
 
-This skill is not exhaustive. Please refer to library documentation and code examples for more information. Context7 can help as a discoverability platform.
+このスキルは網羅的ではありません。最新のAPIシグネチャや使用方法については、ライブラリの公式ドキュメントとコード例を参照してください。Context7がディスカバリプラットフォームとして役立ちます。
 
-## Why samber/lo
+## なぜ samber/lo か
 
-Go's stdlib `slices` and `maps` packages cover ~10 basic helpers (sort, contains, keys). Everything else — Map, Filter, Reduce, GroupBy, Chunk, Flatten, Zip — requires manual for-loops. `lo` fills this gap:
+Go標準ライブラリの `slices` と `maps` パッケージは基本的なヘルパー約10個（sort、contains、keys）しかカバーしていない。それ以外のMap、Filter、Reduce、GroupBy、Chunk、Flatten、Zipにはすべて手動のforループが必要。`lo` はこのギャップを埋める:
 
-- **Type-safe generics** — no `interface{}` casts, no reflection, compile-time checking, no interface boxing overhead
-- **Immutable by default** — returns new collections, safe for concurrent reads, easier to reason about
-- **Composable** — functions take and return slices/maps, so they chain without wrapper types
-- **Zero dependencies** — only Go stdlib, no transitive dependency risk
-- **Progressive complexity** — start with `lo`, upgrade to `lop`/`lom`/`loi` only when profiling demands it
-- **Error variants** — most functions have `Err` suffixes (`MapErr`, `FilterErr`, `ReduceErr`) that stop on first error
+- **型安全なジェネリクス** — `interface{}` キャスト不要、リフレクション不要、コンパイル時チェック、インターフェースボクシングのオーバーヘッドなし
+- **デフォルトでイミュータブル** — 新しいコレクションを返すため、並行読み取りに安全で推論が容易
+- **合成可能** — 関数はスライス/マップを受け取り返すため、ラッパー型なしでチェーン可能
+- **依存関係ゼロ** — Go標準ライブラリのみ、推移的依存リスクなし
+- **段階的な複雑さ** — `lo` から始めて、プロファイリングで必要と判明した場合のみ `lop`/`lom`/`loi` にアップグレード
+- **エラーバリアント** — ほとんどの関数に `Err` サフィックス（`MapErr`、`FilterErr`、`ReduceErr`）があり、最初のエラーで停止
 
-## Installation
+## インストール
 
 ```bash
 go get github.com/samber/lo
 ```
 
-| Package | Import | Alias | Go version |
+| パッケージ | インポート | エイリアス | Goバージョン |
 | --- | --- | --- | --- |
-| Core (immutable) | `github.com/samber/lo` | `lo` | 1.18+ |
-| Parallel | `github.com/samber/lo/parallel` | `lop` | 1.18+ |
-| Mutable | `github.com/samber/lo/mutable` | `lom` | 1.18+ |
-| Iterator | `github.com/samber/lo/it` | `loi` | 1.23+ |
-| SIMD (experimental) | `github.com/samber/lo/exp/simd` | — | 1.25+ (amd64 only) |
+| コア（イミュータブル） | `github.com/samber/lo` | `lo` | 1.18+ |
+| 並列 | `github.com/samber/lo/parallel` | `lop` | 1.18+ |
+| ミュータブル | `github.com/samber/lo/mutable` | `lom` | 1.18+ |
+| イテレータ | `github.com/samber/lo/it` | `loi` | 1.23+ |
+| SIMD（実験的） | `github.com/samber/lo/exp/simd` | — | 1.25+（amd64のみ） |
 
-## Choose the Right Package
+## 適切なパッケージの選択
 
-Start with `lo`. Move to other packages only when profiling shows a bottleneck or when lazy evaluation is explicitly needed.
+`lo` から始める。プロファイリングでボトルネックが判明した場合、または遅延評価が明示的に必要な場合のみ他のパッケージに移行する。
 
-| Package | Use when | Trade-off |
+| パッケージ | 使うべき場面 | トレードオフ |
 | --- | --- | --- |
-| `lo` | Default for all transforms | Allocates new collections (safe, predictable) |
-| `lop` | CPU-bound work on large datasets (1000+ items) | Goroutine overhead; not for I/O or small slices |
-| `lom` | Hot path confirmed by `pprof -alloc_objects` | Mutates input — caller must understand side effects |
-| `loi` | Large datasets with chained transforms (Go 1.23+) | Lazy evaluation saves memory but adds iterator complexity |
-| `simd` | Numeric bulk ops after benchmarking (experimental) | Unstable API, may break between versions |
+| `lo` | すべての変換のデフォルト | 新しいコレクションを割り当てる（安全、予測可能） |
+| `lop` | 大規模データセット（1000以上のアイテム）でのCPUバウンド処理 | goroutineオーバーヘッド、I/Oや小さいスライスには不向き |
+| `lom` | `pprof -alloc_objects` で確認されたホットパス | 入力をミューテートする — 呼び出し元は副作用を理解する必要あり |
+| `loi` | チェーン変換を伴う大規模データセット（Go 1.23+） | 遅延評価でメモリを節約するが、イテレータの複雑さが増す |
+| `simd` | ベンチマーク後の数値バルク演算（実験的） | 不安定なAPI、バージョン間で破壊的変更の可能性あり |
 
-**Key rules:**
+**重要なルール:**
 
-- `lop` is for CPU parallelism, not I/O concurrency — for I/O fan-out, use `errgroup` instead
-- `lom` breaks immutability — only use when allocation pressure is measured, never assumed
-- `loi` eliminates intermediate allocations in chains like `Map → Filter → Take` by evaluating lazily
-- For reactive/streaming pipelines over infinite event streams, → see `samber/cc-skills-golang@golang-samber-ro` skill + `samber/ro` package
+- `lop` はCPU並列性のためであり、I/O並行性のためではない — I/Oファンアウトには代わりに `errgroup` を使う
+- `lom` はイミュータビリティを壊す — アロケーションプレッシャーが計測された場合のみ使用し、推測で使わない
+- `loi` は `Map → Filter → Take` のようなチェーンで遅延評価により中間アロケーションを排除する
+- 無限イベントストリーム上のリアクティブ/ストリーミングパイプラインには、→ see `samber/cc-skills-golang@golang-samber-ro` skill + `samber/ro` パッケージ
 
-For detailed package comparison and decision flowchart, see [Package Guide](./references/package-guide.md).
+詳細なパッケージ比較とデシジョンフローチャートについては [Package Guide](./references/package-guide.md) を参照。
 
-## Core Patterns
+## コアパターン
 
-### Transform a slice
+### スライスの変換
 
 ```go
 // ✓ lo — declarative, type-safe
@@ -117,7 +117,7 @@ byStatus := lo.GroupBy(tasks, func(t Task, _ int) string {
 // map[string][]Task{"open": [...], "closed": [...]}
 ```
 
-### Error variant — stop on first error
+### エラーバリアント — 最初のエラーで停止
 
 ```go
 results, err := lo.MapErr(urls, func(url string, _ int) (Response, error) {
@@ -125,56 +125,56 @@ results, err := lo.MapErr(urls, func(url string, _ int) (Response, error) {
 })
 ```
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Why it fails | Fix |
+| 間違い | なぜ問題か | 修正方法 |
 | --- | --- | --- |
-| Using `lo.Contains` when `slices.Contains` exists | Unnecessary dependency for a stdlib-covered op | Prefer `slices.Contains`, `slices.Sort`, `maps.Keys` since Go 1.21+ |
-| Using `lop.Map` on 10 items | Goroutine creation overhead exceeds transform cost | Use `lo.Map` — `lop` benefits start at ~1000+ items for CPU-bound work |
-| Assuming `lo.Filter` modifies the input | `lo` is immutable by default — it returns a new slice | Use `lom.Filter` if you explicitly need in-place mutation |
-| Using `lo.Must` in production code paths | `Must` panics on error — fine in tests and init, dangerous in request handlers | Use the non-Must variant and handle the error |
-| Chaining many eager transforms on large data | Each step allocates an intermediate slice | Use `loi` (lazy iterators) to avoid intermediate allocations |
+| `slices.Contains` が存在するのに `lo.Contains` を使う | 標準ライブラリでカバーされている操作に不要な依存を追加 | Go 1.21+ では `slices.Contains`、`slices.Sort`、`maps.Keys` を優先 |
+| 10アイテムに `lop.Map` を使う | goroutine作成のオーバーヘッドが変換コストを上回る | `lo.Map` を使う — `lop` の利点はCPUバウンド処理で約1000以上のアイテムから |
+| `lo.Filter` が入力を変更すると想定する | `lo` はデフォルトでイミュータブル — 新しいスライスを返す | インプレースミューテーションが明示的に必要な場合は `lom.Filter` を使う |
+| 本番コードパスで `lo.Must` を使う | `Must` はエラー時にpanicする — テストとinitでは問題ないが、リクエストハンドラでは危険 | Must以外のバリアントを使いエラーをハンドリングする |
+| 大規模データでイーガーな変換を多数チェーンする | 各ステップが中間スライスを割り当てる | `loi`（遅延イテレータ）を使い中間アロケーションを回避する |
 
-## Best Practices
+## ベストプラクティス
 
-1. **Prefer stdlib when available** — `slices.Contains`, `slices.Sort`, `maps.Keys` carry no dependency. Use `lo` for transforms the stdlib doesn't offer (Map, Filter, Reduce, GroupBy, Chunk, Flatten)
-2. **Compose lo functions** — chain `lo.Filter` → `lo.Map` → `lo.GroupBy` instead of writing nested loops. Each function is a building block
-3. **Profile before optimizing** — switch from `lo` to `lom`/`lop` only after `go tool pprof` confirms allocation or CPU as the bottleneck
-4. **Use error variants** — prefer `lo.MapErr` over `lo.Map` + manual error collection. Error variants stop early and propagate cleanly
-5. **Use `lo.Must` only in tests and init** — in production, handle errors explicitly
+1. **標準ライブラリが利用可能な場合はそちらを優先** — `slices.Contains`、`slices.Sort`、`maps.Keys` は依存なし。標準ライブラリにない変換（Map、Filter、Reduce、GroupBy、Chunk、Flatten）には `lo` を使う
+2. **lo関数を合成する** — ネストしたループを書く代わりに `lo.Filter` → `lo.Map` → `lo.GroupBy` をチェーンする。各関数はビルディングブロック
+3. **最適化前にプロファイルする** — `go tool pprof` でアロケーションまたはCPUがボトルネックと確認された後のみ `lo` から `lom`/`lop` に切り替える
+4. **エラーバリアントを使う** — `lo.Map` + 手動エラー収集よりも `lo.MapErr` を優先する。エラーバリアントは早期停止しクリーンに伝播する
+5. **`lo.Must` はテストとinitのみで使う** — 本番ではエラーを明示的にハンドリングする
 
-## Quick Reference
+## クイックリファレンス
 
-| Function | What it does |
+| 関数 | 機能 |
 | --- | --- |
-| `lo.Map` | Transform each element |
-| `lo.Filter` / `lo.Reject` | Keep / remove elements matching predicate |
-| `lo.Reduce` | Fold elements into a single value |
-| `lo.ForEach` | Side-effect iteration |
-| `lo.GroupBy` | Group elements by key |
-| `lo.Chunk` | Split into fixed-size batches |
-| `lo.Flatten` | Flatten nested slices one level |
-| `lo.Uniq` / `lo.UniqBy` | Remove duplicates |
-| `lo.Find` / `lo.FindOrElse` | First match or default |
-| `lo.Contains` / `lo.Every` / `lo.Some` | Membership tests |
-| `lo.Keys` / `lo.Values` | Extract map keys or values |
-| `lo.PickBy` / `lo.OmitBy` | Filter map entries |
-| `lo.Zip2` / `lo.Unzip2` | Pair/unpair two slices |
-| `lo.Range` / `lo.RangeFrom` | Generate number sequences |
-| `lo.Ternary` / `lo.If` | Inline conditionals |
-| `lo.ToPtr` / `lo.FromPtr` | Pointer helpers |
-| `lo.Must` / `lo.Try` | Panic-on-error / recover-as-bool |
-| `lo.Async` / `lo.Attempt` | Async execution / retry with backoff |
-| `lo.Debounce` / `lo.Throttle` | Rate limiting |
-| `lo.ChannelDispatcher` | Fan-out to multiple channels |
+| `lo.Map` | 各要素を変換 |
+| `lo.Filter` / `lo.Reject` | 述語に一致する要素を保持/除外 |
+| `lo.Reduce` | 要素を単一の値に畳み込む |
+| `lo.ForEach` | 副作用付きイテレーション |
+| `lo.GroupBy` | キーで要素をグループ化 |
+| `lo.Chunk` | 固定サイズのバッチに分割 |
+| `lo.Flatten` | ネストしたスライスを1レベル平坦化 |
+| `lo.Uniq` / `lo.UniqBy` | 重複を除去 |
+| `lo.Find` / `lo.FindOrElse` | 最初の一致またはデフォルト |
+| `lo.Contains` / `lo.Every` / `lo.Some` | メンバーシップテスト |
+| `lo.Keys` / `lo.Values` | マップのキーまたは値を抽出 |
+| `lo.PickBy` / `lo.OmitBy` | マップエントリをフィルタ |
+| `lo.Zip2` / `lo.Unzip2` | 2つのスライスをペア/アンペア |
+| `lo.Range` / `lo.RangeFrom` | 数列を生成 |
+| `lo.Ternary` / `lo.If` | インライン条件式 |
+| `lo.ToPtr` / `lo.FromPtr` | ポインタヘルパー |
+| `lo.Must` / `lo.Try` | エラー時panic / boolとしてリカバー |
+| `lo.Async` / `lo.Attempt` | 非同期実行 / バックオフ付きリトライ |
+| `lo.Debounce` / `lo.Throttle` | レート制限 |
+| `lo.ChannelDispatcher` | 複数チャネルへのファンアウト |
 
-For the complete function catalog (300+ functions), see [API Reference](./references/api-reference.md).
+完全な関数カタログ（300以上の関数）については [API Reference](./references/api-reference.md) を参照。
 
-For composition patterns, stdlib interop, and iterator pipelines, see [Advanced Patterns](./references/advanced-patterns.md).
+合成パターン、標準ライブラリとの相互運用、イテレータパイプラインについては [Advanced Patterns](./references/advanced-patterns.md) を参照。
 
-If you encounter a bug or unexpected behavior in samber/lo, open an issue at [github.com/samber/lo/issues](https://github.com/samber/lo/issues).
+samber/lo でバグや予期しない動作に遭遇した場合は、[github.com/samber/lo/issues](https://github.com/samber/lo/issues) で Issue を作成してください。
 
-## Cross-References
+## 相互参照
 
 - → See `samber/cc-skills-golang@golang-samber-ro` skill for reactive/streaming pipelines over infinite event streams (`samber/ro` package)
 - → See `samber/cc-skills-golang@golang-samber-mo` skill for monadic types (Option, Result, Either) that compose with lo transforms

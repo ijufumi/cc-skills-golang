@@ -19,31 +19,31 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 **Persona:** You are a defensive Go engineer. You treat every untested assumption about nil, capacity, and numeric range as a latent crash waiting to happen.
 
-# Go Safety: Correctness & Defensive Coding
+# Go 安全性: 正確性と防御的コーディング
 
-Prevents programmer mistakes — bugs, panics, and silent data corruption in normal (non-adversarial) code. Security handles attackers; safety handles ourselves.
+プログラマのミスを防止する — 通常の（非悪意的な）コードにおけるバグ、panic、サイレントなデータ破損。セキュリティは攻撃者に対処し、安全性は自分たち自身に対処する。
 
-## Best Practices Summary
+## ベストプラクティスまとめ
 
-1. **Prefer generics over `any`** when the type set is known — compiler catches mismatches instead of runtime panics
-2. **Always use comma-ok for type assertions** — bare assertions panic on mismatch
-3. **Typed nil pointer in an interface is not `== nil`** — the type descriptor makes it non-nil
-4. **Writing to a nil map panics** — always initialize before use
-5. **`append` may reuse the backing array** — both slices share memory if capacity allows, silently corrupting each other
-6. **Return defensive copies** from exported functions — otherwise callers mutate your internals
-7. **`defer` runs at function exit, not loop iteration** — extract loop body to a function
-8. **Integer conversions truncate silently** — `int64` to `int32` wraps without error
-9. **Float arithmetic is not exact** — use epsilon comparison or `math/big`
-10. **Design useful zero values** — nil map fields panic on first write; use lazy init
-11. **Use `sync.Once` for lazy init** — guarantees exactly-once even under concurrency
+1. **型のセットが既知の場合はSHOULDで `any` よりジェネリクスを優先** — コンパイラがランタイムpanicの代わりにミスマッチを検出
+2. **型アサーションには常にカンマokを使用** — 素のアサーションはミスマッチ時にpanicする
+3. **インターフェース内の型付きnilポインタは `== nil` ではない** — 型記述子がnon-nilにする
+4. **nilマップへの書き込みはpanicする** — 使用前に必ず初期化
+5. **`append` はバッキング配列を再利用する可能性がある** — 容量が許せば両方のスライスがメモリを共有し、互いをサイレントに破損
+6. **エクスポートされた関数からは防御的コピーを返す** — そうしないと呼び出し側が内部を変更する
+7. **`defer` はループの反復ではなく関数の終了時に実行される** — ループ本体を関数に抽出
+8. **整数変換はサイレントに切り捨てる** — `int64` から `int32` はエラーなしでラップする
+9. **浮動小数点演算は正確ではない** — イプシロン比較または `math/big` を使用
+10. **有用なゼロ値を設計する** — nilマップフィールドは最初の書き込みでpanic。遅延初期化を使用
+11. **遅延初期化には `sync.Once` を使用** — 並行状況下でも正確に一度だけを保証
 
-## Nil Safety
+## Nil安全性
 
-Nil-related panics are the most common crash in Go.
+Nil関連のpanicはGoで最も一般的なクラッシュである。
 
-### The nil interface trap
+### nilインターフェーストラップ
 
-Interfaces store (type, value). An interface is `nil` only when both are nil. Returning a typed nil pointer sets the type descriptor, making it non-nil:
+インターフェースは(type, value)を格納する。インターフェースは両方がnilの場合のみ `nil` になる。型付きnilポインタを返すと型記述子が設定され、non-nilになる:
 
 ```go
 // ✗ Dangerous — interface{type: *MyHandler, value: nil} is not == nil
@@ -64,13 +64,13 @@ func getHandler() http.Handler {
 }
 ```
 
-### Nil map, slice, and channel behavior
+### nilマップ、スライス、チャネルの動作
 
-| Type | Read from nil | Write to nil | Len/Cap of nil | Range over nil |
+| 型 | nilからの読み取り | nilへの書き込み | nilのLen/Cap | nilに対するRange |
 | --- | --- | --- | --- | --- |
-| Map | Zero value | **panic** | 0 | 0 iterations |
-| Slice | **panic** (index) | **panic** (index) | 0 | 0 iterations |
-| Channel | Blocks forever | Blocks forever | 0 | Blocks forever |
+| Map | ゼロ値 | **panic** | 0 | 0回の反復 |
+| Slice | **panic**（インデックス） | **panic**（インデックス） | 0 | 0回の反復 |
+| Channel | 永久にブロック | 永久にブロック | 0 | 永久にブロック |
 
 ```go
 // ✗ Bad — nil map panics on write
@@ -86,13 +86,13 @@ func (r *Registry) Add(name string, val int) {
 }
 ```
 
-See **[Nil Safety Deep Dive](./references/nil-safety.md)** for nil receivers, nil in generics, and nil interface performance.
+nilレシーバー、ジェネリクスにおけるnil、nilインターフェースのパフォーマンスについては **[Nil Safety Deep Dive](./references/nil-safety.md)** を参照。
 
-## Slice & Map Safety
+## スライスとマップの安全性
 
-### Slice aliasing — the append trap
+### スライスエイリアシング — appendトラップ
 
-`append` reuses the backing array if capacity allows. Both slices then share memory:
+`append` は容量が許せばバッキング配列を再利用する。両方のスライスがメモリを共有する:
 
 ```go
 // ✗ Dangerous — a and b share backing array
@@ -104,15 +104,15 @@ b[0] = 99 // also modifies a[0]
 b := append(a[:len(a):len(a)], 4)
 ```
 
-### Map concurrent access
+### マップの並行アクセス
 
-Maps MUST NOT be accessed concurrently — → see `samber/cc-skills-golang@golang-concurrency` for sync primitives.
+マップはMUSTで並行アクセスしてはならない — → see `samber/cc-skills-golang@golang-concurrency` for sync primitives.
 
-See **[Slice and Map Deep Dive](./references/slice-map-safety.md)** for range pitfalls, subslice memory retention, and `slices.Clone`/`maps.Clone`.
+rangeの落とし穴、サブスライスのメモリ保持、`slices.Clone`/`maps.Clone` については **[Slice and Map Deep Dive](./references/slice-map-safety.md)** を参照。
 
-## Numeric Safety
+## 数値の安全性
 
-### Implicit type conversions truncate silently
+### 暗黙の型変換はサイレントに切り捨てる
 
 ```go
 // ✗ Bad — silently wraps around if val > math.MaxInt32 (3B becomes -1.29B)
@@ -126,7 +126,7 @@ if val > math.MaxInt32 || val < math.MinInt32 {
 i32 := int32(val)
 ```
 
-### Float comparison
+### 浮動小数点比較
 
 ```go
 // ✗ Bad — floating point arithmetic is not exact
@@ -137,9 +137,9 @@ const epsilon = 1e-9
 math.Abs((0.1+0.2)-0.3) < epsilon // true
 ```
 
-### Division by zero
+### ゼロ除算
 
-Integer division by zero panics. Float division by zero produces `+Inf`, `-Inf`, or `NaN`.
+整数のゼロ除算はpanicする。浮動小数点のゼロ除算は `+Inf`、`-Inf`、または `NaN` を生成する。
 
 ```go
 func avg(total, count int) (int, error) {
@@ -150,13 +150,13 @@ func avg(total, count int) (int, error) {
 }
 ```
 
-For integer overflow as a security vulnerability, see the `samber/cc-skills-golang@golang-security` skill section.
+セキュリティ脆弱性としての整数オーバーフローについては `samber/cc-skills-golang@golang-security` スキルのセクションを参照。
 
-## Resource Safety
+## リソースの安全性
 
-### defer in loops — resource accumulation
+### ループ内のdefer — リソースの蓄積
 
-`defer` runs at _function_ exit, not loop iteration. Resources accumulate until the function returns:
+`defer` はループの反復ではなく_関数_の終了時に実行される。関数が返るまでリソースが蓄積する:
 
 ```go
 // ✗ Bad — all files stay open until function returns
@@ -178,15 +178,15 @@ func processOne(path string) error {
 }
 ```
 
-### Goroutine leaks
+### ゴルーチンリーク
 
 → See `samber/cc-skills-golang@golang-concurrency` for goroutine lifecycle and leak prevention.
 
-## Immutability & Defensive Copying
+## イミュータビリティと防御的コピー
 
-Exported functions returning slices/maps SHOULD return defensive copies.
+スライス/マップを返すエクスポートされた関数はSHOULDで防御的コピーを返す。
 
-### Protecting struct internals
+### 構造体の内部を保護する
 
 ```go
 // ✗ Bad — exported slice field, anyone can mutate
@@ -204,11 +204,11 @@ func (c *Config) Hosts() []string {
 }
 ```
 
-## Initialization Safety
+## 初期化の安全性
 
-### Zero-value design
+### ゼロ値設計
 
-Design types so `var x MyType` is safe — prevents "forgot to initialize" bugs:
+`var x MyType` が安全になるように型を設計する — 「初期化忘れ」バグを防止:
 
 ```go
 var mu sync.Mutex   // ✓ usable at zero value
@@ -218,7 +218,7 @@ var buf bytes.Buffer // ✓ usable at zero value
 type Cache struct { data map[string]any }
 ```
 
-### sync.Once for lazy initialization
+### 遅延初期化のための sync.Once
 
 ```go
 type DB struct {
@@ -234,15 +234,15 @@ func (db *DB) connection() *sql.DB {
 }
 ```
 
-### init() function pitfalls
+### init()関数の落とし穴
 
 → See `samber/cc-skills-golang@golang-design-patterns` for why init() should be avoided in favor of explicit constructors.
 
-## Enforce with Linters
+## リンターによる強制
 
-Many safety pitfalls are caught automatically by linters: `errcheck`, `forcetypeassert`, `nilerr`, `govet`, `staticcheck`. See the `samber/cc-skills-golang@golang-linter` skill for configuration and usage.
+多くの安全性の落とし穴はリンターによって自動的に検出される: `errcheck`、`forcetypeassert`、`nilerr`、`govet`、`staticcheck`。設定と使用方法は `samber/cc-skills-golang@golang-linter` スキルを参照。
 
-## Cross-References
+## クロスリファレンス
 
 - → See `samber/cc-skills-golang@golang-concurrency` skill for concurrent access patterns and sync primitives
 - → See `samber/cc-skills-golang@golang-data-structures` skill for slice/map internals, capacity growth, and container/ packages
@@ -250,18 +250,18 @@ Many safety pitfalls are caught automatically by linters: `errcheck`, `forcetype
 - → See `samber/cc-skills-golang@golang-security` skill for security-relevant safety issues (memory safety, integer overflow)
 - → See `samber/cc-skills-golang@golang-troubleshooting` skill for debugging panics and race conditions
 
-## Common Mistakes
+## よくある間違い
 
-| Mistake | Fix |
+| 間違い | 修正 |
 | --- | --- |
-| Bare type assertion `v := x.(T)` | Panics on type mismatch, crashing the program. Use `v, ok := x.(T)` to handle gracefully |
-| Returning typed nil in interface function | Interface holds (type, nil) which is != nil. Return untyped `nil` for the nil case |
-| Writing to a nil map | Nil maps have no backing storage — write panics. Initialize with `make(map[K]V)` or lazy-init |
-| Assuming `append` always copies | If capacity allows, both slices share the backing array. Use `s[:len(s):len(s)]` to force a copy |
-| `defer` in a loop | `defer` runs at function exit, not loop iteration — resources accumulate. Extract body to a separate function |
-| `int64` to `int32` without bounds check | Values wrap silently (3B → -1.29B). Check against `math.MaxInt32`/`math.MinInt32` first |
-| Comparing floats with `==` | IEEE 754 representation is not exact (`0.1+0.2 != 0.3`). Use `math.Abs(a-b) < epsilon` |
-| Integer division without zero check | Integer division by zero panics. Guard with `if divisor == 0` before dividing |
-| Returning internal slice/map reference | Callers can mutate your struct's internals through the shared backing array. Return a defensive copy |
-| Multiple `init()` with ordering assumptions | `init()` execution order across files is unspecified. → See `samber/cc-skills-golang@golang-design-patterns` — use explicit constructors |
-| Blocking forever on nil channel | Nil channels block on both send and receive. Always initialize before use |
+| 素の型アサーション `v := x.(T)` | 型ミスマッチ時にpanicし、プログラムがクラッシュ。`v, ok := x.(T)` で優雅に処理 |
+| インターフェース関数で型付きnilを返す | インターフェースは(type, nil)を保持し、!= nilになる。nilの場合は型なし `nil` を返す |
+| nilマップへの書き込み | nilマップにはバッキングストレージがない — 書き込みでpanic。`make(map[K]V)` または遅延初期化で初期化 |
+| `append` が常にコピーすると仮定 | 容量が許せば、両方のスライスがバッキング配列を共有。`s[:len(s):len(s)]` でコピーを強制 |
+| ループ内の `defer` | `defer` はループの反復ではなく関数終了時に実行 — リソースが蓄積。本体を別の関数に抽出 |
+| 境界チェックなしの `int64` から `int32` | 値がサイレントにラップ（3B → -1.29B）。先に `math.MaxInt32`/`math.MinInt32` と比較 |
+| `==` での浮動小数点比較 | IEEE 754表現は正確ではない（`0.1+0.2 != 0.3`）。`math.Abs(a-b) < epsilon` を使用 |
+| ゼロチェックなしの整数除算 | 整数のゼロ除算はpanic。除算前に `if divisor == 0` でガード |
+| 内部スライス/マップ参照の返却 | 共有バッキング配列を通じて呼び出し側が構造体の内部を変更可能。防御的コピーを返す |
+| 順序を仮定した複数の `init()` | ファイル間の `init()` 実行順序は未規定。→ See `samber/cc-skills-golang@golang-design-patterns` — 明示的コンストラクタを使用 |
+| nilチャネルでの永久ブロック | nilチャネルは送信と受信の両方でブロックする。使用前に必ず初期化 |

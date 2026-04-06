@@ -34,27 +34,27 @@ allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(g
 
 > **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-testing` skill takes precedence.
 
-# Go Testing Best Practices
+# Go テストのベストプラクティス
 
-This skill guides the creation of production-ready tests for Go applications. Follow these principles to write maintainable, fast, and reliable tests.
+このスキルはGoアプリケーションの本番品質のテスト作成をガイドする。保守性が高く、高速で信頼性のあるテストを書くために以下の原則に従う。
 
-## Best Practices Summary
+## ベストプラクティスまとめ
 
-1. Table-driven tests MUST use named subtests -- every test case needs a `name` field passed to `t.Run`
-2. Integration tests MUST use build tags (`//go:build integration`) to separate from unit tests
-3. Tests MUST NOT depend on execution order -- each test MUST be independently runnable
-4. Independent tests SHOULD use `t.Parallel()` when possible
-5. NEVER test implementation details -- test observable behavior and public API contracts
-6. Packages with goroutines SHOULD use `goleak.VerifyTestMain` in `TestMain` to detect goroutine leaks
-7. Use testify as helpers, not a replacement for standard library
-8. Mock interfaces, not concrete types
-9. Keep unit tests fast (< 1ms), use build tags for integration tests
-10. Run tests with race detection in CI
-11. Include examples as executable documentation
+1. テーブル駆動テストはMUSTで名前付きサブテストを使用する -- すべてのテストケースに `t.Run` に渡す `name` フィールドが必要
+2. 統合テストはMUSTでビルドタグ（`//go:build integration`）を使用してユニットテストと分離する
+3. テストはMUSTで実行順序に依存しない -- 各テストはMUSTで独立して実行可能でなければならない
+4. 独立したテストはSHOULDで可能な限り `t.Parallel()` を使用する
+5. 実装の詳細をテストしない -- 観測可能な振る舞いと公開APIの契約をテストする
+6. ゴルーチンを持つパッケージはSHOULDで `TestMain` 内の `goleak.VerifyTestMain` を使用してゴルーチンリークを検出する
+7. testifyは標準ライブラリの代替ではなく、ヘルパーとして使用する
+8. 具象型ではなくインターフェースをモックする
+9. ユニットテストは高速に保ち（< 1ms）、統合テストにはビルドタグを使用する
+10. CIではレースディテクション付きでテストを実行する
+11. 実行可能なドキュメントとしてExampleを含める
 
-## Test Structure and Organization
+## テストの構造と構成
 
-### File Conventions
+### ファイル規約
 
 ```go
 // package_test.go - tests in same package (white-box, access unexported)
@@ -64,7 +64,7 @@ package mypackage
 package mypackage_test
 ```
 
-### Naming Conventions
+### 命名規約
 
 ```go
 func TestAdd(t *testing.T) { ... }              // function test
@@ -73,9 +73,9 @@ func BenchmarkAdd(b *testing.B) { ... }          // benchmark
 func ExampleAdd() { ... }                        // example
 ```
 
-## Table-Driven Tests
+## テーブル駆動テスト
 
-Table-driven tests are the idiomatic Go way to test multiple scenarios. Always name each test case.
+テーブル駆動テストは複数のシナリオをテストするGoの慣用的な方法である。各テストケースには必ず名前を付ける。
 
 ```go
 func TestCalculatePrice(t *testing.T) {
@@ -117,17 +117,17 @@ func TestCalculatePrice(t *testing.T) {
 }
 ```
 
-## Unit Tests
+## ユニットテスト
 
-Unit tests should be fast (< 1ms), isolated (no external dependencies), and deterministic.
+ユニットテストは高速（< 1ms）、独立（外部依存なし）、決定論的であるべき。
 
-## Testing HTTP Handlers
+## HTTPハンドラのテスト
 
-Use `httptest` for handler tests with table-driven patterns. See [HTTP Testing](./references/http-testing.md) for examples with request/response bodies, query parameters, headers, and status code assertions.
+ハンドラテストにはテーブル駆動パターンで `httptest` を使用する。リクエスト/レスポンスボディ、クエリパラメータ、ヘッダー、ステータスコードアサーションの例は [HTTP Testing](./references/http-testing.md) を参照。
 
-## Goroutine Leak Detection with goleak
+## goleakによるゴルーチンリーク検出
 
-Use `go.uber.org/goleak` to detect leaking goroutines, especially for concurrent code:
+特に並行コードでリークしているゴルーチンを検出するために `go.uber.org/goleak` を使用する:
 
 ```go
 import (
@@ -140,7 +140,7 @@ func TestMain(m *testing.M) {
 }
 ```
 
-To exclude specific goroutine stacks (for known leaks or library goroutines):
+特定のゴルーチンスタックを除外する場合（既知のリークやライブラリのゴルーチン）:
 
 ```go
 func TestMain(m *testing.M) {
@@ -150,7 +150,7 @@ func TestMain(m *testing.M) {
 }
 ```
 
-Or per-test:
+またはテスト単位で:
 
 ```go
 func TestWorkerPool(t *testing.T) {
@@ -159,17 +159,17 @@ func TestWorkerPool(t *testing.T) {
 }
 ```
 
-## testing/synctest for Deterministic Goroutine Testing
+## 決定論的ゴルーチンテストのための testing/synctest
 
-> **Experimental:** `testing/synctest` is not yet covered by Go's compatibility guarantee. Its API may change in future releases. For stable alternatives, use `clockwork` (see [Mocking](./references/mocking.md)).
+> **実験的:** `testing/synctest` はまだGoの互換性保証の対象外。APIは将来のリリースで変更される可能性がある。安定した代替手段として `clockwork` を使用（[Mocking](./references/mocking.md) を参照）。
 
-`testing/synctest` (Go 1.24+) provides deterministic time for concurrent code testing. Time advances only when all goroutines are blocked, making ordering predictable.
+`testing/synctest`（Go 1.24+）は並行コードテストに決定論的な時間を提供する。すべてのゴルーチンがブロックされた場合にのみ時間が進み、順序が予測可能になる。
 
-When to use `synctest` instead of real time:
+実際の時間の代わりに `synctest` を使用する場合:
 
-- Testing concurrent code with time-based operations (time.Sleep, time.After, time.Ticker)
-- When race conditions need to be reproducible
-- When tests are flaky due to timing issues
+- 時間ベースの操作（time.Sleep、time.After、time.Ticker）を含む並行コードのテスト
+- レースコンディションを再現可能にする必要がある場合
+- タイミングの問題でテストがフレーキーな場合
 
 ```go
 import (
@@ -199,22 +199,22 @@ func TestChannelTimeout(t *testing.T) {
 }
 ```
 
-Key differences in `synctest`:
+`synctest` の主な違い:
 
-- `time.Sleep` advances synthetic time instantly when the goroutine blocks
-- `time.After` fires when synthetic time reaches the duration
-- All goroutines run to blocking points before time advances
-- Test execution is deterministic and repeatable
+- `time.Sleep` はゴルーチンがブロックした時点で合成時間を即座に進める
+- `time.After` は合成時間が期間に達した時点で発火する
+- すべてのゴルーチンが時間が進む前にブロッキングポイントまで実行される
+- テスト実行は決定論的で再現可能
 
-## Test Timeouts
+## テストタイムアウト
 
-For tests that may hang, use a timeout helper that panics with caller location. See [Helpers](./references/helpers.md).
+ハングする可能性のあるテストには、呼び出し元の位置情報付きでpanicするタイムアウトヘルパーを使用する。[Helpers](./references/helpers.md) を参照。
 
-## Benchmarks
+## ベンチマーク
 
 → See `samber/cc-skills-golang@golang-benchmark` skill for advanced benchmarking: `b.Loop()` (Go 1.24+), `benchstat`, profiling from benchmarks, and CI regression detection.
 
-Write benchmarks to measure performance and detect regressions:
+パフォーマンスを測定しリグレッションを検出するためにベンチマークを書く:
 
 ```go
 func BenchmarkStringConcatenation(b *testing.B) {
@@ -237,7 +237,7 @@ func BenchmarkStringConcatenation(b *testing.B) {
 }
 ```
 
-Benchmarks with different input sizes:
+異なる入力サイズでのベンチマーク:
 
 ```go
 func BenchmarkFibonacci(b *testing.B) {
@@ -253,9 +253,9 @@ func BenchmarkFibonacci(b *testing.B) {
 }
 ```
 
-## Parallel Tests
+## 並列テスト
 
-Use `t.Parallel()` to run tests concurrently:
+`t.Parallel()` を使用してテストを同時実行する:
 
 ```go
 func TestParallelOperations(t *testing.T) {
@@ -279,9 +279,9 @@ func TestParallelOperations(t *testing.T) {
 }
 ```
 
-## Fuzzing
+## ファジング
 
-Use fuzzing to find edge cases and bugs:
+ファジングを使用してエッジケースやバグを発見する:
 
 ```go
 func FuzzReverse(f *testing.F) {
@@ -299,9 +299,9 @@ func FuzzReverse(f *testing.F) {
 }
 ```
 
-## Examples as Documentation
+## ドキュメントとしてのExample
 
-Examples are executable documentation verified by `go test`:
+Exampleは `go test` で検証される実行可能なドキュメントである:
 
 ```go
 func ExampleCalculatePrice() {
@@ -317,7 +317,7 @@ func ExampleCalculatePrice_singleItem() {
 }
 ```
 
-## Code Coverage
+## コードカバレッジ
 
 ```bash
 # Generate coverage file
@@ -333,9 +333,9 @@ go tool cover -func=coverage.out
 go tool cover -func=coverage.out | grep total
 ```
 
-## Integration Tests
+## 統合テスト
 
-Use build tags to separate integration tests from unit tests:
+ビルドタグを使用して統合テストをユニットテストから分離する:
 
 ```go
 //go:build integration
@@ -353,25 +353,25 @@ func TestDatabaseIntegration(t *testing.T) {
 }
 ```
 
-Run integration tests separately:
+統合テストを個別に実行する:
 
 ```bash
 go test -tags=integration ./...
 ```
 
-For Docker Compose fixtures, SQL schemas, and integration test suites, see [Integration Testing](./references/integration-testing.md).
+Docker Composeフィクスチャ、SQLスキーマ、統合テストスイートについては [Integration Testing](./references/integration-testing.md) を参照。
 
-## Mocking
+## モッキング
 
-Mock interfaces, not concrete types. Define interfaces where consumed, then create mock implementations.
+具象型ではなくインターフェースをモックする。インターフェースは使用する側で定義し、モック実装を作成する。
 
-For mock patterns, test fixtures, and time mocking, see [Mocking](./references/mocking.md).
+モックパターン、テストフィクスチャ、時間のモッキングについては [Mocking](./references/mocking.md) を参照。
 
-## Enforce with Linters
+## リンターによる強制
 
-Many test best practices are enforced automatically by linters: `thelper`, `paralleltest`, `testifylint`. See the `samber/cc-skills-golang@golang-linter` skill for configuration and usage.
+多くのテストベストプラクティスはリンターで自動的に強制される: `thelper`、`paralleltest`、`testifylint`。設定と使用方法は `samber/cc-skills-golang@golang-linter` スキルを参照。
 
-## Cross-References
+## クロスリファレンス
 
 - -> See `samber/cc-skills-golang@golang-stretchr-testify` skill for detailed testify API (assert, require, mock, suite)
 - -> See `samber/cc-skills-golang@golang-database` skill (testing.md) for database integration test patterns
@@ -379,7 +379,7 @@ Many test best practices are enforced automatically by linters: `thelper`, `para
 - -> See `samber/cc-skills-golang@golang-continuous-integration` skill for CI test configuration and GitHub Actions workflows
 - -> See `samber/cc-skills-golang@golang-linter` skill for testifylint and paralleltest configuration
 
-## Quick Reference
+## クイックリファレンス
 
 ```bash
 go test ./...                          # all tests
