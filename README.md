@@ -205,6 +205,12 @@ These skills are designed as **atomic, cross-referencing units**. A skill may re
 
 See [EVALUATIONS.md](./EVALUATIONS.md) for the full per-skill breakdown.
 
+## 🕵  Use in CI for AI-driven reviews
+
+Add AI agents as PR reviewers alongside traditional static analysis. When configured with this skill plugin, the agent applies the relevant Go skills per review area — catching architectural drift, logic bugs, and concurrency hazards that linters cannot detect.
+
+See [GOLANG-AI-DRIVEN-REVIEW.md](./GOLANG-AI-DRIVEN-REVIEW.md) for full setup instructions (Claude Code Action and GitHub Copilot).
+
 ## 🎯 Tuning Skill Triggers
 
 If a skill triggers too often or not often enough, please [open an issue](https://github.com/samber/cc-skills-golang/issues) suggesting a description change. The `description` field in SKILL.md frontmatter is the primary triggering mechanism — small wording adjustments can significantly improve trigger accuracy. Some `SKILL.md` files might have a `When to use` section which is another level of exclusion. Finally, `SKILL.md` files are an entrypoint for lazy loading references with deep knowledge located in `references/`.
