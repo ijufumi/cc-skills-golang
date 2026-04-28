@@ -83,7 +83,7 @@ func TestWiring_MissingDependency(t *testing.T) {
 }
 ```
 
-Use `fx.New` (not `fxtest.New`) when you *expect* the wiring to fail — `fxtest.New` would call `t.Fatal`.
+Use `fx.New` (not `fxtest.New`) when you _expect_ the wiring to fail — `fxtest.New` would call `t.Fatal`.
 
 ## Validating the production graph in CI
 
@@ -123,7 +123,7 @@ require.NotEmpty(t, recorded.FilterMessage("OnStart hook executed").All())
 
 ## Testing a lifecycle hook in isolation
 
-If a constructor returns a value *and* registers a hook, you often want to test both halves:
+If a constructor returns a value _and_ registers a hook, you often want to test both halves:
 
 ```go
 func TestNewServer_OnStartFailsBindError(t *testing.T) {

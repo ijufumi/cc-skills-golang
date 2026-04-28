@@ -125,6 +125,7 @@ Parse-32   12.00 ± 0%   6.000 ± 0%  -50.00% (p=0.000 n=10)
 ```
 
 **Rules:**
+
 - Only include benchmarks directly affected by the change — strip unrelated rows
 - Never paste results with `~` (no statistical significance) — the improvement cannot be claimed
 - Include the hardware context line (`goos/goarch/cpu`) so results are reproducible
@@ -156,7 +157,7 @@ For full pprof CLI reference (all commands, non-interactive mode, profile interp
 
 - **[benchstat Reference](./references/benchstat.md)** — Statistical comparison of benchmark runs with rigorous confidence intervals and p-value tests. Covers output reading, filtering old benchmarks, interleaving results for visual clarity, and regression detection. Use this when you need to prove a change made a meaningful performance difference, not just a lucky run.
 
-- **[Trace Reference](./references/trace.md)** — Execution tracer for understanding *when* and *why* code runs. Visualizes goroutine scheduling, garbage collection phases, network blocking, and custom span annotations. Use this when pprof (which shows *where* CPU goes) isn't enough — you need to see the timeline of what happened.
+- **[Trace Reference](./references/trace.md)** — Execution tracer for understanding _when_ and _why_ code runs. Visualizes goroutine scheduling, garbage collection phases, network blocking, and custom span annotations. Use this when pprof (which shows _where_ CPU goes) isn't enough — you need to see the timeline of what happened.
 
 - **[Diagnostic Tools](./references/tools.md)** — Quick reference for ancillary tools: fieldalignment (struct padding waste), GODEBUG (runtime logging flags), fgprof (frame graph profiles), race detector (concurrency bugs), and others. Use this when you have a specific symptom and need a focused diagnostic — don't reach for pprof if a simpler tool already answers your question.
 

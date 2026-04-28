@@ -4,11 +4,11 @@ Detail topics referenced from `SKILL.md`. Each section is self-contained.
 
 ## fx.Supply, fx.Replace, fx.Decorate
 
-| Option                  | Purpose                                                                       |
-| ----------------------- | ----------------------------------------------------------------------------- |
-| `fx.Supply(values...)`  | Provide pre-built values directly. Use for config, secrets, parsed flags.     |
-| `fx.Replace(values...)` | Replace an already-provided type. Most useful in tests: swap real for fake.   |
-| `fx.Decorate(fn)`       | Wrap or modify an existing value. Scoped to the surrounding module.           |
+| Option | Purpose |
+| --- | --- |
+| `fx.Supply(values...)` | Provide pre-built values directly. Use for config, secrets, parsed flags. |
+| `fx.Replace(values...)` | Replace an already-provided type. Most useful in tests: swap real for fake. |
+| `fx.Decorate(fn)` | Wrap or modify an existing value. Scoped to the surrounding module. |
 
 ```go
 fx.Supply(cfg, secret)
@@ -79,57 +79,57 @@ if err := app.Stop(stopCtx); err != nil {
 
 ### Application
 
-| Function                     | Purpose                                                  |
-| ---------------------------- | -------------------------------------------------------- |
-| `fx.New(opts...)`            | Build the application graph                              |
-| `app.Run()`                  | Start, wait for signal, Stop — single call               |
-| `app.Start(ctx)`             | Run OnStart hooks in dependency order                    |
-| `app.Stop(ctx)`              | Run OnStop hooks in reverse order                        |
-| `app.Done()`                 | Channel that closes on SIGINT/SIGTERM                    |
-| `app.Err()`                  | Wiring error from `fx.New` (validate without starting)   |
+| Function          | Purpose                                                |
+| ----------------- | ------------------------------------------------------ |
+| `fx.New(opts...)` | Build the application graph                            |
+| `app.Run()`       | Start, wait for signal, Stop — single call             |
+| `app.Start(ctx)`  | Run OnStart hooks in dependency order                  |
+| `app.Stop(ctx)`   | Run OnStop hooks in reverse order                      |
+| `app.Done()`      | Channel that closes on SIGINT/SIGTERM                  |
+| `app.Err()`       | Wiring error from `fx.New` (validate without starting) |
 
 ### Wiring
 
-| Option                       | Purpose                                                  |
-| ---------------------------- | -------------------------------------------------------- |
-| `fx.Provide(ctors...)`       | Register constructors                                    |
-| `fx.Invoke(fns...)`          | Run functions during Start                               |
-| `fx.Supply(values...)`       | Provide pre-built values                                 |
-| `fx.Replace(values...)`      | Replace previously-provided values (tests)               |
-| `fx.Decorate(fn)`            | Wrap an existing value (module-scoped)                   |
-| `fx.Module(name, opts...)`   | Group providers/invokes/decorators                       |
-| `fx.Options(opts...)`        | Bundle options into a single value                       |
-| `fx.Populate(targets...)`    | Extract typed values from the graph (tests)              |
+| Option                     | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `fx.Provide(ctors...)`     | Register constructors                       |
+| `fx.Invoke(fns...)`        | Run functions during Start                  |
+| `fx.Supply(values...)`     | Provide pre-built values                    |
+| `fx.Replace(values...)`    | Replace previously-provided values (tests)  |
+| `fx.Decorate(fn)`          | Wrap an existing value (module-scoped)      |
+| `fx.Module(name, opts...)` | Group providers/invokes/decorators          |
+| `fx.Options(opts...)`      | Bundle options into a single value          |
+| `fx.Populate(targets...)`  | Extract typed values from the graph (tests) |
 
 ### Annotations
 
-| Function                              | Purpose                                          |
-| ------------------------------------- | ------------------------------------------------ |
-| `fx.Annotate(fn, opts...)`            | Tag/interface-wrap a constructor                 |
-| `fx.ParamTags("...")`                 | Tag parameters of an annotated constructor       |
-| `fx.ResultTags("...")`                | Tag results of an annotated constructor          |
-| `fx.As(new(I))`                       | Provide as one or more interfaces                |
-| `fx.From(types...)`                   | Bind annotated parameters to specific provided types |
+| Function | Purpose |
+| --- | --- |
+| `fx.Annotate(fn, opts...)` | Tag/interface-wrap a constructor |
+| `fx.ParamTags("...")` | Tag parameters of an annotated constructor |
+| `fx.ResultTags("...")` | Tag results of an annotated constructor |
+| `fx.As(new(I))` | Provide as one or more interfaces |
+| `fx.From(types...)` | Bind annotated parameters to specific provided types |
 
 ### Lifecycle
 
-| Helper                                       | Purpose                                       |
-| -------------------------------------------- | --------------------------------------------- |
-| `fx.Hook{OnStart, OnStop}`                   | Full hook with context-aware callbacks        |
-| `fx.StartHook(fn)`                           | Adapt a simple Start function                 |
-| `fx.StopHook(fn)`                            | Adapt a simple Stop function                  |
-| `fx.StartStopHook(start, stop)`              | Pair of simple Start/Stop functions           |
-| `fx.StartTimeout(d)`, `fx.StopTimeout(d)`    | Override default 15s lifecycle timeouts       |
-| `fx.ErrorHook(h)`                            | Intercept lifecycle errors (e.g. failed OnStart) for alerting or cleanup |
+| Helper | Purpose |
+| --- | --- |
+| `fx.Hook{OnStart, OnStop}` | Full hook with context-aware callbacks |
+| `fx.StartHook(fn)` | Adapt a simple Start function |
+| `fx.StopHook(fn)` | Adapt a simple Stop function |
+| `fx.StartStopHook(start, stop)` | Pair of simple Start/Stop functions |
+| `fx.StartTimeout(d)`, `fx.StopTimeout(d)` | Override default 15s lifecycle timeouts |
+| `fx.ErrorHook(h)` | Intercept lifecycle errors (e.g. failed OnStart) for alerting or cleanup |
 
 ### Logging & Testing
 
-| Helper                                       | Purpose                                       |
-| -------------------------------------------- | --------------------------------------------- |
-| `fx.WithLogger(fn)`                          | Plug in a custom `fxevent.Logger`             |
-| `fx.NopLogger`                               | Silence fx event logging                      |
-| `fxevent.ZapLogger{Logger: log}`             | Bridge fx events into zap                     |
-| `fxevent.SlogLogger{Logger: log}`            | Bridge fx events into log/slog                |
-| `fxtest.New(t, opts...)`                     | App that fails the test on errors             |
-| `app.RequireStart()`, `app.RequireStop()`    | Start/Stop with `t.Fatal` on failure          |
-| `fxtest.NewLifecycle(t)`                     | Standalone lifecycle for unit tests           |
+| Helper | Purpose |
+| --- | --- |
+| `fx.WithLogger(fn)` | Plug in a custom `fxevent.Logger` |
+| `fx.NopLogger` | Silence fx event logging |
+| `fxevent.ZapLogger{Logger: log}` | Bridge fx events into zap |
+| `fxevent.SlogLogger{Logger: log}` | Bridge fx events into log/slog |
+| `fxtest.New(t, opts...)` | App that fails the test on errors |
+| `app.RequireStart()`, `app.RequireStop()` | Start/Stop with `t.Fatal` on failure |
+| `fxtest.NewLifecycle(t)` | Standalone lifecycle for unit tests |

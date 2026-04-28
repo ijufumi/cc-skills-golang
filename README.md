@@ -4,8 +4,7 @@ AI agent skills are reusable instruction sets that extend your coding assistant 
 
 For generic skills, please visit [cc-skills](https://github.com/samber/cc-skills).
 
-> [!IMPORTANT]
-> Bootstrapped with Claude Code by distilling my Go project commits. **Edited, tested, reviewed and reworked by a human**.
+> [!IMPORTANT] Bootstrapped with Claude Code by distilling my Go project commits. **Edited, tested, reviewed and reworked by a human**.
 >
 > **No AI slop here.** AI-made skills are useless.
 
@@ -205,7 +204,7 @@ These skills are designed as **atomic, cross-referencing units**. A skill may re
 
 See [EVALUATIONS.md](./EVALUATIONS.md) for the full per-skill breakdown.
 
-## 🕵  Use in CI for AI-driven reviews
+## 🕵 Use in CI for AI-driven reviews
 
 Add AI agents as PR reviewers alongside traditional static analysis. When configured with this skill plugin, the agent applies the relevant Go skills per review area — catching architectural drift, logic bugs, and concurrency hazards that linters cannot detect.
 

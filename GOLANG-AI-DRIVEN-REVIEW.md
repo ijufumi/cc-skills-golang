@@ -14,7 +14,7 @@ Add AI agents as PR reviewers alongside traditional static analysis. When config
 
 Run `/install-github-app` in Claude Code to install the GitHub app and connect to the Claude API. Then create `.github/workflows/ai-code-review.yml`:
 
-```yaml
+````yaml
 name: AI Code Review (Claude)
 
 on:
@@ -75,6 +75,7 @@ jobs:
             actions: read
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__resolve-library-id,mcp__context7__query-docs,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -152,6 +153,7 @@ jobs:
             actions: read
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__resolve-library-id,mcp__context7__query-docs,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -230,6 +232,7 @@ jobs:
             actions: read
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__resolve-library-id,mcp__context7__query-docs,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -307,6 +310,7 @@ jobs:
             actions: read
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__resolve-library-id,mcp__context7__query-docs,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -382,6 +386,7 @@ jobs:
             actions: read
           claude_args: >-
             --allowedTools "Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh run view:*),Bash(gh run list:*)"
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -419,6 +424,7 @@ jobs:
           track_progress: false
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh pr diff:*)"
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -447,7 +453,7 @@ jobs:
 
             Use `mcp__github_inline_comment__create_inline_comment` to reply inline when the comment
             is line-specific, otherwise use `gh pr comment`. Post nothing else. No chat output.
-```
+````
 
 Remove jobs you don't need to reduce cost. The `ci-diagnosis` and `discuss` jobs add no review API cost — they only run when other jobs fail or a human comments.
 
@@ -502,8 +508,7 @@ Pick skills that look relevant. Even if they have a 0.001% chance of applying. R
 - 🟠 **IMPORTANT** — significant quality or maintainability concern; strongly recommended.
 - 🟡 **SUGGESTION** — style, naming, or minor improvement; optional but worthwhile.
 
-Write short, concise comments. Reference the exact file and line. Explain what is wrong and why it
-matters. Provide a concrete fix. Post nothing if there is nothing to say.
+Write short, concise comments. Reference the exact file and line. Explain what is wrong and why it matters. Provide a concrete fix. Post nothing if there is nothing to say.
 ```
 
 ---

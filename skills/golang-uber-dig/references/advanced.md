@@ -51,7 +51,7 @@ type Params struct {
 
 ## Error Handling
 
-dig wraps the constructor error with the dependency path so you can see *which* graph edge failed:
+dig wraps the constructor error with the dependency path so you can see _which_ graph edge failed:
 
 ```go
 if err := c.Invoke(run); err != nil {
@@ -82,38 +82,38 @@ _ = dig.Visualize(c, f)
 
 ### Container
 
-| Function/Method                  | Purpose                                                  |
-| -------------------------------- | -------------------------------------------------------- |
-| `dig.New(opts...)`               | Create a root container                                  |
-| `c.Provide(ctor, opts...)`       | Register a constructor                                   |
-| `c.Invoke(fn, opts...)`          | Run a function with injected dependencies                |
-| `c.Decorate(fn, opts...)`        | Modify a previously-provided value within a scope        |
-| `c.Scope(name, opts...)`         | Create a child scope (private providers by default)      |
-| `c.String()`                     | Human-readable text summary of providers (not DOT; use `dig.Visualize` for DOT) |
+| Function/Method | Purpose |
+| --- | --- |
+| `dig.New(opts...)` | Create a root container |
+| `c.Provide(ctor, opts...)` | Register a constructor |
+| `c.Invoke(fn, opts...)` | Run a function with injected dependencies |
+| `c.Decorate(fn, opts...)` | Modify a previously-provided value within a scope |
+| `c.Scope(name, opts...)` | Create a child scope (private providers by default) |
+| `c.String()` | Human-readable text summary of providers (not DOT; use `dig.Visualize` for DOT) |
 
 ### Provide options
 
-| Option                            | Purpose                                                  |
-| --------------------------------- | -------------------------------------------------------- |
-| `dig.Name("...")`                 | Disambiguate same-typed providers                        |
-| `dig.Group("...")`                | Add the result to a value group                          |
-| `dig.As(new(I))`                  | Provide the concrete value as one or more interfaces     |
-| `dig.Export(true)`                | Make a scope-level provider visible from the root        |
-| `dig.FillProvideInfo(&info)`      | Capture metadata for tooling                             |
+| Option | Purpose |
+| --- | --- |
+| `dig.Name("...")` | Disambiguate same-typed providers |
+| `dig.Group("...")` | Add the result to a value group |
+| `dig.As(new(I))` | Provide the concrete value as one or more interfaces |
+| `dig.Export(true)` | Make a scope-level provider visible from the root |
+| `dig.FillProvideInfo(&info)` | Capture metadata for tooling |
 
 ### Container options
 
-| Option                              | Purpose                                                  |
-| ----------------------------------- | -------------------------------------------------------- |
-| `dig.DeferAcyclicVerification()`    | Defer cycle check to first `Invoke`                      |
-| `dig.RecoverFromPanics()`           | Convert constructor panics into `dig.PanicError`         |
-| `dig.DryRun(true)`                  | Validate without invoking constructors                   |
+| Option | Purpose |
+| --- | --- |
+| `dig.DeferAcyclicVerification()` | Defer cycle check to first `Invoke` |
+| `dig.RecoverFromPanics()` | Convert constructor panics into `dig.PanicError` |
+| `dig.DryRun(true)` | Validate without invoking constructors |
 
 ### Errors
 
-| Helper                              | Purpose                                                  |
-| ----------------------------------- | -------------------------------------------------------- |
-| `dig.RootCause(err)`                | Unwrap to the user-returned error                        |
-| `dig.IsCycleDetected(err)`          | True if the graph has a cycle                            |
-| `errors.As(err, &dig.PanicError{})` | Detect a recovered panic                                 |
-| `dig.Visualize(c, w, opts...)`      | Write the graph in DOT format                            |
+| Helper                              | Purpose                           |
+| ----------------------------------- | --------------------------------- |
+| `dig.RootCause(err)`                | Unwrap to the user-returned error |
+| `dig.IsCycleDetected(err)`          | True if the graph has a cycle     |
+| `errors.As(err, &dig.PanicError{})` | Detect a recovered panic          |
+| `dig.Visualize(c, w, opts...)`      | Write the graph in DOT format     |

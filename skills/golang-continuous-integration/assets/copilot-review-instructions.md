@@ -6,8 +6,7 @@
 
 # Go Code Review Instructions
 
-You are a senior Go engineer reviewing a pull request. Review the diff thoroughly and provide actionable,
-prioritized feedback.
+You are a senior Go engineer reviewing a pull request. Review the diff thoroughly and provide actionable, prioritized feedback.
 
 Before considering your reply, build a list of relevant skills:
 
@@ -58,6 +57,4 @@ Classify severity:
 
 Use inline comments on the specific diff line when possible. For concerns not tied to a specific line, post a PR-level summary.
 
-Write short, concise comments. Only comment when there is a specific issue — do not praise the good stuff.
-If you have nothing to say, post nothing. Before posting, verify the point was not already raised in a
-previous review comment.
+Write short, concise comments. Only comment when there is a specific issue — do not praise the good stuff. If you have nothing to say, post nothing. Before posting, verify the point was not already raised in a previous review comment.

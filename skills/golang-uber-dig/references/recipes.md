@@ -246,7 +246,7 @@ func TestWiringIsValid(t *testing.T) {
 }
 ```
 
-This catches "no provider for *X" failures at build time instead of in production.
+This catches "no provider for \*X" failures at build time instead of in production.
 
 ## Visualizing a failed graph
 

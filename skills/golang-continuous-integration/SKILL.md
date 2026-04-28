@@ -223,12 +223,12 @@ Add AI agents as PR reviewers alongside traditional static analysis. When loaded
 
 The workflow runs parallel jobs, each scoped to a set of review areas and priority level:
 
-| Job             | Areas                                              | Priority         |
-| --------------- | -------------------------------------------------- | ---------------- |
-| `quality`       | Code style, Naming, Documentation, Design patterns | Suggestion-first |
-| `correctness`   | Error handling, Code safety, Concurrency           | Blocking-first   |
-| `security`      | Security, Dependencies                             | Blocking-first   |
-| `quality-depth` | Tests, Performance, Observability, Modernize       | Mixed            |
+| Job | Areas | Priority |
+| --- | --- | --- |
+| `quality` | Code style, Naming, Documentation, Design patterns | Suggestion-first |
+| `correctness` | Error handling, Code safety, Concurrency | Blocking-first |
+| `security` | Security, Dependencies | Blocking-first |
+| `quality-depth` | Tests, Performance, Observability, Modernize | Mixed |
 
 Depending on your project, also load: `golang-cli`, `golang-context`, `golang-data-structures`, `golang-database`, `golang-dependency-injection`, or any library-specific skill.
 
