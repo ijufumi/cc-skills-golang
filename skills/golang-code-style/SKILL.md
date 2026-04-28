@@ -1,12 +1,12 @@
 ---
 name: golang-code-style
-description: "Golang code style, formatting and conventions. Use when writing code, reviewing style, configuring linters, writing comments, or establishing project standards."
+description: "Golang code style, formatting and conventions. Use when writing Go code, reviewing style, configuring linters, writing comments, or establishing project standards."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code or similar AI coding agents, and for projects using Golang.
 metadata:
   author: samber
-  version: "1.1.1"
+  version: "1.1.2"
   openclaw:
     emoji: "🎨"
     homepage: https://github.com/samber/cc-skills-golang
