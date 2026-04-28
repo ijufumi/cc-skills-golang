@@ -182,14 +182,14 @@ For `fx.Supply`/`fx.Replace`/`fx.Decorate`, optional deps, custom logging, manua
 
 ## Common Mistakes
 
-| Mistake                                              | Fix                                                                                                                    |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Long-running work directly in OnStart                | Spawn a goroutine inside OnStart; the hook itself must return quickly so dependent hooks can run.                       |
-| `fx.Provide` something that should be `fx.Supply`    | Pre-built values (config, secrets) belong in `fx.Supply` — clearer and avoids a no-op constructor.                      |
-| Module decorator leaking to siblings                 | Decorate inside `fx.Module(...)` — decorators flow only to descendants. A top-level `fx.Decorate` is global.            |
-| Group order assumed                                  | Groups are unordered. If order matters, provide an ordered slice from one constructor.                                  |
-| Constructors with side effects                       | Side effects belong in OnStart — constructors should be cheap and pure-ish, since they may run concurrently and lazily. |
-| Forgotten `fx.Invoke`                                | Without an Invoke (or downstream consumer), constructors never run. Add at least one Invoke per app.                    |
+| Mistake | Fix |
+| --- | --- |
+| Long-running work directly in OnStart | Spawn a goroutine inside OnStart; the hook itself must return quickly so dependent hooks can run. |
+| `fx.Provide` something that should be `fx.Supply` | Pre-built values (config, secrets) belong in `fx.Supply` — clearer and avoids a no-op constructor. |
+| Module decorator leaking to siblings | Decorate inside `fx.Module(...)` — decorators flow only to descendants. A top-level `fx.Decorate` is global. |
+| Group order assumed | Groups are unordered. If order matters, provide an ordered slice from one constructor. |
+| Constructors with side effects | Side effects belong in OnStart — constructors should be cheap and pure-ish, since they may run concurrently and lazily. |
+| Forgotten `fx.Invoke` | Without an Invoke (or downstream consumer), constructors never run. Add at least one Invoke per app. |
 
 ## Testing
 
@@ -211,4 +211,4 @@ Use `go.uber.org/fx/fxtest` to integrate fx with `*testing.T` (failures call `t.
 - → See `samber/cc-skills-golang@golang-context` skill for context propagation in OnStart/OnStop hooks
 - → See `samber/cc-skills-golang@golang-testing` skill for general testing patterns
 
-If you encounter a bug or unexpected behavior in uber-go/fx, open an issue at https://github.com/uber-go/fx/issues.
+If you encounter a bug or unexpected behavior in uber-go/fx, open an issue at <https://github.com/uber-go/fx/issues>.

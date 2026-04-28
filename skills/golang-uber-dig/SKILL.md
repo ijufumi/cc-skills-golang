@@ -178,13 +178,13 @@ For Decorate, Scopes, optional deps, error helpers, and Visualize, see [advanced
 
 ## Common Mistakes
 
-| Mistake                                        | Fix                                                                                                                                |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Passing the container into services            | The container belongs to `main()`. Inject the typed dependencies a service needs; otherwise tests need to build a real container.  |
-| Two providers for the same type without `Name` | dig errors at `Provide` time. Either name them, or merge into a single provider that returns a `dig.Out` result struct.            |
-| Ignoring `Provide` errors                      | Wrap each `Provide` with a `must` helper. A silent registration error becomes a missing-type error far later.                      |
-| Using groups when ordering matters             | Groups are unordered. If order matters (middleware chain, migration sequence), provide an explicit ordered slice with one constructor. |
-| Constructors with side effects on import       | Keep `init()` empty — start work only inside the constructor, after the graph is built.                                            |
+| Mistake | Fix |
+| --- | --- |
+| Passing the container into services | The container belongs to `main()`. Inject the typed dependencies a service needs; otherwise tests need to build a real container. |
+| Two providers for the same type without `Name` | dig errors at `Provide` time. Either name them, or merge into a single provider that returns a `dig.Out` result struct. |
+| Ignoring `Provide` errors | Wrap each `Provide` with a `must` helper. A silent registration error becomes a missing-type error far later. |
+| Using groups when ordering matters | Groups are unordered. If order matters (middleware chain, migration sequence), provide an explicit ordered slice with one constructor. |
+| Constructors with side effects on import | Keep `init()` empty — start work only inside the constructor, after the graph is built. |
 
 ## Testing
 
@@ -205,4 +205,4 @@ dig containers are cheap — build a fresh one per test, override providers with
 - → See `samber/cc-skills-golang@golang-structs-interfaces` skill for interface design patterns
 - → See `samber/cc-skills-golang@golang-testing` skill for general testing patterns
 
-If you encounter a bug or unexpected behavior in uber-go/dig, open an issue at https://github.com/uber-go/dig/issues.
+If you encounter a bug or unexpected behavior in uber-go/dig, open an issue at <https://github.com/uber-go/dig/issues>.
