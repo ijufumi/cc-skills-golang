@@ -179,7 +179,7 @@ These skills are designed as **atomic, cross-referencing units**. A skill may re
 | Skill | Flags | Error rate gap | Description (tok) | SKILL.md (tok) | Directory (tok) |
 | --- | --- | --- | --- | --- | --- |
 | ❌ `golang-google-wire` |  | — | 0 | 0 | 0 |
-| ❌ `golang-graphql` |  | — | 0 | 0 | 0 |
+| ✅ `golang-graphql` |  | -16% | 76 | 2,935 | 7,766 |
 | ✅ `golang-grpc` | ⚡ | -41% | 69 | 2,149 | 4,965 |
 | ❌ `golang-spf13-cobra` |  | — | 0 | 0 | 0 |
 | ❌ `golang-spf13-viper` |  | — | 0 | 0 | 0 |

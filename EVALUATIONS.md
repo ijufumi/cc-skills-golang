@@ -50,6 +50,7 @@
 | `golang-samber-lo`              | v1.0.0  | 86         | 97%        | 57%           | +40pp     | 1.70×     |                             |
 | `golang-uber-fx`                | v1.0.0  | 21         | 100%       | **95%**       | +5pp      | 1.05×     | **Low delta, high without** |
 | `golang-uber-dig`               | v1.0.0  | 20         | 100%       | **90%**       | +10pp     | 1.11×     | **Low delta, high without** |
+| `golang-graphql`                | v0.0.2  | 59         | 100%       | **83%**       | +17pp     | 1.20×     | **Low delta, high without** |
 | `golang-samber-do`              | v1.0.0  | 53         | 100%       | 19%           | +81pp     | 5.26×     |                             |
 | **Total (38 skills)**           |         | **3242**   | **98%**    | **55%**       | **+43pp** | **1.79×** |                             |
 
@@ -4511,7 +4512,7 @@
 <details>
 <summary>Full breakdown (60 assertions)</summary>
 
-**Model:** Claude Sonnet 4.6 | **Runs:** 12 evals × 2 configs = 24 subagents | **Grading:** LLM-as-judge
+**Model:** Claude Sonnet 4.6 | **Runs:** 12 evals × 2 configs = 24 subagents | **Grading:** Human-as-judge
 
 | #    | Assertion                                                                                               | With                           | Without                        |
 | ---- | ------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------ |
